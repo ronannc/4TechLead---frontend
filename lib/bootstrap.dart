@@ -1,0 +1,38 @@
+import 'package:get_it/get_it.dart';
+
+import 'core/auth/auth_session.dart';
+import 'core/network/dio_client.dart';
+import 'core/storage/token_storage.dart';
+import 'features/auth/repositories/auth_repository.dart';
+import 'features/auth/services/auth_service.dart';
+import 'features/teams/repositories/team_repository.dart';
+import 'features/teams/services/team_service.dart';
+
+final getIt = GetIt.instance;
+
+/// Registers app-wide singletons (auth session, Dio client, Services,
+/// Repositories) with [getIt]. ViewModels are NOT registered here —
+/// they're created per-route via `ChangeNotifierProvider` instead, since
+/// their lifecycle is scoped to a screen, not the whole app.
+///
+/// Async because [AuthSession.restore] must load any persisted token
+/// *before* the first frame — otherwise the router's first redirect
+/// decision (see `app_router.dart`) would incorrectly send a signed-in
+/// user to `/login`.
+Future<void> configureDependencies() async {
+  getIt.registerLazySingleton<TokenStorage>(TokenStorage.new);
+
+  final authSession = AuthSession(getIt<TokenStorage>());
+  await authSession.restore();
+  getIt.registerSingleton<AuthSession>(authSession);
+
+  getIt.registerLazySingleton<DioClient>(() => DioClient(getIt<AuthSession>()));
+
+  getIt.registerLazySingleton<AuthService>(() => AuthService(getIt<DioClient>()));
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepository(getIt<AuthService>(), getIt<AuthSession>()),
+  );
+
+  getIt.registerLazySingleton<TeamService>(() => TeamService(getIt<DioClient>()));
+  getIt.registerLazySingleton<TeamRepository>(() => TeamRepository(getIt<TeamService>()));
+}
