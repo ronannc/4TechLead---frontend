@@ -6,8 +6,11 @@ class RoutePaths {
   static const login = '/login';
   static const register = '/register';
 
+  static const home = '/home';
   static const teams = '/teams';
   static const teamDetail = '/teams/:id';
+  static const notifications = '/notifications';
+  static const profile = '/profile';
 
   static String teamDetailPath(String id) => '/teams/$id';
 }

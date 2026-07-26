@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../bootstrap.dart';
-import '../../../core/auth/auth_session.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
@@ -27,16 +26,7 @@ class TeamsListScreen extends StatelessWidget {
       // the FAB's onPressed) would fail with a "could not find provider" error.
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text('Teams'),
-            actions: [
-              IconButton(
-                onPressed: () => getIt<AuthSession>().signOut(),
-                icon: const Icon(Icons.logout),
-                tooltip: 'Sign out',
-              ),
-            ],
-          ),
+          appBar: AppBar(title: const Text('Teams')),
           body: Selector<TeamsListViewModel, ViewState>(
             selector: (_, vm) => vm.state,
             builder: (context, state, _) {

@@ -38,6 +38,12 @@ class AuthRepository {
     await _authSession.signOut();
   }
 
+  Future<AppUser> me() async {
+    final json = await _service.me();
+
+    return AppUser.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
   Future<AppUser> _signInFromResponse(Map<String, dynamic> json) async {
     final user = AppUser.fromJson(json['data'] as Map<String, dynamic>);
     await _authSession.signIn(json['token'] as String);

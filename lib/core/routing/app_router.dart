@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/home/screens/home_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/profile/screens/profile_screen.dart';
 import '../../features/teams/screens/team_detail_screen.dart';
 import '../../features/teams/screens/teams_list_screen.dart';
 import '../auth/auth_session.dart';
@@ -10,7 +13,14 @@ import '../responsive/adaptive_scaffold.dart';
 import 'route_paths.dart';
 
 final _navDestinations = [
+  const AppNavDestination(label: 'Home', icon: Icons.dashboard_outlined, path: RoutePaths.home),
   const AppNavDestination(label: 'Teams', icon: Icons.groups_outlined, path: RoutePaths.teams),
+  const AppNavDestination(
+    label: 'Notifications',
+    icon: Icons.notifications_none,
+    path: RoutePaths.notifications,
+  ),
+  const AppNavDestination(label: 'Profile', icon: Icons.person_outline, path: RoutePaths.profile),
 ];
 
 /// Builds the app-wide go_router configuration. `authSession` drives the
@@ -23,7 +33,7 @@ final _navDestinations = [
 /// `/register` are top-level routes outside the shell (no nav chrome).
 GoRouter createAppRouter(AuthSession authSession) {
   return GoRouter(
-    initialLocation: RoutePaths.teams,
+    initialLocation: RoutePaths.home,
     refreshListenable: authSession,
     redirect: (context, state) {
       final loggingIn =
@@ -34,7 +44,7 @@ GoRouter createAppRouter(AuthSession authSession) {
       }
 
       if (authSession.isAuthenticated && loggingIn) {
-        return RoutePaths.teams;
+        return RoutePaths.home;
       }
 
       return null;
@@ -56,6 +66,7 @@ GoRouter createAppRouter(AuthSession authSession) {
           );
         },
         routes: [
+          GoRoute(path: RoutePaths.home, builder: (context, state) => const HomeScreen()),
           GoRoute(
             path: RoutePaths.teams,
             builder: (context, state) => const TeamsListScreen(),
@@ -64,6 +75,11 @@ GoRouter createAppRouter(AuthSession authSession) {
             path: RoutePaths.teamDetail,
             builder: (context, state) => TeamDetailScreen(teamId: state.pathParameters['id']!),
           ),
+          GoRoute(
+            path: RoutePaths.notifications,
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(path: RoutePaths.profile, builder: (context, state) => const ProfileScreen()),
         ],
       ),
     ],

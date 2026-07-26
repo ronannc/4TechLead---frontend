@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 /// exposed via `Theme.of(context).extension<AppThemeExtension>()`.
 @immutable
 class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
-  const AppThemeExtension({required this.success, required this.warning});
+  const AppThemeExtension({required this.success, required this.warning, required this.border});
 
   final Color success;
   final Color warning;
+  final Color border;
 
   @override
-  AppThemeExtension copyWith({Color? success, Color? warning}) {
+  AppThemeExtension copyWith({Color? success, Color? warning, Color? border}) {
     return AppThemeExtension(
       success: success ?? this.success,
       warning: warning ?? this.warning,
+      border: border ?? this.border,
     );
   }
 
@@ -26,6 +28,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
     return AppThemeExtension(
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
+      border: Color.lerp(border, other.border, t)!,
     );
   }
 }
