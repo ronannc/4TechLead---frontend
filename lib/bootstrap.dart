@@ -5,6 +5,8 @@ import 'core/network/dio_client.dart';
 import 'core/storage/token_storage.dart';
 import 'features/auth/repositories/auth_repository.dart';
 import 'features/auth/services/auth_service.dart';
+import 'features/people/repositories/person_repository.dart';
+import 'features/people/services/person_service.dart';
 import 'features/teams/repositories/team_repository.dart';
 import 'features/teams/services/team_service.dart';
 
@@ -35,4 +37,7 @@ Future<void> configureDependencies() async {
 
   getIt.registerLazySingleton<TeamService>(() => TeamService(getIt<DioClient>()));
   getIt.registerLazySingleton<TeamRepository>(() => TeamRepository(getIt<TeamService>()));
+
+  getIt.registerLazySingleton<PersonService>(() => PersonService(getIt<DioClient>()));
+  getIt.registerLazySingleton<PersonRepository>(() => PersonRepository(getIt<PersonService>()));
 }

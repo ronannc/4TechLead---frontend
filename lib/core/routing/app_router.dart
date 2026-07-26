@@ -5,6 +5,8 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/people/screens/person_detail_screen.dart';
+import '../../features/people/screens/person_form_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/teams/screens/team_detail_screen.dart';
 import '../../features/teams/screens/teams_list_screen.dart';
@@ -74,6 +76,14 @@ GoRouter createAppRouter(AuthSession authSession) {
           GoRoute(
             path: RoutePaths.teamDetail,
             builder: (context, state) => TeamDetailScreen(teamId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: RoutePaths.personCreate,
+            builder: (context, state) => PersonFormScreen(teamId: state.pathParameters['teamId']!),
+          ),
+          GoRoute(
+            path: RoutePaths.personDetail,
+            builder: (context, state) => PersonDetailScreen(personId: state.pathParameters['personId']!),
           ),
           GoRoute(
             path: RoutePaths.notifications,

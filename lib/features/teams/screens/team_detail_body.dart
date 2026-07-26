@@ -21,7 +21,7 @@ class TeamDetailBody extends StatelessWidget {
         }
 
         final theme = Theme.of(context);
-        final dateFormat = DateFormat.yMMMd().add_jm();
+        final dateFormat = DateFormat.yMMMd('pt_BR').add_jm();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -6,21 +6,24 @@ import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
+import '../../people/repositories/person_repository.dart';
 import '../../teams/repositories/team_repository.dart';
 import '../viewmodels/home_view_model.dart';
 import 'home_body.dart';
 
 /// Dashboard landing screen: summary cards (above the fold, per the
 /// tech-lead-first design — quick-glance numbers over a chart) followed by
-/// a trend placeholder. Screen only ever depends on [HomeViewModel] and
-/// [TeamRepository] (the single DI wiring point below).
+/// upcoming birthdays and a trend placeholder. Screen only ever depends on
+/// [HomeViewModel], [TeamRepository] and [PersonRepository] (the single DI
+/// wiring point below).
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => HomeViewModel(getIt<TeamRepository>())..load(),
+      create: (_) =>
+          HomeViewModel(getIt<TeamRepository>(), getIt<PersonRepository>())..load(),
       child: Scaffold(
         appBar: const AppPageHeader(subtitle: 'Painel', title: '4TechLead'),
         body: Selector<HomeViewModel, ViewState>(
