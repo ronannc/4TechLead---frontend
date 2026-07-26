@@ -63,7 +63,7 @@ lib/
 │   ├── theme/                       # AppColors, AppTypography, AppRadius, AppSpacing, AppThemeExtension, AppTheme
 │   ├── responsive/                  # Breakpoints, AdaptiveScaffold
 │   ├── viewmodels/base_view_model.dart
-│   └── widgets/                     # AppPrimaryButton, AppTextField, AppDataTable, AppSummaryCard, Loading/Error/EmptyView
+│   └── widgets/                     # AppPrimaryButton, AppTextField, AppDateField, AppDropdownField, AppDataTable, AppSummaryCard, Loading/Error/EmptyView
 └── features/
     ├── teams/                       # reference implementation — copy this shape for new features
     │   ├── models/team.dart
@@ -73,7 +73,15 @@ lib/
     │   └── screens/{teams_list,team_detail}_screen.dart + {teams_list,team_detail}_body.dart
     ├── home/                        # dashboard — viewmodels/home_view_model.dart, screens/{home_screen,home_body}.dart
     ├── notifications/               # empty-state placeholder only, see "Navigation" below
-    └── profile/                     # viewmodels/profile_view_model.dart, screens/profile_screen.dart
+    ├── profile/                     # viewmodels/profile_view_model.dart, screens/profile_screen.dart
+    ├── auth/                        # login/register — see "Authentication" below
+    └── people/                      # nested under a team, not a top-level nav item — see "Navigation" below
+        ├── models/{person,contract_type,seniority_level}.dart
+        ├── repositories/person_repository.dart
+        ├── services/person_service.dart
+        ├── viewmodels/{people_list,person_form,person_detail}_view_model.dart
+        ├── screens/{person_form,person_detail}_screen.dart + person_form.dart + person_detail_body.dart
+        └── utils/birthday_util.dart     # daysUntilNextBirthday() — pure function, used by the Home birthday card
 ```
 
 ## One class per file
@@ -137,6 +145,11 @@ or radius value inline in a widget — add/use tokens in `core/theme/` and read 
   server-side pagination + search together). Keep an unfiltered getter (`hasTeams`) alongside the
   filtered one so the empty-state message can distinguish "no results for this search" from
   "genuinely no data yet".
+- **`AppDateField`**/**`AppDropdownField<T>`** (`core/widgets/inputs/`): the date/select counterparts
+  to `AppTextField`, same decoration-driven theming. `AppDateField` wraps `showDatePicker` behind a
+  read-only `InputDecorator` (tap anywhere to open the picker, no keyboard ever shows).
+  `AppDropdownField<T>` is a themed generic `DropdownButtonFormField<T>` (`items` +
+  `labelBuilder`) — see `PersonForm`'s contract-type/seniority selects for the reference usage.
 
 ## Navigation
 
@@ -150,6 +163,24 @@ placeholder (no notifications backend/feature exists yet) rather than a stub wit
 it with a full Model → Service → Repository → ViewModel → Screen feature once that API exists.
 `ProfileScreen` shows the signed-in user (via `AuthRepository.me()`) and is where sign-out now lives
 (moved off `TeamsListScreen`'s app bar).
+
+Not every feature gets a nav destination — `features/people/` is deliberately **nested under Team**,
+not a 5th bottom-nav tab: `TeamDetailScreen` gets a "Membros" section (`team_members_section.dart`,
+same team feature, reusing `AppDataTable`) listing that team's people via
+`PeopleListViewModel(personRepository, teamId)`, with a FAB pushing `PersonFormScreen` at
+`RoutePaths.personCreatePath(teamId)` and rows pushing `PersonDetailScreen` at
+`RoutePaths.personDetailPath(teamId, personId)` — both are plain `GoRoute`s inside the same
+`ShellRoute` as `teamDetail` (so the shell chrome persists), not top-level routes. Use this pattern —
+not a new nav tab — for any future feature that's naturally scoped to a parent resource rather than
+being its own global list.
+
+`HomeBody` also has a "Próximos aniversários" card between the summary cards and the trends
+placeholder: `HomeViewModel` injects `PersonRepository` alongside `TeamRepository`, fetches people
+across *all* teams (`perPage: 100` — the API's validated ceiling), and sorts them by
+`daysUntilNextBirthday()` (`features/people/utils/birthday_util.dart`, a pure/testable function) to
+show the soonest 5. It's one `Card` with a `ListTile` per person, not a `Card` per person — the
+"lists aren't cards" rule is about `AppDataTable`-style lists, not this kind of small fixed summary
+widget, but per-item elevation is still avoided here for the same visual-noise reason.
 
 ### Page header
 
@@ -175,6 +206,16 @@ they come from `ValidationException.userMessage` verbatim from the API response 
 coverage would need Laravel's own localization (`lang/pt_BR`), not just Flutter-side changes; flagged
 as a known gap, not yet addressed.
 
+This extends to native widgets, not just app text: `app.dart`'s `MaterialApp.router` sets
+`locale: Locale('pt', 'BR')` + `supportedLocales`/`localizationsDelegates` (via the
+`flutter_localizations` SDK package) so built-in Material/Cupertino/Widgets chrome (e.g.
+`AppDateField`'s `showDatePicker` dialog) renders in Portuguese too, not just this app's own screens.
+`main.dart` calls `initializeDateFormatting('pt_BR')` (from `intl`) before `runApp()` — required
+before any `DateFormat.yMMMd('pt_BR')`-style call (skeleton formats with an explicit locale throw a
+`LocaleDataException` otherwise). Always pass `'pt_BR'` explicitly to `DateFormat` constructors in
+this codebase (see `AppDateField`, `team_detail_body.dart`, `person_detail_body.dart`,
+`home_body.dart`) rather than relying on an ambient default locale.
+
 ## Reusable components
 
 Buttons, inputs, and tables/lists live in `core/widgets/` and are used by every screen that needs
@@ -197,7 +238,7 @@ method/URL/headers (Authorization/Cookie redacted)/body for requests, status/bod
 status/body for errors. Services catch `DioException` and rethrow via `mapDioException()` so callers
 only ever deal with typed `ApiException` subclasses (`NetworkException`, `ValidationException` —
 mirrors Laravel's `{message, errors: {field: [msgs]}}` 422 shape — `NotFoundException`,
-`UnauthorizedException`, `ServerException`).
+`UnauthenticatedException`, `ForbiddenException`, `ServerException`).
 
 ## Adding a new feature — recipe (mirror `features/teams/`)
 
@@ -242,7 +283,7 @@ see `backend/CLAUDE.md`'s "Authentication" section for the API contract.
   (`flutter_secure_storage` — Keychain/Credential Manager/Keystore), and is the single source of truth
   `go_router`'s `redirect` (in `core/routing/app_router.dart`) uses as its `refreshListenable` to guard
   routes: unauthenticated → forced to `/login`; authenticated and on `/login`/`/register` → forced to
-  `/teams`.
+  `/home`.
 - `core/network/auth_interceptor.dart` (`AuthInterceptor`) attaches `Authorization: Bearer <token>` to
   every request when `AuthSession.isAuthenticated`, and calls `AuthSession.signOut()` on any 401 response
   — the redirect above then takes over. `core/network/api_exception.dart` distinguishes
@@ -258,6 +299,6 @@ see `backend/CLAUDE.md`'s "Authentication" section for the API contract.
 - `bootstrap.dart`'s `configureDependencies()` is `async`: it must `await authSession.restore()` (load any
   persisted token) *before* `runApp()`, otherwise the router's very first redirect decision runs before
   the token is known and can incorrectly bounce a signed-in user to `/login`. `main()` is `async` to match.
-- Sign-out from the UI (`TeamsListScreen`'s app bar) calls `getIt<AuthSession>().signOut()` directly —
-  `AuthSession` is core infrastructure, not a feature Repository, so this doesn't violate the
-  screens-never-touch-repositories rule (comparable to a Screen reading `Theme.of(context)`).
+- Sign-out from the UI (`ProfileScreen`, via `ProfileViewModel.signOut()` → `AuthRepository.logout()`)
+  goes through the normal Screen → ViewModel → Repository chain like any other action — `AuthSession`
+  itself is only touched directly by `AuthRepository`/`AuthInterceptor` (see above), never by a Screen.

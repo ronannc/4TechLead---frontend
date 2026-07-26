@@ -41,6 +41,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # pt_BR Material/Cupertino/Widgets localization (date pickers, etc.) — the
+  # whole app's content is Portuguese, including native widgets like AppDateField's showDatePicker.
+  flutter_localizations:
+    sdk: flutter
+
   # Secure, cross-platform (Keychain/Credential Manager/Keystore) token storage
   flutter_secure_storage: ^9.2.4
 
