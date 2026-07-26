@@ -13,7 +13,8 @@ desktop — all 6 platform folders are scaffolded.
 Packages: `go_router` (routing), `provider` (ViewModel exposure + granular rebuilds via
 `Consumer`/`Selector`), `get_it` (DI container for Services/Repositories only), `dio` (HTTP),
 `logger` (debug interceptor console output), `equatable` (value equality on Models), `intl`
-(date/number formatting), `mocktail` (dev, test mocking, no codegen).
+(date/number formatting), `google_fonts` (Inter, see "Design system" below), `mocktail` (dev, test
+mocking, no codegen).
 
 Deliberately **not** used: Riverpod (extra paradigm, not needed yet — see rationale in the plan
 history if revisited), `freezed`/`json_serializable`/`build_runner` (manual `fromJson`/`toJson` is
@@ -59,17 +60,20 @@ lib/
 │   ├── config/env.dart              # Env.apiBaseUrl (String.fromEnvironment / --dart-define)
 │   ├── network/                     # DioClient, AppLoggingInterceptor, ApiException + mapDioException
 │   ├── routing/                     # appRouter (go_router), RoutePaths
-│   ├── theme/                       # AppColors, AppTypography, AppSpacing, AppThemeExtension, AppTheme
+│   ├── theme/                       # AppColors, AppTypography, AppRadius, AppSpacing, AppThemeExtension, AppTheme
 │   ├── responsive/                  # Breakpoints, AdaptiveScaffold
 │   ├── viewmodels/base_view_model.dart
-│   └── widgets/                     # AppPrimaryButton, AppTextField, AppDataTable, Loading/Error/EmptyView
+│   └── widgets/                     # AppPrimaryButton, AppTextField, AppDataTable, AppSummaryCard, Loading/Error/EmptyView
 └── features/
-    └── teams/                       # reference implementation — copy this shape for new features
-        ├── models/team.dart
-        ├── repositories/team_repository.dart
-        ├── services/team_service.dart
-        ├── viewmodels/{teams_list,team_detail}_view_model.dart
-        └── screens/{teams_list,team_detail}_screen.dart + {teams_list,team_detail}_body.dart
+    ├── teams/                       # reference implementation — copy this shape for new features
+    │   ├── models/team.dart
+    │   ├── repositories/team_repository.dart
+    │   ├── services/team_service.dart
+    │   ├── viewmodels/{teams_list,team_detail}_view_model.dart
+    │   └── screens/{teams_list,team_detail}_screen.dart + {teams_list,team_detail}_body.dart
+    ├── home/                        # dashboard — viewmodels/home_view_model.dart, screens/{home_screen,home_body}.dart
+    ├── notifications/               # empty-state placeholder only, see "Navigation" below
+    └── profile/                     # viewmodels/profile_view_model.dart, screens/profile_screen.dart
 ```
 
 ## One class per file
@@ -88,12 +92,88 @@ for the loading/error/loaded switch, then a separate nested `Selector` on the ac
 `TeamsListScreen`/`TeamsListBody`. Use `context.read<T>()` for one-off calls (button `onPressed`)
 that shouldn't subscribe the calling widget to rebuilds.
 
-## Theme
+## Design system
 
-Never hardcode a `Color(0xFF...)`, font size, or spacing value inline in a widget. Add/use tokens in
-`core/theme/{app_colors,app_typography,app_spacing}.dart`, extend `AppThemeExtension` for semantic
-tokens not covered by `ColorScheme`, and read everything through `Theme.of(context)` inside widgets —
-this is what makes `ThemeMode.system` (light/dark, wired in `app.dart`) work for free.
+Built for the target user (technical leads: short, frequent sessions between meetings, on both
+mobile and desktop, often at night) — a sober "dev tool" look (dense-data-friendly, low visual
+noise) rather than a bright consumer-app one. Never hardcode a `Color(0xFF...)`, font size, spacing,
+or radius value inline in a widget — add/use tokens in `core/theme/` and read everything through
+`Theme.of(context)` inside widgets. This is what makes `ThemeMode.system` (light/dark, wired in
+`app.dart`) work for free.
+
+- **Color** (`app_colors.dart`): near-monochrome zinc (grafite) neutral scale for
+  background/surface/text/border, plus a single orange accent (`AppColors.accent`/`accentDark`)
+  reserved for primary actions/selection — kept meaningful by never using it decoratively elsewhere.
+  Status colors (`success`/`warning`/`error`) are separate from the accent and used sparingly
+  (badges, alerts), never as a button color.
+- **Typography** (`app_typography.dart`): Inter (via `google_fonts`) — chosen for legibility on
+  dense data screens. Regular (400) for body copy, Medium (500) for labels/card titles, SemiBold
+  (600) reserved for screen headers (`titleLarge`/`titleMedium`) — never a heavier weight in body
+  text. Full scale: `displaySmall`, `titleLarge/Medium/Small`, `bodyLarge/Medium/Small`,
+  `labelLarge/Medium/Small`.
+- **Shape** (`app_radius.dart`): `sm` (8px, inputs/buttons), `md` (12px, cards), `lg` (20px,
+  dialogs/bottom sheets) — soft-but-not-round; sharp corners read as legacy, heavy rounding as
+  consumer/playful.
+- **`AppTheme`** (`app_theme.dart`) wires all of the above into `ThemeData`: a hand-built
+  `ColorScheme` (not `ColorScheme.fromSeed`, for exact control over the accent/neutral split),
+  `inputDecorationTheme`/`elevatedButtonTheme`/`outlinedButtonTheme`/`cardTheme`/`dialogTheme`/
+  `navigationBarTheme`/`navigationRailTheme` all reading the same tokens — a component never sets
+  its own shape/color, so changing a token updates every screen. `AppPrimaryButton`/`AppTextField`
+  in particular rely entirely on these theme defaults (no inline `style:`/`decoration:` overrides).
+- **`AppSummaryCard`** (`core/widgets/cards/`): the reusable dashboard KPI card (icon + big value +
+  label) — see `HomeScreen`. This is the one place a `Card` is intentional; lists never use one (see
+  below).
+- **Lists** (`AppDataTable`, `core/widgets/tables/`): never a `Card`-per-row list. On mobile widths
+  it's a plain `ListView.separated` with a `Divider` between rows (no elevation, no per-row
+  container); on desktop widths it's a `DataTable`, unchanged. Every `AppDataTable` **always**
+  renders a search field above its content — via `AppSearchField` (`core/widgets/inputs/`) — from
+  the start, not behind a toggle; there is no non-searchable list variant. `AppDataTable` owns its
+  own empty state too (`emptyMessage`), so the search field stays visible even when a search yields
+  no results (only `items.isEmpty` swaps in `EmptyView`, and the search bar sits outside that swap).
+  `AppDataTable` itself just reports the (300ms-debounced) query text via `onSearchChanged`; the
+  actual filtering is the ViewModel's job — see `TeamsListViewModel.search()`, which filters the
+  already-loaded in-memory list by a case-insensitive `name` match rather than round-tripping to the
+  API per keystroke (fine at the list sizes these screens deal with; revisit if a list needs
+  server-side pagination + search together). Keep an unfiltered getter (`hasTeams`) alongside the
+  filtered one so the empty-state message can distinguish "no results for this search" from
+  "genuinely no data yet".
+
+## Navigation
+
+Bottom `NavigationBar` (mobile) / `NavigationRail` (desktop) with 4 top-level destinations, in this
+order: **Início** (dashboard), **Times**, **Notificações**, **Perfil** — see `_navDestinations` in
+`core/routing/app_router.dart`. `RoutePaths.home` is the post-login `initialLocation`. Home
+prioritizes summary cards above the fold (quick 3-second read) over a chart — a trend chart, once
+historical data exists to back it, goes below the cards, not above (see `features/home/`'s
+`HomeBody`: cards first, then a trends section). `NotificationsScreen` is an intentional empty-state
+placeholder (no notifications backend/feature exists yet) rather than a stub with fake data — replace
+it with a full Model → Service → Repository → ViewModel → Screen feature once that API exists.
+`ProfileScreen` shows the signed-in user (via `AuthRepository.me()`) and is where sign-out now lives
+(moved off `TeamsListScreen`'s app bar).
+
+### Page header
+
+Every top-level (shell) screen uses `core/widgets/navigation/app_page_header.dart`
+(`AppPageHeader`) instead of a raw `AppBar` — never build a bespoke one per screen. Layout:
+description/subtitle line on top, page title below it, both left-aligned (`centerTitle: false`); the
+notifications bell is right-aligned via `actions` and navigates to `/notifications` with
+`context.go` (switches shell tab, doesn't stack a route). Pass `showNotifications: false` for
+sub-pages reached by push (e.g. `TeamDetailScreen`) and for the Notifications screen itself, so the
+bell doesn't point at the page you're already on. `HomeScreen` is the one place the title is the app
+name itself (`4TechLead`, subtitle `'Painel'`) rather than the page name — see `HomeScreen`.
+
+## Language
+
+The app's name (`4TechLead`, set in `app.dart`'s `MaterialApp.title` and used as `HomeScreen`'s
+header title) stays English/branded, but every other piece of user-facing text in the Flutter layer
+— screen titles/subtitles, buttons, labels, empty/error/loading messages, nav destination labels —
+is Portuguese (pt-BR). This includes the default messages baked into shared widgets/classes
+(`ApiException` subclasses in `core/network/api_exception.dart`, `BaseViewModel`'s generic catch-all,
+`ErrorView`'s retry button), not just per-screen strings — a new shared default must also be written
+in Portuguese. Backend (Laravel) validation messages are not yet localized (still English) since
+they come from `ValidationException.userMessage` verbatim from the API response — full pt-BR
+coverage would need Laravel's own localization (`lang/pt_BR`), not just Flutter-side changes; flagged
+as a known gap, not yet addressed.
 
 ## Reusable components
 

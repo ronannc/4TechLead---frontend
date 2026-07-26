@@ -50,6 +50,9 @@ dependencies:
   # Routing
   go_router: ^16.2.4
 
+  # Inter font for the design system's typography scale
+  google_fonts: ^6.3.2
+
   # Date/number formatting for API payloads
   intl: ^0.20.2
 
