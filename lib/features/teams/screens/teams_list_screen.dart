@@ -5,6 +5,7 @@ import '../../../bootstrap.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
+import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
 import '../repositories/team_repository.dart';
@@ -26,7 +27,7 @@ class TeamsListScreen extends StatelessWidget {
       // the FAB's onPressed) would fail with a "could not find provider" error.
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Teams')),
+          appBar: const AppPageHeader(subtitle: 'Gestão de equipes', title: 'Times'),
           body: Selector<TeamsListViewModel, ViewState>(
             selector: (_, vm) => vm.state,
             builder: (context, state, _) {
@@ -35,7 +36,7 @@ class TeamsListScreen extends StatelessWidget {
               return switch (state) {
                 ViewState.idle || ViewState.loading => const LoadingView(),
                 ViewState.error => ErrorView(
-                  message: viewModel.errorMessage ?? 'Something went wrong.',
+                  message: viewModel.errorMessage ?? 'Algo deu errado.',
                   onRetry: viewModel.load,
                 ),
                 ViewState.loaded => const TeamsListBody(),
@@ -58,12 +59,12 @@ class TeamsListScreen extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('New team'),
-        content: AppTextField(label: 'Name', controller: controller),
+        title: const Text('Novo time'),
+        content: AppTextField(label: 'Nome', controller: controller),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
           AppPrimaryButton(
-            label: 'Create',
+            label: 'Criar',
             onPressed: () {
               Navigator.pop(dialogContext);
               viewModel.createTeam(controller.text);

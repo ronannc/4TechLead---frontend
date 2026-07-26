@@ -13,7 +13,7 @@ sealed class ApiException implements Exception {
 }
 
 class NetworkException extends ApiException {
-  const NetworkException() : super('No internet connection. Please try again.');
+  const NetworkException() : super('Sem conexão com a internet. Tente novamente.');
 }
 
 /// Maps a Laravel 422 validation response (`{message, errors: {field: [msgs]}}`).
@@ -29,26 +29,26 @@ class ValidationException extends ApiException {
       }
     }
 
-    return 'Validation failed.';
+    return 'Falha na validação.';
   }
 }
 
 class NotFoundException extends ApiException {
-  const NotFoundException() : super('The requested resource was not found.');
+  const NotFoundException() : super('O recurso solicitado não foi encontrado.');
 }
 
 /// 401 — not authenticated (missing/expired/invalid token, or wrong login
 /// credentials). [AuthInterceptor] reacts to this by clearing the session.
 class UnauthenticatedException extends ApiException {
   const UnauthenticatedException([String? message])
-    : super(message ?? 'Your session has expired. Please sign in again.');
+    : super(message ?? 'Sua sessão expirou. Faça login novamente.');
 }
 
 /// 403 — authenticated, but not permitted. Just an in-place error; does not
 /// trigger a session sign-out.
 class ForbiddenException extends ApiException {
   const ForbiddenException([String? message])
-    : super(message ?? "You don't have permission to do that.");
+    : super(message ?? 'Você não tem permissão para fazer isso.');
 }
 
 class ServerException extends ApiException {
@@ -91,5 +91,5 @@ ApiException mapDioException(DioException exception) {
     return const NotFoundException();
   }
 
-  return ServerException(bodyMessage ?? 'Server error. Please try again later.');
+  return ServerException(bodyMessage ?? 'Erro no servidor. Tente novamente mais tarde.');
 }

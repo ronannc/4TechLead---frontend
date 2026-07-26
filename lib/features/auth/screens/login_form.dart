@@ -37,11 +37,11 @@ class _LoginFormState extends State<LoginForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Sign in', style: theme.textTheme.headlineMedium),
+        Text('Entrar', style: theme.textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.lg),
-        AppTextField(label: 'Email', controller: _emailController, keyboardType: TextInputType.emailAddress),
+        AppTextField(label: 'E-mail', controller: _emailController, keyboardType: TextInputType.emailAddress),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(label: 'Password', controller: _passwordController, obscureText: true),
+        AppTextField(label: 'Senha', controller: _passwordController, obscureText: true),
         const SizedBox(height: AppSpacing.md),
         Selector<LoginViewModel, ViewState>(
           selector: (_, vm) => vm.state,
@@ -55,12 +55,12 @@ class _LoginFormState extends State<LoginForm> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: Text(
-                      viewModel.errorMessage ?? 'Something went wrong.',
+                      viewModel.errorMessage ?? 'Algo deu errado.',
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
                   ),
                 AppPrimaryButton(
-                  label: 'Sign in',
+                  label: 'Entrar',
                   loading: state == ViewState.loading,
                   onPressed: () => viewModel.login(
                     email: _emailController.text,
@@ -74,7 +74,7 @@ class _LoginFormState extends State<LoginForm> {
         const SizedBox(height: AppSpacing.md),
         TextButton(
           onPressed: () => context.push(RoutePaths.register),
-          child: const Text("Don't have an account? Register"),
+          child: const Text('Não tem uma conta? Cadastre-se'),
         ),
       ],
     );

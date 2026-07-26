@@ -13,14 +13,14 @@ import '../responsive/adaptive_scaffold.dart';
 import 'route_paths.dart';
 
 final _navDestinations = [
-  const AppNavDestination(label: 'Home', icon: Icons.dashboard_outlined, path: RoutePaths.home),
-  const AppNavDestination(label: 'Teams', icon: Icons.groups_outlined, path: RoutePaths.teams),
+  const AppNavDestination(label: 'Início', icon: Icons.dashboard_outlined, path: RoutePaths.home),
+  const AppNavDestination(label: 'Times', icon: Icons.groups_outlined, path: RoutePaths.teams),
   const AppNavDestination(
-    label: 'Notifications',
+    label: 'Notificações',
     icon: Icons.notifications_none,
     path: RoutePaths.notifications,
   ),
-  const AppNavDestination(label: 'Profile', icon: Icons.person_outline, path: RoutePaths.profile),
+  const AppNavDestination(label: 'Perfil', icon: Icons.person_outline, path: RoutePaths.profile),
 ];
 
 /// Builds the app-wide go_router configuration. `authSession` drives the

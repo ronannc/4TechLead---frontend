@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../bootstrap.dart';
 import '../../../core/viewmodels/base_view_model.dart';
+import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
 import '../../teams/repositories/team_repository.dart';
@@ -21,7 +22,7 @@ class HomeScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => HomeViewModel(getIt<TeamRepository>())..load(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Home')),
+        appBar: const AppPageHeader(subtitle: 'Painel', title: '4TechLead'),
         body: Selector<HomeViewModel, ViewState>(
           selector: (_, vm) => vm.state,
           builder: (context, state, _) {
@@ -30,7 +31,7 @@ class HomeScreen extends StatelessWidget {
             return switch (state) {
               ViewState.idle || ViewState.loading => const LoadingView(),
               ViewState.error => ErrorView(
-                message: viewModel.errorMessage ?? 'Something went wrong.',
+                message: viewModel.errorMessage ?? 'Algo deu errado.',
                 onRetry: viewModel.load,
               ),
               ViewState.loaded => const HomeBody(),

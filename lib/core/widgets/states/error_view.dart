@@ -26,7 +26,7 @@ class ErrorView extends StatelessWidget {
             Text(message, style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: AppSpacing.md),
-              AppPrimaryButton(label: 'Retry', onPressed: onRetry),
+              AppPrimaryButton(label: 'Tentar novamente', onPressed: onRetry),
             ],
           ],
         ),

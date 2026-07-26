@@ -89,7 +89,7 @@ void main() {
       final result = mapDioException(exception);
 
       expect(result, isA<ServerException>());
-      expect(result.userMessage, 'Server error. Please try again later.');
+      expect(result.userMessage, 'Erro no servidor. Tente novamente mais tarde.');
     });
   });
 }

@@ -5,6 +5,7 @@ import '../../../bootstrap.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
+import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
 import '../../auth/repositories/auth_repository.dart';
@@ -20,7 +21,7 @@ class ProfileScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => ProfileViewModel(getIt<AuthRepository>())..load(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
+        appBar: const AppPageHeader(subtitle: 'Sua conta', title: 'Perfil'),
         body: Selector<ProfileViewModel, ViewState>(
           selector: (_, vm) => vm.state,
           builder: (context, state, _) {
@@ -29,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
             return switch (state) {
               ViewState.idle || ViewState.loading => const LoadingView(),
               ViewState.error => ErrorView(
-                message: viewModel.errorMessage ?? 'Something went wrong.',
+                message: viewModel.errorMessage ?? 'Algo deu errado.',
                 onRetry: viewModel.load,
               ),
               ViewState.loaded => _ProfileBody(viewModel: viewModel),
@@ -72,7 +73,7 @@ class _ProfileBody extends StatelessWidget {
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const Spacer(),
-          AppPrimaryButton(label: 'Sign out', onPressed: viewModel.signOut),
+          AppPrimaryButton(label: 'Sair', onPressed: viewModel.signOut),
         ],
       ),
     );

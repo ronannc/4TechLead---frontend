@@ -40,16 +40,16 @@ class _RegisterFormState extends State<RegisterForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Create your account', style: theme.textTheme.headlineMedium),
+        Text('Crie sua conta', style: theme.textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.lg),
-        AppTextField(label: 'Name', controller: _nameController),
+        AppTextField(label: 'Nome', controller: _nameController),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(label: 'Email', controller: _emailController, keyboardType: TextInputType.emailAddress),
+        AppTextField(label: 'E-mail', controller: _emailController, keyboardType: TextInputType.emailAddress),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(label: 'Password', controller: _passwordController, obscureText: true),
+        AppTextField(label: 'Senha', controller: _passwordController, obscureText: true),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
-          label: 'Confirm password',
+          label: 'Confirmar senha',
           controller: _passwordConfirmationController,
           obscureText: true,
         ),
@@ -66,12 +66,12 @@ class _RegisterFormState extends State<RegisterForm> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: Text(
-                      viewModel.errorMessage ?? 'Something went wrong.',
+                      viewModel.errorMessage ?? 'Algo deu errado.',
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
                   ),
                 AppPrimaryButton(
-                  label: 'Create account',
+                  label: 'Criar conta',
                   loading: state == ViewState.loading,
                   onPressed: () => viewModel.register(
                     name: _nameController.text,
@@ -87,7 +87,7 @@ class _RegisterFormState extends State<RegisterForm> {
         const SizedBox(height: AppSpacing.md),
         TextButton(
           onPressed: () => context.pop(),
-          child: const Text('Already have an account? Sign in'),
+          child: const Text('Já tem uma conta? Entrar'),
         ),
       ],
     );

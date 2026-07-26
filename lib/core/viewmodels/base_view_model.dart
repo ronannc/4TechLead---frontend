@@ -34,7 +34,7 @@ abstract class BaseViewModel extends ChangeNotifier {
       _errorMessage = e.userMessage;
       setState(ViewState.error);
     } catch (_) {
-      _errorMessage = 'Something went wrong. Please try again.';
+      _errorMessage = 'Algo deu errado. Tente novamente.';
       setState(ViewState.error);
     }
   }

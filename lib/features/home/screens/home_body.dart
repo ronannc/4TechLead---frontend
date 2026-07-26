@@ -20,7 +20,7 @@ class HomeBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Overview', style: theme.textTheme.titleMedium),
+          Text('Visão geral', style: theme.textTheme.titleMedium),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
@@ -30,22 +30,22 @@ class HomeBody extends StatelessWidget {
                   builder: (context, teamsCount, _) => AppSummaryCard(
                     icon: Icons.groups_outlined,
                     value: '$teamsCount',
-                    label: 'Teams',
+                    label: 'Times',
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Trends', style: theme.textTheme.titleMedium),
+          Text('Tendências', style: theme.textTheme.titleMedium),
           const SizedBox(height: AppSpacing.sm),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Center(
                 child: Text(
-                  'Historical trend data isn\'t tracked yet — this card will chart '
-                  'metrics like team growth once that data exists.',
+                  'Ainda não há dados históricos registrados — este card vai exibir '
+                  'métricas como o crescimento dos times assim que esses dados existirem.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

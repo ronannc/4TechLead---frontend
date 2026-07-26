@@ -29,7 +29,7 @@ class TeamDetailBody extends StatelessWidget {
             Text(team.name, style: theme.textTheme.headlineMedium),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Created at ${dateFormat.format(team.createdAt.toLocal())}',
+              'Criado em ${dateFormat.format(team.createdAt.toLocal())}',
               style: theme.textTheme.bodySmall,
             ),
           ],

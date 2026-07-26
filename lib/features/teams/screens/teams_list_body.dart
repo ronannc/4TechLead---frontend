@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/routing/route_paths.dart';
-import '../../../core/widgets/states/empty_view.dart';
 import '../../../core/widgets/tables/app_data_table.dart';
 import '../models/team.dart';
 import '../viewmodels/teams_list_view_model.dart';
@@ -18,20 +17,21 @@ class TeamsListBody extends StatelessWidget {
     return Selector<TeamsListViewModel, List<Team>>(
       selector: (_, vm) => vm.teams,
       builder: (context, teams, _) {
-        if (teams.isEmpty) {
-          return const EmptyView(message: 'No teams yet.');
-        }
+        final viewModel = context.read<TeamsListViewModel>();
 
         return AppDataTable<Team>(
           items: teams,
           columns: [
-            AppDataColumn(label: 'Name', cellBuilder: (team) => team.name),
+            AppDataColumn(label: 'Nome', cellBuilder: (team) => team.name),
             AppDataColumn(
-              label: 'Created at',
+              label: 'Criado em',
               cellBuilder: (team) => team.createdAt.toLocal().toString(),
             ),
           ],
           onRowTap: (team) => context.push(RoutePaths.teamDetailPath(team.id.toString())),
+          onSearchChanged: viewModel.search,
+          searchHint: 'Buscar times...',
+          emptyMessage: viewModel.hasTeams ? 'Nenhum resultado para a busca.' : 'Nenhum time ainda.',
         );
       },
     );
