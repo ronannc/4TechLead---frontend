@@ -13,8 +13,10 @@ desktop — all 6 platform folders are scaffolded.
 Packages: `go_router` (routing), `provider` (ViewModel exposure + granular rebuilds via
 `Consumer`/`Selector`), `get_it` (DI container for Services/Repositories only), `dio` (HTTP),
 `logger` (debug interceptor console output), `equatable` (value equality on Models), `intl`
-(date/number formatting), `google_fonts` (Inter, see "Design system" below), `mocktail` (dev, test
-mocking, no codegen).
+(date/number formatting), `google_fonts` (Inter, see "Design system" below), `audioplayers` +
+`wakelock_plus` (Daily's live-session gamification feedback + keep-awake, see "Navigation" below),
+`mocktail` (dev, test mocking, no codegen), `fake_async` (dev, deterministic `Timer` tests — see
+`DailySessionViewModel`'s tests).
 
 Deliberately **not** used: Riverpod (extra paradigm, not needed yet — see rationale in the plan
 history if revisited), `freezed`/`json_serializable`/`build_runner` (manual `fromJson`/`toJson` is
@@ -63,7 +65,8 @@ lib/
 │   ├── theme/                       # AppColors, AppTypography, AppRadius, AppSpacing, AppThemeExtension, AppTheme
 │   ├── responsive/                  # Breakpoints, AdaptiveScaffold
 │   ├── viewmodels/base_view_model.dart
-│   └── widgets/                     # AppPrimaryButton, AppTextField, AppDateField, AppDropdownField, AppDataTable, AppSummaryCard, Loading/Error/EmptyView
+│   ├── feedback/daily_cue_player.dart  # sound + haptics for Daily's live session, see "Navigation" below
+│   └── widgets/                     # AppPrimaryButton, AppTextField, AppDateField, AppDropdownField, AppDataTable, AppSummaryCard, AppKeyValueRow, Loading/Error/EmptyView
 └── features/
     ├── teams/                       # reference implementation — copy this shape for new features
     │   ├── models/team.dart
@@ -75,13 +78,22 @@ lib/
     ├── notifications/               # empty-state placeholder only, see "Navigation" below
     ├── profile/                     # viewmodels/profile_view_model.dart, screens/profile_screen.dart
     ├── auth/                        # login/register — see "Authentication" below
-    └── people/                      # nested under a team, not a top-level nav item — see "Navigation" below
-        ├── models/{person,contract_type,seniority_level}.dart
-        ├── repositories/person_repository.dart
-        ├── services/person_service.dart
-        ├── viewmodels/{people_list,person_form,person_detail}_view_model.dart
-        ├── screens/{person_form,person_detail}_screen.dart + person_form.dart + person_detail_body.dart
-        └── utils/birthday_util.dart     # daysUntilNextBirthday() — pure function, used by the Home birthday card
+    ├── people/                      # nested under a team, not a top-level nav item — see "Navigation" below
+    │   ├── models/{person,contract_type,seniority_level}.dart
+    │   ├── repositories/person_repository.dart
+    │   ├── services/person_service.dart
+    │   ├── viewmodels/{people_list,person_form,person_detail}_view_model.dart
+    │   ├── screens/{person_form,person_detail}_screen.dart + person_form.dart + person_detail_body.dart
+    │   └── utils/birthday_util.dart     # daysUntilNextBirthday() — pure function, used by the Home birthday card
+    └── daily/                       # live session is top-level "focus mode", history nested under Team — see "Navigation"
+        ├── models/{daily_meeting,daily_meeting_entry,daily_note_category,daily_session_phase,daily_cue,daily_turn_draft}.dart
+        ├── repositories/daily_meeting_repository.dart
+        ├── services/daily_meeting_service.dart
+        ├── viewmodels/{daily_session,daily_history,daily_meeting_detail,person_daily_stats}_view_model.dart
+        ├── screens/daily_session_screen.dart + {daily_config,daily_running,daily_review}_body.dart + daily_timer_ring.dart + daily_note_sheet.dart
+        ├── screens/daily_history_screen.dart + daily_history_body.dart, daily_meeting_detail_screen.dart + daily_meeting_detail_body.dart
+        ├── screens/person_daily_section.dart   # appended to PersonDetailBody
+        └── utils/{daily_time_limit,daily_stats}.dart   # pure functions — validation/formatting, client-side stats aggregation
 ```
 
 ## One class per file
@@ -182,6 +194,45 @@ show the soonest 5. It's one `Card` with a `ListTile` per person, not a `Card` p
 "lists aren't cards" rule is about `AppDataTable`-style lists, not this kind of small fixed summary
 widget, but per-item elevation is still avoided here for the same visual-noise reason.
 
+### Daily — the one top-level route outside the shell
+
+`features/daily/`'s live session (`DailySessionScreen`, `RoutePaths.dailySession`) is the **only**
+route in the app that's a top-level `GoRoute` sibling of the `ShellRoute` while still requiring
+authentication (same tier as `/login`/`/register`, but auth-gated like everything inside the shell) —
+a live Daily is "focus mode": the nav bar/rail must not stay reachable mid-session, since `context.go`
+from a stray nav tap isn't intercepted by `PopScope` and would silently destroy an unsaved, running
+meeting. `DailySessionScreen` guards exit itself instead (a leading close button + `PopScope`, with a
+confirmation dialog while `phase` is `running`/`reviewing`). History screens (`DailyHistoryScreen`,
+`DailyMeetingDetailScreen`) are the opposite — nested under Team exactly like `features/people/`,
+reached by push, inside the shell.
+
+`DailySessionViewModel`'s countdown timer doesn't use `runCatching` for its final save
+(`DailySessionViewModel.save()`): a network failure there must never swap the whole screen for an
+`ErrorView` (`runCatching`'s normal behavior), since that would erase the meeting the tech lead just
+ran turn-by-turn with nothing persisted server-side yet. It stays on the `reviewing` phase with an
+inline error + retry button instead, via its own `isSaving`/`saveErrorMessage` fields — this is the one
+ViewModel in the app that deliberately does NOT use the shared `runCatching` helper for a write
+operation; don't "fix" this to match the convention elsewhere.
+
+Live-session feedback (color/countdown ring is the primary channel; sound + haptics are reinforcement)
+goes through `core/feedback/daily_cue_player.dart` (`DailyCuePlayer`, `audioplayers` +
+`HapticFeedback`), a cross-cutting singleton registered in `bootstrap.dart` like `AuthSession`/
+`DioClient` — **consumed by `DailySessionScreen`, never injected into `DailySessionViewModel`**, so the
+ViewModel's timer logic stays testable (see `daily_session_view_model_test.dart`'s `fakeAsync` tests)
+without an audio plugin in the test environment. The 3 short WAV cues under `assets/sounds/` are
+generated by `tool/generate_daily_sounds.dart` (plain sine tones with a fade envelope) rather than
+sourced externally — rerun that script (`dart run tool/generate_daily_sounds.dart`) if the cues ever
+need to change; don't hand-edit the `.wav` files. `wakelock_plus` keeps the screen on only while
+`phase == running`.
+
+Both team-level (`DailyHistoryViewModel`) and person-level (`PersonDailyStatsViewModel`) stats are
+computed client-side from `GET /daily-meeting-entries` listings (mirrors the birthday card's
+approach) — but unlike birthdays (bounded by headcount), daily entries accumulate indefinitely, so
+`DailyMeetingRepository.getAllEntries()` follows the response's `meta.last_page` across multiple pages
+(capped at 10 pages / ~1000 entries) instead of assuming a single `per_page: 100` page is the whole
+history. If stats ever look truncated for a long-lived team, this cap — not the aggregation math — is
+the first thing to check.
+
 ### Page header
 
 Every top-level (shell) screen uses `core/widgets/navigation/app_page_header.dart`
@@ -221,7 +272,11 @@ this codebase (see `AppDateField`, `team_detail_body.dart`, `person_detail_body.
 Buttons, inputs, and tables/lists live in `core/widgets/` and are used by every screen that needs
 them — never recreate a bespoke button/text field/table per screen. `AppDataTable<T>` in particular
 is itself responsive (`ListView` cards on mobile widths, `DataTable` on desktop widths, via
-`Breakpoints`), so a Screen never has to make that layout decision itself.
+`Breakpoints`), so a Screen never has to make that layout decision itself. `AppKeyValueRow`
+(`core/widgets/data/`) is the label/value stacked row used for read-only detail fields — extracted
+from `PersonDetailBody`'s original private `_field` helper once Daily's history/stats sections needed
+the same shape; reach for it instead of a bespoke `Column`+`Text` pair whenever a screen just needs to
+show "label → value".
 
 ## Responsive / desktop
 
