@@ -18,7 +18,8 @@ class PersonFormScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PersonFormViewModel(getIt<PersonRepository>(), int.parse(teamId)),
+      create: (_) =>
+          PersonFormViewModel(getIt<PersonRepository>(), int.parse(teamId)),
       child: Scaffold(
         appBar: const AppPageHeader(
           subtitle: 'Novo integrante',

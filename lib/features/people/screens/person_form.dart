@@ -22,6 +22,8 @@ class PersonForm extends StatefulWidget {
 }
 
 class _PersonFormState extends State<PersonForm> {
+  static final RegExp _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -32,6 +34,15 @@ class _PersonFormState extends State<PersonForm> {
   ContractType? _contractType;
   SeniorityLevel? _seniority;
 
+  String? _nameError;
+  String? _birthDateError;
+  String? _positionError;
+  String? _contractTypeError;
+  String? _admissionDateError;
+  String? _seniorityError;
+  String? _emailError;
+  String? _phoneError;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -41,26 +52,131 @@ class _PersonFormState extends State<PersonForm> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  DateTime get _today {
+    final now = DateTime.now();
+
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  bool _validateForm() {
+    final name = _nameController.text.trim();
+    final position = _positionController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final birthDate = _birthDate;
     final admissionDate = _admissionDate;
-    final contractType = _contractType;
-    final seniority = _seniority;
+    final today = _today;
 
-    if (birthDate == null || admissionDate == null || contractType == null || seniority == null) {
+    String? nameError;
+    String? birthDateError;
+    String? positionError;
+    String? contractTypeError;
+    String? admissionDateError;
+    String? seniorityError;
+    String? emailError;
+    String? phoneError;
+
+    if (name.isEmpty) {
+      nameError = 'Informe o nome.';
+    } else if (name.length > 255) {
+      nameError = 'O nome deve ter no máximo 255 caracteres.';
+    }
+
+    if (birthDate == null) {
+      birthDateError = 'Informe a data de nascimento.';
+    } else if (!_dateOnly(birthDate).isBefore(today)) {
+      birthDateError = 'A data de nascimento deve ser anterior a hoje.';
+    }
+
+    if (position.isEmpty) {
+      positionError = 'Informe o cargo.';
+    } else if (position.length > 255) {
+      positionError = 'O cargo deve ter no máximo 255 caracteres.';
+    }
+
+    if (_contractType == null) {
+      contractTypeError = 'Selecione o tipo de contrato.';
+    }
+
+    if (admissionDate == null) {
+      admissionDateError = 'Informe a data de admissão.';
+    } else {
+      final normalizedAdmission = _dateOnly(admissionDate);
+      if (normalizedAdmission.isAfter(today)) {
+        admissionDateError = 'A data de admissão deve ser hoje ou anterior.';
+      } else if (birthDate != null &&
+          !normalizedAdmission.isAfter(_dateOnly(birthDate))) {
+        admissionDateError =
+            'A admissão deve ser posterior à data de nascimento.';
+      }
+    }
+
+    if (_seniority == null) {
+      seniorityError = 'Selecione a senioridade.';
+    }
+
+    if (email.isNotEmpty) {
+      if (email.length > 255) {
+        emailError = 'O e-mail deve ter no máximo 255 caracteres.';
+      } else if (!_emailRegex.hasMatch(email)) {
+        emailError = 'Informe um e-mail válido.';
+      }
+    }
+
+    if (phone.isNotEmpty && phone.length > 30) {
+      phoneError = 'O telefone deve ter no máximo 30 caracteres.';
+    }
+
+    setState(() {
+      _nameError = nameError;
+      _birthDateError = birthDateError;
+      _positionError = positionError;
+      _contractTypeError = contractTypeError;
+      _admissionDateError = admissionDateError;
+      _seniorityError = seniorityError;
+      _emailError = emailError;
+      _phoneError = phoneError;
+    });
+
+    return [
+      nameError,
+      birthDateError,
+      positionError,
+      contractTypeError,
+      admissionDateError,
+      seniorityError,
+      emailError,
+      phoneError,
+    ].every((error) => error == null);
+  }
+
+  Future<void> _submit() async {
+    if (!_validateForm()) {
       return;
     }
 
+    final birthDate = _birthDate!;
+    final admissionDate = _admissionDate!;
+    final contractType = _contractType!;
+    final seniority = _seniority!;
+    final name = _nameController.text.trim();
+    final position = _positionController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+
     final viewModel = context.read<PersonFormViewModel>();
     await viewModel.createPerson(
-      name: _nameController.text,
+      name: name,
       birthDate: birthDate,
-      position: _positionController.text,
+      position: position,
       contractType: contractType,
       admissionDate: admissionDate,
       seniority: seniority,
-      email: _emailController.text.isEmpty ? null : _emailController.text,
-      phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+      email: email.isEmpty ? null : email,
+      phone: phone.isEmpty ? null : phone,
     );
 
     if (viewModel.state == ViewState.loaded && mounted) {
@@ -76,28 +192,62 @@ class _PersonFormState extends State<PersonForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppTextField(label: 'Nome', controller: _nameController),
+          AppTextField(
+            label: 'Nome',
+            controller: _nameController,
+            errorText: _nameError,
+            onChanged: (_) {
+              if (_nameError != null) {
+                setState(() => _nameError = null);
+              }
+            },
+          ),
           const SizedBox(height: AppSpacing.md),
           AppTextField(
             label: 'E-mail',
             controller: _emailController,
+            errorText: _emailError,
             keyboardType: TextInputType.emailAddress,
+            onChanged: (_) {
+              if (_emailError != null) {
+                setState(() => _emailError = null);
+              }
+            },
           ),
           const SizedBox(height: AppSpacing.md),
           AppTextField(
             label: 'Telefone',
             controller: _phoneController,
+            errorText: _phoneError,
             keyboardType: TextInputType.phone,
+            onChanged: (_) {
+              if (_phoneError != null) {
+                setState(() => _phoneError = null);
+              }
+            },
           ),
           const SizedBox(height: AppSpacing.md),
-          AppTextField(label: 'Cargo', controller: _positionController),
+          AppTextField(
+            label: 'Cargo',
+            controller: _positionController,
+            errorText: _positionError,
+            onChanged: (_) {
+              if (_positionError != null) {
+                setState(() => _positionError = null);
+              }
+            },
+          ),
           const SizedBox(height: AppSpacing.md),
           AppDropdownField<ContractType>(
             label: 'Tipo de contrato',
             items: ContractType.values,
             labelBuilder: (type) => type.label,
             value: _contractType,
-            onChanged: (value) => setState(() => _contractType = value),
+            errorText: _contractTypeError,
+            onChanged: (value) => setState(() {
+              _contractType = value;
+              _contractTypeError = null;
+            }),
           ),
           const SizedBox(height: AppSpacing.md),
           AppDropdownField<SeniorityLevel>(
@@ -105,19 +255,35 @@ class _PersonFormState extends State<PersonForm> {
             items: SeniorityLevel.values,
             labelBuilder: (level) => level.label,
             value: _seniority,
-            onChanged: (value) => setState(() => _seniority = value),
+            errorText: _seniorityError,
+            onChanged: (value) => setState(() {
+              _seniority = value;
+              _seniorityError = null;
+            }),
           ),
           const SizedBox(height: AppSpacing.md),
           AppDateField(
             label: 'Data de nascimento',
             value: _birthDate,
-            onChanged: (value) => setState(() => _birthDate = value),
+            errorText: _birthDateError,
+            lastDate: _today.subtract(const Duration(days: 1)),
+            onChanged: (value) => setState(() {
+              _birthDate = value;
+              _birthDateError = null;
+              if (_admissionDateError != null) {
+                _admissionDateError = null;
+              }
+            }),
           ),
           const SizedBox(height: AppSpacing.md),
           AppDateField(
             label: 'Data de admissão',
             value: _admissionDate,
-            onChanged: (value) => setState(() => _admissionDate = value),
+            errorText: _admissionDateError,
+            onChanged: (value) => setState(() {
+              _admissionDate = value;
+              _admissionDateError = null;
+            }),
           ),
           const SizedBox(height: AppSpacing.lg),
           Selector<PersonFormViewModel, ViewState>(
