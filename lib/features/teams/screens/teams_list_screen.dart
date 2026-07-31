@@ -27,7 +27,10 @@ class TeamsListScreen extends StatelessWidget {
       // the FAB's onPressed) would fail with a "could not find provider" error.
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: const AppPageHeader(subtitle: 'Gestão de equipes', title: 'Times'),
+          appBar: const AppPageHeader(
+            subtitle: 'Gestão de equipes',
+            title: 'Times',
+          ),
           body: Selector<TeamsListViewModel, ViewState>(
             selector: (_, vm) => vm.state,
             builder: (context, state, _) {
@@ -62,7 +65,10 @@ class TeamsListScreen extends StatelessWidget {
         title: const Text('Novo time'),
         content: AppTextField(label: 'Nome', controller: controller),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
           AppPrimaryButton(
             label: 'Criar',
             onPressed: () {

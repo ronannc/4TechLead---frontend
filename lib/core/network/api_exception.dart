@@ -13,7 +13,8 @@ sealed class ApiException implements Exception {
 }
 
 class NetworkException extends ApiException {
-  const NetworkException() : super('Sem conexão com a internet. Tente novamente.');
+  const NetworkException()
+    : super('Sem conexão com a internet. Tente novamente.');
 }
 
 /// Maps a Laravel 422 validation response (`{message, errors: {field: [msgs]}}`).
@@ -77,7 +78,9 @@ ApiException mapDioException(DioException exception) {
     return ValidationException(errors);
   }
 
-  final bodyMessage = (data is Map && data['message'] is String) ? data['message'] as String : null;
+  final bodyMessage = (data is Map && data['message'] is String)
+      ? data['message'] as String
+      : null;
 
   if (statusCode == 401) {
     return UnauthenticatedException(bodyMessage);
@@ -91,5 +94,7 @@ ApiException mapDioException(DioException exception) {
     return const NotFoundException();
   }
 
-  return ServerException(bodyMessage ?? 'Erro no servidor. Tente novamente mais tarde.');
+  return ServerException(
+    bodyMessage ?? 'Erro no servidor. Tente novamente mais tarde.',
+  );
 }

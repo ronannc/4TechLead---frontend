@@ -12,7 +12,9 @@ class TeamRepository {
     final json = await _service.index(page: page);
     final data = json['data'] as List<dynamic>;
 
-    return [for (final item in data) Team.fromJson(item as Map<String, dynamic>)];
+    return [
+      for (final item in data) Team.fromJson(item as Map<String, dynamic>),
+    ];
   }
 
   Future<Team> getTeam(int id) async {

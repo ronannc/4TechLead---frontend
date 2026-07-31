@@ -23,7 +23,11 @@ class ErrorView extends StatelessWidget {
           children: [
             Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
             const SizedBox(height: AppSpacing.md),
-            Text(message, style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
+            Text(
+              message,
+              style: theme.textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
             if (onRetry != null) ...[
               const SizedBox(height: AppSpacing.md),
               AppPrimaryButton(label: 'Tentar novamente', onPressed: onRetry),

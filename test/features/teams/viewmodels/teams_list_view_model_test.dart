@@ -24,23 +24,29 @@ void main() {
     viewModel = TeamsListViewModel(repository);
   });
 
-  test('load() sets state to loaded and exposes the teams on success', () async {
-    when(() => repository.getTeams()).thenAnswer((_) async => [team]);
+  test(
+    'load() sets state to loaded and exposes the teams on success',
+    () async {
+      when(() => repository.getTeams()).thenAnswer((_) async => [team]);
 
-    await viewModel.load();
+      await viewModel.load();
 
-    expect(viewModel.state, ViewState.loaded);
-    expect(viewModel.teams, [team]);
-  });
+      expect(viewModel.state, ViewState.loaded);
+      expect(viewModel.teams, [team]);
+    },
+  );
 
-  test('load() sets state to error with the repository error message on failure', () async {
-    when(() => repository.getTeams()).thenThrow(const NotFoundException());
+  test(
+    'load() sets state to error with the repository error message on failure',
+    () async {
+      when(() => repository.getTeams()).thenThrow(const NotFoundException());
 
-    await viewModel.load();
+      await viewModel.load();
 
-    expect(viewModel.state, ViewState.error);
-    expect(viewModel.errorMessage, const NotFoundException().userMessage);
-  });
+      expect(viewModel.state, ViewState.error);
+      expect(viewModel.errorMessage, const NotFoundException().userMessage);
+    },
+  );
 
   test('createTeam() prepends the new team to the existing list', () async {
     when(() => repository.getTeams()).thenAnswer((_) async => [team]);
@@ -52,7 +58,9 @@ void main() {
       createdAt: DateTime.utc(2026),
       updatedAt: DateTime.utc(2026),
     );
-    when(() => repository.createTeam(name: 'Sales')).thenAnswer((_) async => newTeam);
+    when(
+      () => repository.createTeam(name: 'Sales'),
+    ).thenAnswer((_) async => newTeam);
 
     await viewModel.createTeam('Sales');
 
@@ -60,32 +68,38 @@ void main() {
     expect(viewModel.teams, [newTeam, team]);
   });
 
-  test('search() filters the exposed teams by a case-insensitive name match', () async {
-    final other = Team(
-      id: 2,
-      name: 'Sales',
-      createdAt: DateTime.utc(2026),
-      updatedAt: DateTime.utc(2026),
-    );
-    when(() => repository.getTeams()).thenAnswer((_) async => [team, other]);
-    await viewModel.load();
+  test(
+    'search() filters the exposed teams by a case-insensitive name match',
+    () async {
+      final other = Team(
+        id: 2,
+        name: 'Sales',
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      );
+      when(() => repository.getTeams()).thenAnswer((_) async => [team, other]);
+      await viewModel.load();
 
-    viewModel.search('eng');
+      viewModel.search('eng');
 
-    expect(viewModel.teams, [team]);
+      expect(viewModel.teams, [team]);
 
-    viewModel.search('');
+      viewModel.search('');
 
-    expect(viewModel.teams, [team, other]);
-  });
+      expect(viewModel.teams, [team, other]);
+    },
+  );
 
-  test('hasTeams reflects the unfiltered list, not the search result', () async {
-    when(() => repository.getTeams()).thenAnswer((_) async => [team]);
-    await viewModel.load();
+  test(
+    'hasTeams reflects the unfiltered list, not the search result',
+    () async {
+      when(() => repository.getTeams()).thenAnswer((_) async => [team]);
+      await viewModel.load();
 
-    viewModel.search('no match');
+      viewModel.search('no match');
 
-    expect(viewModel.teams, isEmpty);
-    expect(viewModel.hasTeams, isTrue);
-  });
+      expect(viewModel.teams, isEmpty);
+      expect(viewModel.hasTeams, isTrue);
+    },
+  );
 }

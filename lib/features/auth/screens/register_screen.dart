@@ -20,7 +20,10 @@ class RegisterScreen extends StatelessWidget {
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: const Padding(padding: EdgeInsets.all(AppSpacing.lg), child: RegisterForm()),
+            child: const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: RegisterForm(),
+            ),
           ),
         ),
       ),

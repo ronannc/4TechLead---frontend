@@ -2,7 +2,12 @@ import 'package:equatable/equatable.dart';
 
 /// Mirrors the backend's `TeamResource` (`id, name, created_at, updated_at`).
 class Team extends Equatable {
-  const Team({required this.id, required this.name, required this.createdAt, required this.updatedAt});
+  const Team({
+    required this.id,
+    required this.name,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
   final int id;
   final String name;

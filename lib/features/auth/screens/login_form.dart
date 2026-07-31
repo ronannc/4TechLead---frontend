@@ -39,9 +39,17 @@ class _LoginFormState extends State<LoginForm> {
       children: [
         Text('Entrar', style: theme.textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.lg),
-        AppTextField(label: 'E-mail', controller: _emailController, keyboardType: TextInputType.emailAddress),
+        AppTextField(
+          label: 'E-mail',
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+        ),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(label: 'Senha', controller: _passwordController, obscureText: true),
+        AppTextField(
+          label: 'Senha',
+          controller: _passwordController,
+          obscureText: true,
+        ),
         const SizedBox(height: AppSpacing.md),
         Selector<LoginViewModel, ViewState>(
           selector: (_, vm) => vm.state,

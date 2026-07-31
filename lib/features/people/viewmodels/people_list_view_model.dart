@@ -23,7 +23,9 @@ class PeopleListViewModel extends BaseViewModel {
 
     final lowerQuery = _query.toLowerCase();
 
-    return List.unmodifiable(_people.where((person) => person.name.toLowerCase().contains(lowerQuery)));
+    return List.unmodifiable(
+      _people.where((person) => person.name.toLowerCase().contains(lowerQuery)),
+    );
   }
 
   Future<void> load() => runCatching(() async {

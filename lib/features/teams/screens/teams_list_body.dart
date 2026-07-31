@@ -28,10 +28,13 @@ class TeamsListBody extends StatelessWidget {
               cellBuilder: (team) => team.createdAt.toLocal().toString(),
             ),
           ],
-          onRowTap: (team) => context.push(RoutePaths.teamDetailPath(team.id.toString())),
+          onRowTap: (team) =>
+              context.push(RoutePaths.teamDetailPath(team.id.toString())),
           onSearchChanged: viewModel.search,
           searchHint: 'Buscar times...',
-          emptyMessage: viewModel.hasTeams ? 'Nenhum resultado para a busca.' : 'Nenhum time ainda.',
+          emptyMessage: viewModel.hasTeams
+              ? 'Nenhum resultado para a busca.'
+              : 'Nenhum time ainda.',
         );
       },
     );

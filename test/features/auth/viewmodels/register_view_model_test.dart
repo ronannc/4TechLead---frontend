@@ -26,8 +26,12 @@ void main() {
         passwordConfirmation: 'password123',
       ),
     ).thenAnswer(
-      (_) async =>
-          AppUser(id: 1, name: 'Ada Lovelace', email: 'ada@example.com', createdAt: DateTime.utc(2026)),
+      (_) async => AppUser(
+        id: 1,
+        name: 'Ada Lovelace',
+        email: 'ada@example.com',
+        createdAt: DateTime.utc(2026),
+      ),
     );
 
     await viewModel.register(
@@ -40,28 +44,31 @@ void main() {
     expect(viewModel.state, ViewState.loaded);
   });
 
-  test('register() sets state to error with a validation message on failure', () async {
-    when(
-      () => repository.register(
+  test(
+    'register() sets state to error with a validation message on failure',
+    () async {
+      when(
+        () => repository.register(
+          name: 'Ada Lovelace',
+          email: 'taken@example.com',
+          password: 'password123',
+          passwordConfirmation: 'password123',
+        ),
+      ).thenThrow(
+        ValidationException({
+          'email': ['The email has already been taken.'],
+        }),
+      );
+
+      await viewModel.register(
         name: 'Ada Lovelace',
         email: 'taken@example.com',
         password: 'password123',
         passwordConfirmation: 'password123',
-      ),
-    ).thenThrow(
-      ValidationException({
-        'email': ['The email has already been taken.'],
-      }),
-    );
+      );
 
-    await viewModel.register(
-      name: 'Ada Lovelace',
-      email: 'taken@example.com',
-      password: 'password123',
-      passwordConfirmation: 'password123',
-    );
-
-    expect(viewModel.state, ViewState.error);
-    expect(viewModel.errorMessage, 'The email has already been taken.');
-  });
+      expect(viewModel.state, ViewState.error);
+      expect(viewModel.errorMessage, 'The email has already been taken.');
+    },
+  );
 }

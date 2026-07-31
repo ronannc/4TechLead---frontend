@@ -65,7 +65,9 @@ void main() {
 
   group('getPerson', () {
     test('maps a single {data} envelope into a Person', () async {
-      when(() => service.show(1)).thenAnswer((_) async => {'data': _personJson()});
+      when(
+        () => service.show(1),
+      ).thenAnswer((_) async => {'data': _personJson()});
 
       final person = await repository.getPerson(1);
 

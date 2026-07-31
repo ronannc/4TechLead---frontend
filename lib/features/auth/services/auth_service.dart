@@ -33,7 +33,10 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> login({required String email, required String password}) async {
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/auth/login',

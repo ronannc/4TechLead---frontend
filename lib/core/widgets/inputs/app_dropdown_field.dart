@@ -27,7 +27,8 @@ class AppDropdownField<T> extends StatelessWidget {
       initialValue: value,
       decoration: InputDecoration(labelText: label, errorText: errorText),
       items: [
-        for (final item in items) DropdownMenuItem(value: item, child: Text(labelBuilder(item))),
+        for (final item in items)
+          DropdownMenuItem(value: item, child: Text(labelBuilder(item))),
       ],
       onChanged: onChanged,
     );

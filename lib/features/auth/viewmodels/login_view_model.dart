@@ -6,7 +6,8 @@ class LoginViewModel extends BaseViewModel {
 
   final AuthRepository _repository;
 
-  Future<void> login({required String email, required String password}) => runCatching(() async {
-    await _repository.login(email: email, password: password);
-  });
+  Future<void> login({required String email, required String password}) =>
+      runCatching(() async {
+        await _repository.login(email: email, password: password);
+      });
 }

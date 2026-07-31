@@ -20,13 +20,19 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('shows a spinner and disables tapping while loading', (tester) async {
+  testWidgets('shows a spinner and disables tapping while loading', (
+    tester,
+  ) async {
     var tapped = false;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: AppPrimaryButton(label: 'Save', loading: true, onPressed: () => tapped = true),
+          body: AppPrimaryButton(
+            label: 'Save',
+            loading: true,
+            onPressed: () => tapped = true,
+          ),
         ),
       ),
     );

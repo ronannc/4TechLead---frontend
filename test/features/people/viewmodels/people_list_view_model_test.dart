@@ -35,49 +35,65 @@ void main() {
     viewModel = PeopleListViewModel(repository, 1);
   });
 
-  test('load() sets state to loaded and exposes the people on success', () async {
-    when(
-      () => repository.getPeople(teamId: 1, perPage: 100),
-    ).thenAnswer((_) async => [_person()]);
+  test(
+    'load() sets state to loaded and exposes the people on success',
+    () async {
+      when(
+        () => repository.getPeople(teamId: 1, perPage: 100),
+      ).thenAnswer((_) async => [_person()]);
 
-    await viewModel.load();
+      await viewModel.load();
 
-    expect(viewModel.state, ViewState.loaded);
-    expect(viewModel.people, [_person()]);
-  });
+      expect(viewModel.state, ViewState.loaded);
+      expect(viewModel.people, [_person()]);
+    },
+  );
 
-  test('load() sets state to error with the repository error message on failure', () async {
-    when(() => repository.getPeople(teamId: 1, perPage: 100)).thenThrow(const NotFoundException());
+  test(
+    'load() sets state to error with the repository error message on failure',
+    () async {
+      when(
+        () => repository.getPeople(teamId: 1, perPage: 100),
+      ).thenThrow(const NotFoundException());
 
-    await viewModel.load();
+      await viewModel.load();
 
-    expect(viewModel.state, ViewState.error);
-    expect(viewModel.errorMessage, const NotFoundException().userMessage);
-  });
+      expect(viewModel.state, ViewState.error);
+      expect(viewModel.errorMessage, const NotFoundException().userMessage);
+    },
+  );
 
-  test('search() filters the exposed people by a case-insensitive name match', () async {
-    final other = _person(id: 2, name: 'Grace Hopper');
-    when(
-      () => repository.getPeople(teamId: 1, perPage: 100),
-    ).thenAnswer((_) async => [_person(), other]);
-    await viewModel.load();
+  test(
+    'search() filters the exposed people by a case-insensitive name match',
+    () async {
+      final other = _person(id: 2, name: 'Grace Hopper');
+      when(
+        () => repository.getPeople(teamId: 1, perPage: 100),
+      ).thenAnswer((_) async => [_person(), other]);
+      await viewModel.load();
 
-    viewModel.search('ada');
+      viewModel.search('ada');
 
-    expect(viewModel.people, [_person()]);
+      expect(viewModel.people, [_person()]);
 
-    viewModel.search('');
+      viewModel.search('');
 
-    expect(viewModel.people, [_person(), other]);
-  });
+      expect(viewModel.people, [_person(), other]);
+    },
+  );
 
-  test('hasPeople reflects the unfiltered list, not the search result', () async {
-    when(() => repository.getPeople(teamId: 1, perPage: 100)).thenAnswer((_) async => [_person()]);
-    await viewModel.load();
+  test(
+    'hasPeople reflects the unfiltered list, not the search result',
+    () async {
+      when(
+        () => repository.getPeople(teamId: 1, perPage: 100),
+      ).thenAnswer((_) async => [_person()]);
+      await viewModel.load();
 
-    viewModel.search('no match');
+      viewModel.search('no match');
 
-    expect(viewModel.people, isEmpty);
-    expect(viewModel.hasPeople, isTrue);
-  });
+      expect(viewModel.people, isEmpty);
+      expect(viewModel.hasPeople, isTrue);
+    },
+  );
 }

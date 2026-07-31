@@ -15,7 +15,12 @@ class PersonService {
 
   static final _dateFormat = DateFormat('yyyy-MM-dd');
 
-  Future<Map<String, dynamic>> index({int page = 1, int? teamId, String? search, int? perPage}) async {
+  Future<Map<String, dynamic>> index({
+    int page = 1,
+    int? teamId,
+    String? search,
+    int? perPage,
+  }) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/people',
@@ -35,7 +40,9 @@ class PersonService {
 
   Future<Map<String, dynamic>> show(int id) async {
     try {
-      final response = await _client.dio.get<Map<String, dynamic>>('/people/$id');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/people/$id',
+      );
 
       return response.data!;
     } on DioException catch (e) {

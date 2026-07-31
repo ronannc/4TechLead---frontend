@@ -25,11 +25,18 @@ class TeamMembersSection extends StatelessWidget {
           items: people,
           columns: [
             AppDataColumn(label: 'Nome', cellBuilder: (person) => person.name),
-            AppDataColumn(label: 'Cargo', cellBuilder: (person) => person.position),
-            AppDataColumn(label: 'Contrato', cellBuilder: (person) => person.contractType.label),
+            AppDataColumn(
+              label: 'Cargo',
+              cellBuilder: (person) => person.position,
+            ),
+            AppDataColumn(
+              label: 'Contrato',
+              cellBuilder: (person) => person.contractType.label,
+            ),
           ],
-          onRowTap: (person) =>
-              context.push(RoutePaths.personDetailPath(teamId, person.id.toString())),
+          onRowTap: (person) => context.push(
+            RoutePaths.personDetailPath(teamId, person.id.toString()),
+          ),
           onSearchChanged: viewModel.search,
           searchHint: 'Buscar pessoas...',
           emptyMessage: viewModel.hasPeople

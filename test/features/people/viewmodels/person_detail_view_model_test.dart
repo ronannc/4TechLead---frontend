@@ -33,21 +33,27 @@ void main() {
     viewModel = PersonDetailViewModel(repository, 1);
   });
 
-  test('load() sets state to loaded and exposes the person on success', () async {
-    when(() => repository.getPerson(1)).thenAnswer((_) async => _person);
+  test(
+    'load() sets state to loaded and exposes the person on success',
+    () async {
+      when(() => repository.getPerson(1)).thenAnswer((_) async => _person);
 
-    await viewModel.load();
+      await viewModel.load();
 
-    expect(viewModel.state, ViewState.loaded);
-    expect(viewModel.person, _person);
-  });
+      expect(viewModel.state, ViewState.loaded);
+      expect(viewModel.person, _person);
+    },
+  );
 
-  test('load() sets state to error with the repository error message on failure', () async {
-    when(() => repository.getPerson(1)).thenThrow(const NotFoundException());
+  test(
+    'load() sets state to error with the repository error message on failure',
+    () async {
+      when(() => repository.getPerson(1)).thenThrow(const NotFoundException());
 
-    await viewModel.load();
+      await viewModel.load();
 
-    expect(viewModel.state, ViewState.error);
-    expect(viewModel.errorMessage, const NotFoundException().userMessage);
-  });
+      expect(viewModel.state, ViewState.error);
+      expect(viewModel.errorMessage, const NotFoundException().userMessage);
+    },
+  );
 }

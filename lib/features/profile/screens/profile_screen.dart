@@ -61,8 +61,12 @@ class _ProfileBody extends StatelessWidget {
             radius: 32,
             backgroundColor: theme.colorScheme.primary,
             child: Text(
-              (user != null && user.name.isNotEmpty) ? user.name[0].toUpperCase() : '?',
-              style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onPrimary),
+              (user != null && user.name.isNotEmpty)
+                  ? user.name[0].toUpperCase()
+                  : '?',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onPrimary,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -70,7 +74,9 @@ class _ProfileBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             user?.email ?? '',
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const Spacer(),
           AppPrimaryButton(label: 'Sair', onPressed: viewModel.signOut),

@@ -44,9 +44,17 @@ class _RegisterFormState extends State<RegisterForm> {
         const SizedBox(height: AppSpacing.lg),
         AppTextField(label: 'Nome', controller: _nameController),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(label: 'E-mail', controller: _emailController, keyboardType: TextInputType.emailAddress),
+        AppTextField(
+          label: 'E-mail',
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+        ),
         const SizedBox(height: AppSpacing.md),
-        AppTextField(label: 'Senha', controller: _passwordController, obscureText: true),
+        AppTextField(
+          label: 'Senha',
+          controller: _passwordController,
+          obscureText: true,
+        ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
           label: 'Confirmar senha',

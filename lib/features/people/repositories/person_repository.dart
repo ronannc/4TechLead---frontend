@@ -10,11 +10,23 @@ class PersonRepository {
 
   final PersonService _service;
 
-  Future<List<Person>> getPeople({int page = 1, int? teamId, String? search, int? perPage}) async {
-    final json = await _service.index(page: page, teamId: teamId, search: search, perPage: perPage);
+  Future<List<Person>> getPeople({
+    int page = 1,
+    int? teamId,
+    String? search,
+    int? perPage,
+  }) async {
+    final json = await _service.index(
+      page: page,
+      teamId: teamId,
+      search: search,
+      perPage: perPage,
+    );
     final data = json['data'] as List<dynamic>;
 
-    return [for (final item in data) Person.fromJson(item as Map<String, dynamic>)];
+    return [
+      for (final item in data) Person.fromJson(item as Map<String, dynamic>),
+    ];
   }
 
   Future<Person> getPerson(int id) async {

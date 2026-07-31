@@ -20,7 +20,9 @@ class TeamsListViewModel extends BaseViewModel {
 
     final lowerQuery = _query.toLowerCase();
 
-    return List.unmodifiable(_teams.where((team) => team.name.toLowerCase().contains(lowerQuery)));
+    return List.unmodifiable(
+      _teams.where((team) => team.name.toLowerCase().contains(lowerQuery)),
+    );
   }
 
   Future<void> load() => runCatching(() async {

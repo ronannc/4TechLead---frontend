@@ -5,7 +5,11 @@ import 'breakpoints.dart';
 /// A navigation destination shared between the mobile bottom nav and the
 /// desktop side rail, so [AdaptiveScaffold] only needs one list of items.
 class AppNavDestination {
-  const AppNavDestination({required this.label, required this.icon, required this.path});
+  const AppNavDestination({
+    required this.label,
+    required this.icon,
+    required this.path,
+  });
 
   final String label;
   final IconData icon;
@@ -73,7 +77,10 @@ class AdaptiveScaffold extends StatelessWidget {
               onDestinationSelected: onDestinationSelected,
               destinations: [
                 for (final destination in destinations)
-                  NavigationDestination(icon: Icon(destination.icon), label: destination.label),
+                  NavigationDestination(
+                    icon: Icon(destination.icon),
+                    label: destination.label,
+                  ),
               ],
             ),
     );

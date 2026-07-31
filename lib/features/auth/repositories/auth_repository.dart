@@ -27,7 +27,10 @@ class AuthRepository {
     return _signInFromResponse(json);
   }
 
-  Future<AppUser> login({required String email, required String password}) async {
+  Future<AppUser> login({
+    required String email,
+    required String password,
+  }) async {
     final json = await _service.login(email: email, password: password);
 
     return _signInFromResponse(json);

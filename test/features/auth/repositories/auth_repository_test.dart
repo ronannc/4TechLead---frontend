@@ -62,7 +62,10 @@ void main() {
       () => service.login(email: 'ada@example.com', password: 'password123'),
     ).thenAnswer((_) async => userJson);
 
-    final user = await repository.login(email: 'ada@example.com', password: 'password123');
+    final user = await repository.login(
+      email: 'ada@example.com',
+      password: 'password123',
+    );
 
     expect(user.id, 1);
     expect(authSession.isAuthenticated, isTrue);

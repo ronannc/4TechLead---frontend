@@ -25,7 +25,9 @@ class TeamService {
 
   Future<Map<String, dynamic>> show(int id) async {
     try {
-      final response = await _client.dio.get<Map<String, dynamic>>('/teams/$id');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/teams/$id',
+      );
 
       return response.data!;
     } on DioException catch (e) {

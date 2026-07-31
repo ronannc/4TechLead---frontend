@@ -9,7 +9,12 @@ import '../../routing/route_paths.dart';
 /// bespoke `AppBar` per screen; add [subtitle]/[title] here instead so the
 /// layout stays identical everywhere.
 class AppPageHeader extends StatelessWidget implements PreferredSizeWidget {
-  const AppPageHeader({super.key, required this.title, this.subtitle, this.showNotifications = true});
+  const AppPageHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.showNotifications = true,
+  });
 
   final String title;
   final String? subtitle;
@@ -30,7 +35,9 @@ class AppPageHeader extends StatelessWidget implements PreferredSizeWidget {
           if (subtitle != null)
             Text(
               subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           Text(title, style: theme.textTheme.titleLarge),
         ],

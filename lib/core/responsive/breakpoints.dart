@@ -8,7 +8,9 @@ class Breakpoints {
   static const mobile = 600.0;
   static const tablet = 1024.0;
 
-  static bool isMobile(BuildContext context) => MediaQuery.sizeOf(context).width < mobile;
+  static bool isMobile(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < mobile;
 
-  static bool isDesktop(BuildContext context) => MediaQuery.sizeOf(context).width >= tablet;
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= tablet;
 }

@@ -20,7 +20,10 @@ class LoginScreen extends StatelessWidget {
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: const Padding(padding: EdgeInsets.all(AppSpacing.lg), child: LoginForm()),
+            child: const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: LoginForm(),
+            ),
           ),
         ),
       ),

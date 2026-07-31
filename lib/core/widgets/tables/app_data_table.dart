@@ -60,7 +60,10 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
   void _onSearchChanged(String query) {
     setState(() {}); // rebuilds the clear button's visibility
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () => widget.onSearchChanged(query));
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+      () => widget.onSearchChanged(query),
+    );
   }
 
   @override
@@ -89,12 +92,20 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
   Widget _buildTable(BuildContext context) {
     return SingleChildScrollView(
       child: DataTable(
-        columns: [for (final column in widget.columns) DataColumn(label: Text(column.label))],
+        columns: [
+          for (final column in widget.columns)
+            DataColumn(label: Text(column.label)),
+        ],
         rows: [
           for (final item in widget.items)
             DataRow(
-              onSelectChanged: widget.onRowTap == null ? null : (_) => widget.onRowTap!(item),
-              cells: [for (final column in widget.columns) DataCell(Text(column.cellBuilder(item)))],
+              onSelectChanged: widget.onRowTap == null
+                  ? null
+                  : (_) => widget.onRowTap!(item),
+              cells: [
+                for (final column in widget.columns)
+                  DataCell(Text(column.cellBuilder(item))),
+              ],
             ),
         ],
       ),
@@ -111,7 +122,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
         return ListTile(
           onTap: widget.onRowTap == null ? null : () => widget.onRowTap!(item),
           title: Text(widget.columns.first.cellBuilder(item)),
-          subtitle: widget.columns.length > 1 ? Text(widget.columns[1].cellBuilder(item)) : null,
+          subtitle: widget.columns.length > 1
+              ? Text(widget.columns[1].cellBuilder(item))
+              : null,
         );
       },
     );

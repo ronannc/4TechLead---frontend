@@ -2,7 +2,12 @@ import 'package:equatable/equatable.dart';
 
 /// Mirrors the backend's `UserResource` (`id, name, email, created_at`).
 class AppUser extends Equatable {
-  const AppUser({required this.id, required this.name, required this.email, required this.createdAt});
+  const AppUser({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.createdAt,
+  });
 
   final int id;
   final String name;
@@ -19,7 +24,12 @@ class AppUser extends Equatable {
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'email': email, 'created_at': createdAt.toIso8601String()};
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'created_at': createdAt.toIso8601String(),
+    };
   }
 
   @override

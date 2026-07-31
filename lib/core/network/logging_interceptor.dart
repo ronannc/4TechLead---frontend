@@ -24,7 +24,10 @@ class AppLoggingInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
     _logger.i(
       '<-- ${response.statusCode} ${response.requestOptions.uri}\n'
       'body: ${response.data}',
@@ -47,7 +50,9 @@ class AppLoggingInterceptor extends Interceptor {
   Map<String, dynamic> _redact(Map<String, dynamic> headers) {
     return {
       for (final entry in headers.entries)
-        entry.key: _redactedHeaders.contains(entry.key.toLowerCase()) ? '***' : entry.value,
+        entry.key: _redactedHeaders.contains(entry.key.toLowerCase())
+            ? '***'
+            : entry.value,
     };
   }
 }
