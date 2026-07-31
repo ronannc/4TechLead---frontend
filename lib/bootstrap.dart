@@ -1,10 +1,13 @@
 import 'package:get_it/get_it.dart';
 
 import 'core/auth/auth_session.dart';
+import 'core/feedback/daily_cue_player.dart';
 import 'core/network/dio_client.dart';
 import 'core/storage/token_storage.dart';
 import 'features/auth/repositories/auth_repository.dart';
 import 'features/auth/services/auth_service.dart';
+import 'features/daily/repositories/daily_meeting_repository.dart';
+import 'features/daily/services/daily_meeting_service.dart';
 import 'features/people/repositories/person_repository.dart';
 import 'features/people/services/person_service.dart';
 import 'features/teams/repositories/team_repository.dart';
@@ -30,14 +33,33 @@ Future<void> configureDependencies() async {
 
   getIt.registerLazySingleton<DioClient>(() => DioClient(getIt<AuthSession>()));
 
-  getIt.registerLazySingleton<AuthService>(() => AuthService(getIt<DioClient>()));
+  getIt.registerLazySingleton<AuthService>(
+    () => AuthService(getIt<DioClient>()),
+  );
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(getIt<AuthService>(), getIt<AuthSession>()),
   );
 
-  getIt.registerLazySingleton<TeamService>(() => TeamService(getIt<DioClient>()));
-  getIt.registerLazySingleton<TeamRepository>(() => TeamRepository(getIt<TeamService>()));
+  getIt.registerLazySingleton<TeamService>(
+    () => TeamService(getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<TeamRepository>(
+    () => TeamRepository(getIt<TeamService>()),
+  );
 
-  getIt.registerLazySingleton<PersonService>(() => PersonService(getIt<DioClient>()));
-  getIt.registerLazySingleton<PersonRepository>(() => PersonRepository(getIt<PersonService>()));
+  getIt.registerLazySingleton<PersonService>(
+    () => PersonService(getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<PersonRepository>(
+    () => PersonRepository(getIt<PersonService>()),
+  );
+
+  getIt.registerLazySingleton<DailyMeetingService>(
+    () => DailyMeetingService(getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<DailyMeetingRepository>(
+    () => DailyMeetingRepository(getIt<DailyMeetingService>()),
+  );
+
+  getIt.registerLazySingleton<DailyCuePlayer>(DailyCuePlayer.new);
 }

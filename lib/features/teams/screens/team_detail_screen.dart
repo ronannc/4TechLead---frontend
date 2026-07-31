@@ -30,10 +30,14 @@ class TeamDetailScreen extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => TeamDetailViewModel(getIt<TeamRepository>(), int.parse(teamId))..load(),
+          create: (_) =>
+              TeamDetailViewModel(getIt<TeamRepository>(), int.parse(teamId))
+                ..load(),
         ),
         ChangeNotifierProvider(
-          create: (_) => PeopleListViewModel(getIt<PersonRepository>(), int.parse(teamId))..load(),
+          create: (_) =>
+              PeopleListViewModel(getIt<PersonRepository>(), int.parse(teamId))
+                ..load(),
         ),
       ],
       // Builder gives us a context BELOW the providers above — the FAB's
@@ -41,7 +45,11 @@ class TeamDetailScreen extends StatelessWidget {
       // (see TeamsListScreen for the same pattern/rationale).
       child: Builder(
         builder: (context) => Scaffold(
-          appBar: const AppPageHeader(subtitle: 'Detalhes', title: 'Time', showNotifications: false),
+          appBar: const AppPageHeader(
+            subtitle: 'Detalhes',
+            title: 'Time',
+            showNotifications: false,
+          ),
           body: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Selector<TeamDetailViewModel, ViewState>(
@@ -55,14 +63,19 @@ class TeamDetailScreen extends StatelessWidget {
                     message: viewModel.errorMessage ?? 'Algo deu errado.',
                     onRetry: viewModel.load,
                   ),
-                  ViewState.loaded => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const TeamDetailBody(),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text('Membros', style: Theme.of(context).textTheme.titleMedium),
-                      const Expanded(child: TeamMembersSection()),
-                    ],
+                  ViewState.loaded => SizedBox.expand(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const TeamDetailBody(),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          'Membros',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const Expanded(child: TeamMembersSection()),
+                      ],
+                    ),
                   ),
                 };
               },

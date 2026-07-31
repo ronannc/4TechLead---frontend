@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/data/app_key_value_row.dart';
+import '../../daily/screens/person_daily_section.dart';
 import '../models/person.dart';
 import '../viewmodels/person_detail_view_model.dart';
 
@@ -31,38 +33,33 @@ class PersonDetailBody extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(person.position, style: theme.textTheme.bodyLarge),
               const SizedBox(height: AppSpacing.lg),
-              _field(context, 'Tipo de contrato', person.contractType.label),
-              _field(context, 'Senioridade', person.seniority.label),
-              _field(
-                context,
-                'Nascimento',
-                '${dateFormat.format(person.birthDate)} (${person.age} anos)',
+              AppKeyValueRow(
+                label: 'Tipo de contrato',
+                value: person.contractType.label,
               ),
-              _field(context, 'Admissão', dateFormat.format(person.admissionDate)),
-              if (person.email != null) _field(context, 'E-mail', person.email!),
-              if (person.phone != null) _field(context, 'Telefone', person.phone!),
+              AppKeyValueRow(
+                label: 'Senioridade',
+                value: person.seniority.label,
+              ),
+              AppKeyValueRow(
+                label: 'Nascimento',
+                value:
+                    '${dateFormat.format(person.birthDate)} (${person.age} anos)',
+              ),
+              AppKeyValueRow(
+                label: 'Admissão',
+                value: dateFormat.format(person.admissionDate),
+              ),
+              if (person.email != null)
+                AppKeyValueRow(label: 'E-mail', value: person.email!),
+              if (person.phone != null)
+                AppKeyValueRow(label: 'Telefone', value: person.phone!),
+              const SizedBox(height: AppSpacing.lg),
+              PersonDailySection(teamId: person.teamId),
             ],
           ),
         );
       },
-    );
-  }
-
-  Widget _field(BuildContext context, String label, String value) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          Text(value, style: theme.textTheme.bodyLarge),
-        ],
-      ),
     );
   }
 }

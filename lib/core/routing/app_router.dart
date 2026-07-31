@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/daily/screens/daily_history_screen.dart';
+import '../../features/daily/screens/daily_meeting_detail_screen.dart';
+import '../../features/daily/screens/daily_session_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/people/screens/person_detail_screen.dart';
@@ -15,14 +18,26 @@ import '../responsive/adaptive_scaffold.dart';
 import 'route_paths.dart';
 
 final _navDestinations = [
-  const AppNavDestination(label: 'Início', icon: Icons.dashboard_outlined, path: RoutePaths.home),
-  const AppNavDestination(label: 'Times', icon: Icons.groups_outlined, path: RoutePaths.teams),
+  const AppNavDestination(
+    label: 'Início',
+    icon: Icons.dashboard_outlined,
+    path: RoutePaths.home,
+  ),
+  const AppNavDestination(
+    label: 'Times',
+    icon: Icons.groups_outlined,
+    path: RoutePaths.teams,
+  ),
   const AppNavDestination(
     label: 'Notificações',
     icon: Icons.notifications_none,
     path: RoutePaths.notifications,
   ),
-  const AppNavDestination(label: 'Perfil', icon: Icons.person_outline, path: RoutePaths.profile),
+  const AppNavDestination(
+    label: 'Perfil',
+    icon: Icons.person_outline,
+    path: RoutePaths.profile,
+  ),
 ];
 
 /// Builds the app-wide go_router configuration. `authSession` drives the
@@ -39,7 +54,8 @@ GoRouter createAppRouter(AuthSession authSession) {
     refreshListenable: authSession,
     redirect: (context, state) {
       final loggingIn =
-          state.matchedLocation == RoutePaths.login || state.matchedLocation == RoutePaths.register;
+          state.matchedLocation == RoutePaths.login ||
+          state.matchedLocation == RoutePaths.register;
 
       if (!authSession.isAuthenticated && !loggingIn) {
         return RoutePaths.login;
@@ -52,8 +68,22 @@ GoRouter createAppRouter(AuthSession authSession) {
       return null;
     },
     routes: [
-      GoRoute(path: RoutePaths.login, builder: (context, state) => const LoginScreen()),
-      GoRoute(path: RoutePaths.register, builder: (context, state) => const RegisterScreen()),
+      GoRoute(
+        path: RoutePaths.login,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.register,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      // Deliberately top-level, not inside the ShellRoute below — a live Daily
+      // session is "focus mode": the nav bar/rail must not stay reachable
+      // mid-session (see RoutePaths.dailySession's doc comment).
+      GoRoute(
+        path: RoutePaths.dailySession,
+        builder: (context, state) =>
+            DailySessionScreen(teamId: state.pathParameters['teamId']!),
+      ),
       ShellRoute(
         builder: (context, state, child) {
           final index = _navDestinations.indexWhere(
@@ -68,28 +98,48 @@ GoRouter createAppRouter(AuthSession authSession) {
           );
         },
         routes: [
-          GoRoute(path: RoutePaths.home, builder: (context, state) => const HomeScreen()),
+          GoRoute(
+            path: RoutePaths.home,
+            builder: (context, state) => const HomeScreen(),
+          ),
           GoRoute(
             path: RoutePaths.teams,
             builder: (context, state) => const TeamsListScreen(),
           ),
           GoRoute(
             path: RoutePaths.teamDetail,
-            builder: (context, state) => TeamDetailScreen(teamId: state.pathParameters['id']!),
+            builder: (context, state) =>
+                TeamDetailScreen(teamId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: RoutePaths.personCreate,
-            builder: (context, state) => PersonFormScreen(teamId: state.pathParameters['teamId']!),
+            builder: (context, state) =>
+                PersonFormScreen(teamId: state.pathParameters['teamId']!),
           ),
           GoRoute(
             path: RoutePaths.personDetail,
-            builder: (context, state) => PersonDetailScreen(personId: state.pathParameters['personId']!),
+            builder: (context, state) =>
+                PersonDetailScreen(personId: state.pathParameters['personId']!),
+          ),
+          GoRoute(
+            path: RoutePaths.dailyHistory,
+            builder: (context, state) =>
+                DailyHistoryScreen(teamId: state.pathParameters['teamId']!),
+          ),
+          GoRoute(
+            path: RoutePaths.dailyMeetingDetail,
+            builder: (context, state) => DailyMeetingDetailScreen(
+              meetingId: state.pathParameters['meetingId']!,
+            ),
           ),
           GoRoute(
             path: RoutePaths.notifications,
             builder: (context, state) => const NotificationsScreen(),
           ),
-          GoRoute(path: RoutePaths.profile, builder: (context, state) => const ProfileScreen()),
+          GoRoute(
+            path: RoutePaths.profile,
+            builder: (context, state) => const ProfileScreen(),
+          ),
         ],
       ),
     ],

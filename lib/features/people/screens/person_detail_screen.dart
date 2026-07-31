@@ -7,13 +7,18 @@ import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
+import '../../daily/repositories/daily_meeting_repository.dart';
+import '../../daily/viewmodels/person_daily_stats_view_model.dart';
 import '../repositories/person_repository.dart';
 import '../viewmodels/person_detail_view_model.dart';
 import 'person_detail_body.dart';
 
-/// Screen only ever depends on [PersonDetailViewModel] and
-/// [PersonRepository] (for the single DI wiring point below) — never on
-/// `PersonService`.
+/// Screen depends on [PersonDetailViewModel]/[PersonRepository] for the
+/// person itself and [PersonDailyStatsViewModel]/[DailyMeetingRepository]
+/// for its "Dailies" section (the single DI wiring points below) — never on
+/// `PersonService`/`DailyMeetingService` directly. The stats ViewModel has
+/// its own independent [ViewState] so a stats-fetch failure never takes
+/// down the rest of the person's page.
 class PersonDetailScreen extends StatelessWidget {
   const PersonDetailScreen({super.key, required this.personId});
 
@@ -21,10 +26,27 @@ class PersonDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => PersonDetailViewModel(getIt<PersonRepository>(), int.parse(personId))..load(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => PersonDetailViewModel(
+            getIt<PersonRepository>(),
+            int.parse(personId),
+          )..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PersonDailyStatsViewModel(
+            getIt<DailyMeetingRepository>(),
+            int.parse(personId),
+          )..load(),
+        ),
+      ],
       child: Scaffold(
-        appBar: const AppPageHeader(subtitle: 'Detalhes', title: 'Pessoa', showNotifications: false),
+        appBar: const AppPageHeader(
+          subtitle: 'Detalhes',
+          title: 'Pessoa',
+          showNotifications: false,
+        ),
         body: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Selector<PersonDetailViewModel, ViewState>(

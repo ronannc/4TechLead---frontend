@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/routing/route_paths.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/buttons/app_primary_button.dart';
 import '../models/team.dart';
 import '../viewmodels/team_detail_view_model.dart';
 
@@ -24,6 +27,7 @@ class TeamDetailBody extends StatelessWidget {
         final dateFormat = DateFormat.yMMMd('pt_BR').add_jm();
 
         return Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(team.name, style: theme.textTheme.headlineMedium),
@@ -31,6 +35,23 @@ class TeamDetailBody extends StatelessWidget {
             Text(
               'Criado em ${dateFormat.format(team.createdAt.toLocal())}',
               style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.sm,
+              children: [
+                AppPrimaryButton(
+                  label: 'Iniciar daily',
+                  onPressed: () =>
+                      context.go(RoutePaths.dailySessionPath('${team.id}')),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      context.push(RoutePaths.dailyHistoryPath('${team.id}')),
+                  child: const Text('Ver histórico'),
+                ),
+              ],
             ),
           ],
         );
