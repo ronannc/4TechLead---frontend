@@ -11,10 +11,10 @@ class AppColors {
 
   // Accent (orange) — the only saturated color in the system, reserved for
   // primary actions/selection so it stays meaningful against the neutral base.
-  static const accent = Color(0xFFEA580C);
-  static const accentDark = Color(0xFFFB923C);
+  static const accent = Color(0xFFF4703E);
+  static const accentDark = Color(0xFFF4703E);
   static const onAccent = Color(0xFFFFFFFF);
-  static const onAccentDark = Color(0xFF431407);
+  static const onAccentDark = Color(0xFF1C1E21);
 
   // Neutrals (zinc scale) — background/surface/text/border tokens.
   static const zinc50 = Color(0xFFFAFAFA);
@@ -34,9 +34,9 @@ class AppColors {
   static const textPrimary = zinc900;
   static const textSecondary = zinc500;
 
-  static const backgroundDark = zinc950;
-  static const surfaceDark = zinc900;
-  static const borderDark = zinc700;
+  static const backgroundDark = Color(0xFF1C1E21);
+  static const surfaceDark = Color(0xFF24262A);
+  static const borderDark = Color(0xFF393C41);
   static const textPrimaryDark = zinc50;
   static const textSecondaryDark = zinc400;
 

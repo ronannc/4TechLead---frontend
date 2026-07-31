@@ -30,7 +30,9 @@ class AppTheme {
       surface: isDark ? AppColors.surfaceDark : AppColors.surface,
       onSurface: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
       surfaceContainerHighest: isDark ? AppColors.zinc800 : AppColors.zinc100,
-      onSurfaceVariant: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+      onSurfaceVariant: isDark
+          ? AppColors.textSecondaryDark
+          : AppColors.textSecondary,
       outline: isDark ? AppColors.borderDark : AppColors.border,
     );
 
@@ -41,7 +43,9 @@ class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
+      scaffoldBackgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.background,
       textTheme: textTheme,
       extensions: [
         AppThemeExtension(
@@ -77,7 +81,9 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
           elevation: 0,
           textStyle: textTheme.labelLarge,
         ),
@@ -85,7 +91,9 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
           side: BorderSide(color: border),
           textStyle: textTheme.labelLarge,
         ),
@@ -102,22 +110,32 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.lg),
+          ),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
-        indicatorColor: colorScheme.primary.withValues(alpha: isDark ? 0.24 : 0.12),
+        indicatorColor: colorScheme.primary.withValues(
+          alpha: isDark ? 0.24 : 0.12,
+        ),
         labelTextStyle: WidgetStateProperty.all(textTheme.labelSmall),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
-        indicatorColor: colorScheme.primary.withValues(alpha: isDark ? 0.24 : 0.12),
-        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(color: colorScheme.primary),
+        indicatorColor: colorScheme.primary.withValues(
+          alpha: isDark ? 0.24 : 0.12,
+        ),
+        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          color: colorScheme.primary,
+        ),
         unselectedLabelTextStyle: textTheme.labelMedium,
       ),
       dividerTheme: DividerThemeData(color: border, space: 1),

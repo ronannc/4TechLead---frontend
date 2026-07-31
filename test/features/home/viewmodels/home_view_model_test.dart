@@ -40,41 +40,57 @@ void main() {
     viewModel = HomeViewModel(teamRepository, personRepository);
   });
 
-  test('load() exposes the team count and people sorted by soonest birthday', () async {
-    when(() => teamRepository.getTeams()).thenAnswer(
-      (_) async => [
-        Team(id: 1, name: 'Engineering', createdAt: DateTime(2026), updatedAt: DateTime(2026)),
-      ],
-    );
+  test(
+    'load() exposes the team count and people sorted by soonest birthday',
+    () async {
+      when(() => teamRepository.getTeams()).thenAnswer(
+        (_) async => [
+          Team(
+            id: 1,
+            name: 'Engineering',
+            createdAt: DateTime(2026),
+            updatedAt: DateTime(2026),
+          ),
+        ],
+      );
 
-    // Built relative to today (not fixed calendar dates) so the expected
-    // ordering below holds no matter what day the suite actually runs on.
-    final today = DateTime.now();
-    final soonBirthday = today.add(const Duration(days: 5));
-    final laterBirthday = today.add(const Duration(days: 200));
-    final soon = _personWithBirthday('Soon', DateTime(1990, soonBirthday.month, soonBirthday.day));
-    final later = _personWithBirthday(
-      'Later',
-      DateTime(1990, laterBirthday.month, laterBirthday.day),
-    );
-    when(
-      () => personRepository.getPeople(perPage: 100),
-    ).thenAnswer((_) async => [later, soon]);
+      // Built relative to today (not fixed calendar dates) so the expected
+      // ordering below holds no matter what day the suite actually runs on.
+      final today = DateTime.now();
+      final soonBirthday = today.add(const Duration(days: 5));
+      final laterBirthday = today.add(const Duration(days: 200));
+      final soon = _personWithBirthday(
+        'Soon',
+        DateTime(1990, soonBirthday.month, soonBirthday.day),
+      );
+      final later = _personWithBirthday(
+        'Later',
+        DateTime(1990, laterBirthday.month, laterBirthday.day),
+      );
+      when(
+        () => personRepository.getPeople(perPage: 100),
+      ).thenAnswer((_) async => [later, soon]);
 
-    await viewModel.load();
+      await viewModel.load();
 
-    expect(viewModel.state, ViewState.loaded);
-    expect(viewModel.teamsCount, 1);
-    expect(viewModel.upcomingBirthdays.map((p) => p.name), ['Soon', 'Later']);
-  });
+      expect(viewModel.state, ViewState.loaded);
+      expect(viewModel.teamsCount, 1);
+      expect(viewModel.firstTeamId, 1);
+      expect(viewModel.teamToday.map((p) => p.name), ['Later', 'Soon']);
+      expect(viewModel.upcomingBirthdays.map((p) => p.name), ['Soon', 'Later']);
+    },
+  );
 
   test('load() caps the upcoming birthdays list at 5 people', () async {
     when(() => teamRepository.getTeams()).thenAnswer((_) async => []);
 
     final people = [
-      for (var day = 1; day <= 10; day++) _personWithBirthday('Person $day', DateTime(1990, 1, day)),
+      for (var day = 1; day <= 10; day++)
+        _personWithBirthday('Person $day', DateTime(1990, 1, day)),
     ];
-    when(() => personRepository.getPeople(perPage: 100)).thenAnswer((_) async => people);
+    when(
+      () => personRepository.getPeople(perPage: 100),
+    ).thenAnswer((_) async => people);
 
     await viewModel.load();
 

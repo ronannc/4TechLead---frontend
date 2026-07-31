@@ -23,7 +23,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) =>
-          HomeViewModel(getIt<TeamRepository>(), getIt<PersonRepository>())..load(),
+          HomeViewModel(getIt<TeamRepository>(), getIt<PersonRepository>())
+            ..load(),
       child: Scaffold(
         appBar: const AppPageHeader(subtitle: 'Painel', title: '4TechLead'),
         body: Selector<HomeViewModel, ViewState>(

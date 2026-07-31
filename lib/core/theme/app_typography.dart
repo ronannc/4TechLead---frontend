@@ -9,7 +9,11 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTypography {
   AppTypography._();
 
-  static TextStyle _inter(double fontSize, FontWeight weight, {double? height}) =>
+  static TextStyle _inter(
+    double fontSize,
+    FontWeight weight, {
+    double? height,
+  }) =>
       GoogleFonts.inter(fontSize: fontSize, fontWeight: weight, height: height);
 
   static final displaySmall = _inter(28, FontWeight.w600, height: 1.15);

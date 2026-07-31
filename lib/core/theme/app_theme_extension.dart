@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 /// exposed via `Theme.of(context).extension<AppThemeExtension>()`.
 @immutable
 class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
-  const AppThemeExtension({required this.success, required this.warning, required this.border});
+  const AppThemeExtension({
+    required this.success,
+    required this.warning,
+    required this.border,
+  });
 
   final Color success;
   final Color warning;
