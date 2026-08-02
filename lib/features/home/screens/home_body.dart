@@ -28,11 +28,7 @@ class HomeBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Selector<HomeViewModel, int?>(
-            selector: (_, vm) => vm.firstTeamId,
-            builder: (context, firstTeamId, _) =>
-                _DailyCallout(teamId: firstTeamId),
-          ),
+          const _DailyCallout(),
           const SizedBox(height: AppSpacing.md),
           Selector<HomeViewModel, int>(
             selector: (_, vm) => vm.teamsCount,
@@ -134,9 +130,7 @@ class HomeBody extends StatelessWidget {
 }
 
 class _DailyCallout extends StatelessWidget {
-  const _DailyCallout({required this.teamId});
-
-  final int? teamId;
+  const _DailyCallout();
 
   @override
   Widget build(BuildContext context) {
@@ -164,12 +158,10 @@ class _DailyCallout extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Daily do time', style: theme.textTheme.titleMedium),
+                  Text('Daily', style: theme.textTheme.titleMedium),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    teamId == null
-                        ? 'Crie um time para começar.'
-                        : 'Ritual rápido, foco em bloqueios e alinhamentos.',
+                    'Escolha times ou pessoas para o ritual de alinhamento.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -179,9 +171,7 @@ class _DailyCallout extends StatelessWidget {
             ),
             IconButton.filled(
               tooltip: 'Iniciar daily',
-              onPressed: teamId == null
-                  ? null
-                  : () => context.go(RoutePaths.dailySessionPath('$teamId')),
+              onPressed: () => context.go(RoutePaths.dailySessionPath()),
               icon: const Icon(Icons.play_arrow),
             ),
           ],
@@ -447,9 +437,9 @@ class _BirthdayCard extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.cake_outlined),
               title: Text(person.name),
-              subtitle: Text(dateFormat.format(person.birthDate)),
+              subtitle: Text(dateFormat.format(person.birthDate!)),
               trailing: Text(
-                _daysUntilLabel(daysUntilNextBirthday(person.birthDate)),
+                _daysUntilLabel(daysUntilNextBirthday(person.birthDate!)),
               ),
             ),
         ],

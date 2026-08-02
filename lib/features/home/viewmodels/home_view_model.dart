@@ -41,11 +41,11 @@ class HomeViewModel extends BaseViewModel {
     // revisit if a real org ever needs more than that across all teams.
     final people = await _personRepository.getPeople(perPage: 100);
     _teamToday = people.take(4).toList();
-    final sorted = [...people]
+    final sorted = people.where((person) => person.birthDate != null).toList()
       ..sort(
         (a, b) => daysUntilNextBirthday(
-          a.birthDate,
-        ).compareTo(daysUntilNextBirthday(b.birthDate)),
+          a.birthDate!,
+        ).compareTo(daysUntilNextBirthday(b.birthDate!)),
       );
     _upcomingBirthdays = sorted.take(_upcomingBirthdaysLimit).toList();
   });

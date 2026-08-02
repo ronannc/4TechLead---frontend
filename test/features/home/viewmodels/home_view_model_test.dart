@@ -29,6 +29,19 @@ Person _personWithBirthday(String name, DateTime birthDate) {
   );
 }
 
+Person _personWithoutBirthday(String name) {
+  return Person(
+    id: name.hashCode,
+    name: name,
+    teamId: 1,
+    position: 'Software Engineer',
+    contractType: ContractType.clt,
+    seniority: SeniorityLevel.senior,
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
+  );
+}
+
 void main() {
   late _MockTeamRepository teamRepository;
   late _MockPersonRepository personRepository;
@@ -78,6 +91,28 @@ void main() {
       expect(viewModel.firstTeamId, 1);
       expect(viewModel.teamToday.map((p) => p.name), ['Later', 'Soon']);
       expect(viewModel.upcomingBirthdays.map((p) => p.name), ['Soon', 'Later']);
+    },
+  );
+
+  test(
+    'load() ignores people without birth dates in birthday ranking',
+    () async {
+      when(() => teamRepository.getTeams()).thenAnswer((_) async => []);
+
+      final today = DateTime.now();
+      final soonBirthday = today.add(const Duration(days: 5));
+      final soon = _personWithBirthday(
+        'Soon',
+        DateTime(1990, soonBirthday.month, soonBirthday.day),
+      );
+      when(
+        () => personRepository.getPeople(perPage: 100),
+      ).thenAnswer((_) async => [_personWithoutBirthday('No birthday'), soon]);
+
+      await viewModel.load();
+
+      expect(viewModel.upcomingBirthdays.map((p) => p.name), ['Soon']);
+      expect(viewModel.teamToday.map((p) => p.name), ['No birthday', 'Soon']);
     },
   );
 
