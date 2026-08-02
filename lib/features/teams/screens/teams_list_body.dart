@@ -21,6 +21,10 @@ class TeamsListBody extends StatelessWidget {
 
         return AppDataTable<Team>(
           items: teams,
+          title: 'Times cadastrados',
+          subtitle: 'Lista pesquisável de equipes ativas no app.',
+          itemIcon: Icons.groups_outlined,
+          itemCountLabel: (count) => count == 1 ? '1 time' : '$count times',
           columns: [
             AppDataColumn(label: 'Nome', cellBuilder: (team) => team.name),
             AppDataColumn(

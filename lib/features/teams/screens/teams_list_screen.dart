@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../bootstrap.dart';
 import '../../../core/viewmodels/base_view_model.dart';
-import '../../../core/widgets/buttons/app_primary_button.dart';
+import '../../../core/widgets/buttons/app_dialog_actions.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
@@ -65,13 +65,11 @@ class TeamsListScreen extends StatelessWidget {
         title: const Text('Novo time'),
         content: AppTextField(label: 'Nome', controller: controller),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          AppPrimaryButton(
-            label: 'Criar',
-            onPressed: () {
+          AppDialogActions(
+            secondaryLabel: 'Cancelar',
+            onSecondaryPressed: () => Navigator.pop(dialogContext),
+            primaryLabel: 'Criar',
+            onPrimaryPressed: () {
               Navigator.pop(dialogContext);
               viewModel.createTeam(controller.text);
             },

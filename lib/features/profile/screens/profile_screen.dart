@@ -79,7 +79,7 @@ class _ProfileBody extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          AppPrimaryButton(label: 'Sair', onPressed: viewModel.signOut),
+          AppSecondaryButton(label: 'Sair', onPressed: viewModel.signOut),
         ],
       ),
     );

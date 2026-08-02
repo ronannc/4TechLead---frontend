@@ -23,6 +23,10 @@ class TeamMembersSection extends StatelessWidget {
 
         return AppDataTable<Person>(
           items: people,
+          title: 'Pessoas cadastradas',
+          subtitle: 'Membros deste time, com cargo e contrato.',
+          itemIcon: Icons.person_outline,
+          itemCountLabel: (count) => count == 1 ? '1 pessoa' : '$count pessoas',
           columns: [
             AppDataColumn(label: 'Nome', cellBuilder: (person) => person.name),
             AppDataColumn(

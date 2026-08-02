@@ -50,36 +50,31 @@ class TeamDetailScreen extends StatelessWidget {
             title: 'Time',
             showNotifications: false,
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Selector<TeamDetailViewModel, ViewState>(
-              selector: (_, vm) => vm.state,
-              builder: (context, state, _) {
-                final viewModel = context.read<TeamDetailViewModel>();
+          body: Selector<TeamDetailViewModel, ViewState>(
+            selector: (_, vm) => vm.state,
+            builder: (context, state, _) {
+              final viewModel = context.read<TeamDetailViewModel>();
 
-                return switch (state) {
-                  ViewState.idle || ViewState.loading => const LoadingView(),
-                  ViewState.error => ErrorView(
-                    message: viewModel.errorMessage ?? 'Algo deu errado.',
-                    onRetry: viewModel.load,
+              return switch (state) {
+                ViewState.idle || ViewState.loading => const LoadingView(),
+                ViewState.error => ErrorView(
+                  message: viewModel.errorMessage ?? 'Algo deu errado.',
+                  onRetry: viewModel.load,
+                ),
+                ViewState.loaded => const SizedBox.expand(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        child: TeamDetailBody(),
+                      ),
+                      Expanded(child: TeamMembersSection()),
+                    ],
                   ),
-                  ViewState.loaded => SizedBox.expand(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const TeamDetailBody(),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'Membros',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const Expanded(child: TeamMembersSection()),
-                      ],
-                    ),
-                  ),
-                };
-              },
-            ),
+                ),
+              };
+            },
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
