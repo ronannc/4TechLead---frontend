@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:frontend/core/widgets/buttons/app_dialog_actions.dart';
 import 'package:frontend/core/widgets/buttons/app_primary_button.dart';
 
 void main() {
@@ -47,5 +48,42 @@ void main() {
     await tester.pump();
 
     expect(tapped, isFalse);
+  });
+
+  testWidgets('secondary button uses an outlined style', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AppSecondaryButton(label: 'Cancel', onPressed: () {}),
+        ),
+      ),
+    );
+
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+  });
+
+  testWidgets('dialog actions keep the primary action on the right', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AppDialogActions(
+            secondaryLabel: 'Cancelar',
+            onSecondaryPressed: () {},
+            primaryLabel: 'Salvar',
+            onPrimaryPressed: () {},
+          ),
+        ),
+      ),
+    );
+
+    final cancelCenter = tester.getCenter(find.text('Cancelar'));
+    final saveCenter = tester.getCenter(find.text('Salvar'));
+
+    expect(cancelCenter.dx, lessThan(saveCenter.dx));
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byType(ElevatedButton), findsOneWidget);
   });
 }

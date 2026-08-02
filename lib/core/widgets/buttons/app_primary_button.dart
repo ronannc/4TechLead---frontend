@@ -33,3 +33,21 @@ class AppPrimaryButton extends StatelessWidget {
     );
   }
 }
+
+/// Standard secondary action button for cancel/skip/back flows. It mirrors
+/// [AppPrimaryButton]'s sizing but uses the app's outlined button theme.
+class AppSecondaryButton extends StatelessWidget {
+  const AppSecondaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(onPressed: onPressed, child: Text(label));
+  }
+}
