@@ -17,7 +17,7 @@ class RoutePaths {
   // Live focus-mode flow: deliberately top-level (outside the ShellRoute),
   // same as /login and /register — the nav bar/rail must NOT stay reachable
   // mid-session, since that would let a stray tap destroy a live daily.
-  static const dailySession = '/teams/:teamId/daily';
+  static const dailySession = '/daily';
 
   // History screens are nested under Team, same pattern as `people`.
   static const dailyHistory = '/teams/:teamId/daily/history';
@@ -30,7 +30,10 @@ class RoutePaths {
   static String personDetailPath(String teamId, String personId) =>
       '/teams/$teamId/people/$personId';
 
-  static String dailySessionPath(String teamId) => '/teams/$teamId/daily';
+  static String dailySessionPath({String? initialTeamId}) =>
+      initialTeamId == null
+      ? dailySession
+      : '$dailySession?team=$initialTeamId';
 
   static String dailyHistoryPath(String teamId) =>
       '/teams/$teamId/daily/history';

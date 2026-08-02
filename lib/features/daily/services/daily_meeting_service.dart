@@ -12,7 +12,7 @@ class DailyMeetingService {
   final DioClient _client;
 
   Future<Map<String, dynamic>> index({
-    required int teamId,
+    int? teamId,
     int page = 1,
     int perPage = 15,
   }) async {
@@ -22,7 +22,7 @@ class DailyMeetingService {
         queryParameters: {
           'page': page,
           'per_page': perPage,
-          'filters[team_id]': teamId,
+          'filters[team_id]': ?teamId,
           'order[started_at]': 'desc',
         },
       );
@@ -48,7 +48,6 @@ class DailyMeetingService {
   /// `entries` is a list of `{person_id, actual_seconds, note_type?, note?}`
   /// maps — `speaking_order`/`allotted_seconds` are derived server-side.
   Future<Map<String, dynamic>> store({
-    required int teamId,
     required int timeLimitSeconds,
     required DateTime startedAt,
     required DateTime endedAt,
@@ -58,7 +57,6 @@ class DailyMeetingService {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/daily-meetings',
         data: {
-          'team_id': teamId,
           'time_limit_seconds': timeLimitSeconds,
           'started_at': startedAt.toIso8601String(),
           'ended_at': endedAt.toIso8601String(),

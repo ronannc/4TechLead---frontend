@@ -18,7 +18,7 @@ class DailyMeetingRepository {
   final DailyMeetingService _service;
 
   Future<List<DailyMeeting>> getMeetings({
-    required int teamId,
+    int? teamId,
     int page = 1,
     int perPage = 15,
   }) async {
@@ -42,14 +42,12 @@ class DailyMeetingRepository {
   }
 
   Future<DailyMeeting> createMeeting({
-    required int teamId,
     required int timeLimitSeconds,
     required DateTime startedAt,
     required DateTime endedAt,
     required List<Map<String, dynamic>> entries,
   }) async {
     final json = await _service.store(
-      teamId: teamId,
       timeLimitSeconds: timeLimitSeconds,
       startedAt: startedAt,
       endedAt: endedAt,

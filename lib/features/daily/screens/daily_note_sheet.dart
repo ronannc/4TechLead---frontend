@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/widgets/buttons/app_primary_button.dart';
+import '../../../core/widgets/buttons/app_dialog_actions.dart';
 import '../../../core/widgets/inputs/app_dropdown_field.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../models/daily_note_category.dart';
@@ -77,9 +77,11 @@ class _DailyNoteFormState extends State<_DailyNoteForm> {
         const SizedBox(height: AppSpacing.md),
         AppTextField(label: 'Descrição', controller: _textController),
         const SizedBox(height: AppSpacing.lg),
-        AppPrimaryButton(
-          label: 'Salvar anotação',
-          onPressed: () {
+        AppDialogActions(
+          secondaryLabel: 'Cancelar',
+          onSecondaryPressed: () => Navigator.of(context).pop(),
+          primaryLabel: 'Salvar',
+          onPrimaryPressed: () {
             widget.viewModel.setCurrentNote(
               category: _category,
               text: _textController.text,

@@ -10,11 +10,11 @@ class TeamService {
 
   final DioClient _client;
 
-  Future<Map<String, dynamic>> index({int page = 1}) async {
+  Future<Map<String, dynamic>> index({int page = 1, int? perPage}) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/teams',
-        queryParameters: {'page': page},
+        queryParameters: {'page': page, 'per_page': ?perPage},
       );
 
       return response.data!;

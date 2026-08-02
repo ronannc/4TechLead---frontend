@@ -6,6 +6,8 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../../people/models/person.dart';
 import '../../people/repositories/person_repository.dart';
+import '../../teams/models/team.dart';
+import '../../teams/repositories/team_repository.dart';
 import '../models/daily_blocker_draft.dart';
 import '../models/daily_cue.dart';
 import '../models/daily_note_category.dart';
@@ -30,19 +32,27 @@ class DailySessionViewModel extends BaseViewModel {
   DailySessionViewModel(
     this._personRepository,
     this._dailyMeetingRepository,
-    this.teamId, {
+    this._teamRepository, {
+    this.initialTeamId,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
   final PersonRepository _personRepository;
   final DailyMeetingRepository _dailyMeetingRepository;
-  final int teamId;
+  final TeamRepository _teamRepository;
+  final int? initialTeamId;
   final DateTime Function() _now;
 
   bool _disposed = false;
 
   DailySessionPhase _phase = DailySessionPhase.configuring;
   DailySessionPhase get phase => _phase;
+
+  List<Team> _teams = [];
+  List<Team> get teams => List.unmodifiable(_teams);
+
+  List<Person> _people = [];
+  List<Person> get people => List.unmodifiable(_people);
 
   List<Person> _members = [];
   List<Person> get members => List.unmodifiable(_members);
@@ -79,9 +89,84 @@ class DailySessionViewModel extends BaseViewModel {
   String? _saveErrorMessage;
   String? get saveErrorMessage => _saveErrorMessage;
 
-  Future<void> loadMembers() => runCatching(() async {
-    _members = await _personRepository.getPeople(teamId: teamId, perPage: 100);
+  Future<void> loadParticipants() => runCatching(() async {
+    final results = await Future.wait([
+      _teamRepository.getTeams(perPage: 100),
+      _personRepository.getPeople(perPage: 100),
+    ]);
+
+    _teams = results[0] as List<Team>;
+    _people = results[1] as List<Person>;
+    _members = initialTeamId == null
+        ? []
+        : _people.where((person) => person.teamId == initialTeamId).toList();
   });
+
+  bool isPersonSelected(Person person) {
+    return _members.any((member) => member.id == person.id);
+  }
+
+  bool isTeamSelected(Team team) {
+    final teamPeople = _people.where((person) => person.teamId == team.id);
+
+    return teamPeople.isNotEmpty && teamPeople.every(isPersonSelected);
+  }
+
+  int selectedCountForTeam(Team team) {
+    return _members.where((person) => person.teamId == team.id).length;
+  }
+
+  int totalCountForTeam(Team team) {
+    return _people.where((person) => person.teamId == team.id).length;
+  }
+
+  String teamNameFor(int teamId) {
+    for (final team in _teams) {
+      if (team.id == teamId) {
+        return team.name;
+      }
+    }
+
+    return 'Time $teamId';
+  }
+
+  void toggleTeam(Team team) {
+    final teamPeople = _people.where((person) => person.teamId == team.id);
+    if (teamPeople.isEmpty) {
+      return;
+    }
+
+    if (teamPeople.every(isPersonSelected)) {
+      _members.removeWhere((person) => person.teamId == team.id);
+    } else {
+      final selectedIds = _members.map((person) => person.id).toSet();
+      _members.addAll(
+        teamPeople.where((person) => !selectedIds.contains(person.id)),
+      );
+    }
+
+    notifyListeners();
+  }
+
+  void togglePerson(Person person) {
+    if (isPersonSelected(person)) {
+      _members.removeWhere((member) => member.id == person.id);
+    } else {
+      _members.add(person);
+    }
+
+    notifyListeners();
+  }
+
+  void selectAllPeople() {
+    _members = List.of(_people);
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _members = [];
+    notifyListeners();
+  }
 
   void increaseTimeLimit() {
     _timeLimitSeconds += dailyTimeLimitStepSeconds;
@@ -256,7 +341,6 @@ class DailySessionViewModel extends BaseViewModel {
       final spokenTurns = _turns.where((turn) => turn.hasSpoken);
 
       await _dailyMeetingRepository.createMeeting(
-        teamId: teamId,
         timeLimitSeconds: _timeLimitSeconds,
         startedAt: _meetingStartedAt ?? _now(),
         endedAt: _now(),

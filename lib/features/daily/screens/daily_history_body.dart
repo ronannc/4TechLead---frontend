@@ -90,10 +90,14 @@ class _DailyHistoryBodyState extends State<DailyHistoryBody> {
           ),
           const SizedBox(height: AppSpacing.md),
         ],
-        Text('Dailies passadas', style: theme.textTheme.titleMedium),
         Expanded(
           child: AppDataTable<DailyMeeting>(
             items: meetings,
+            title: 'Dailies passadas',
+            subtitle: 'Histórico pesquisável das reuniões registradas.',
+            itemIcon: Icons.timer_outlined,
+            itemCountLabel: (count) =>
+                count == 1 ? '1 daily' : '$count dailies',
             onSearchChanged: (query) => setState(() => _query = query),
             searchHint: 'Buscar por data...',
             emptyMessage: 'Nenhuma daily registrada ainda.',

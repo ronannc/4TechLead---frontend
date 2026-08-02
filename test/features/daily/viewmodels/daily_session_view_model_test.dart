@@ -11,12 +11,16 @@ import 'package:frontend/features/people/models/contract_type.dart';
 import 'package:frontend/features/people/models/person.dart';
 import 'package:frontend/features/people/models/seniority_level.dart';
 import 'package:frontend/features/people/repositories/person_repository.dart';
+import 'package:frontend/features/teams/models/team.dart';
+import 'package:frontend/features/teams/repositories/team_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockPersonRepository extends Mock implements PersonRepository {}
 
 class _MockDailyMeetingRepository extends Mock
     implements DailyMeetingRepository {}
+
+class _MockTeamRepository extends Mock implements TeamRepository {}
 
 Person _person(int id, String name) {
   return Person(
@@ -29,6 +33,15 @@ Person _person(int id, String name) {
     contractType: ContractType.clt,
     admissionDate: DateTime(2020, 1, 15),
     seniority: SeniorityLevel.senior,
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
+  );
+}
+
+Team _team(int id, String name) {
+  return Team(
+    id: id,
+    name: name,
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
   );
@@ -50,13 +63,20 @@ DailyMeeting _savedMeeting() {
 void main() {
   late _MockPersonRepository personRepository;
   late _MockDailyMeetingRepository meetingRepository;
+  late _MockTeamRepository teamRepository;
 
   setUp(() {
     personRepository = _MockPersonRepository();
     meetingRepository = _MockDailyMeetingRepository();
-    when(() => personRepository.getPeople(teamId: 1, perPage: 100)).thenAnswer(
+    teamRepository = _MockTeamRepository();
+    when(
+      () => personRepository.getPeople(teamId: null, perPage: 100),
+    ).thenAnswer(
       (_) async => [_person(1, 'Ada Lovelace'), _person(2, 'Grace Hopper')],
     );
+    when(
+      () => teamRepository.getTeams(perPage: 100),
+    ).thenAnswer((_) async => [_team(1, 'Engineering')]);
   });
 
   test('countdown reaches burned and emits the expected cue sequence', () {
@@ -65,7 +85,8 @@ void main() {
       final viewModel = DailySessionViewModel(
         personRepository,
         meetingRepository,
-        1,
+        teamRepository,
+        initialTeamId: 1,
         now: () => start.add(async.elapsed),
       );
       final cues = <DailyCue>[];
@@ -74,7 +95,7 @@ void main() {
         if (cue != null) cues.add(cue);
       });
 
-      viewModel.loadMembers();
+      viewModel.loadParticipants();
       async.flushMicrotasks();
       expect(viewModel.state, ViewState.loaded);
 
@@ -100,11 +121,12 @@ void main() {
       final viewModel = DailySessionViewModel(
         personRepository,
         meetingRepository,
-        1,
+        teamRepository,
+        initialTeamId: 1,
         now: () => start.add(async.elapsed),
       );
 
-      viewModel.loadMembers();
+      viewModel.loadParticipants();
       async.flushMicrotasks();
       viewModel.start();
 
@@ -131,11 +153,12 @@ void main() {
       final viewModel = DailySessionViewModel(
         personRepository,
         meetingRepository,
-        1,
+        teamRepository,
+        initialTeamId: 1,
         now: () => start.add(async.elapsed),
       );
 
-      viewModel.loadMembers();
+      viewModel.loadParticipants();
       async.flushMicrotasks();
       expect(viewModel.members.map((person) => person.name), [
         'Ada Lovelace',
@@ -160,7 +183,7 @@ void main() {
     final viewModel = DailySessionViewModel(
       personRepository,
       meetingRepository,
-      1,
+      teamRepository,
     );
 
     viewModel.addTopic('  Webhook de frota validado  ');
@@ -182,11 +205,12 @@ void main() {
       final viewModel = DailySessionViewModel(
         personRepository,
         meetingRepository,
-        1,
+        teamRepository,
+        initialTeamId: 1,
         now: () => start.add(async.elapsed),
       );
 
-      viewModel.loadMembers();
+      viewModel.loadParticipants();
       async.flushMicrotasks();
       viewModel.start();
       async.elapse(const Duration(seconds: 5));
@@ -203,11 +227,12 @@ void main() {
       final viewModel = DailySessionViewModel(
         personRepository,
         meetingRepository,
-        1,
+        teamRepository,
+        initialTeamId: 1,
         now: () => start.add(async.elapsed),
       );
 
-      viewModel.loadMembers();
+      viewModel.loadParticipants();
       async.flushMicrotasks();
       viewModel.start();
       async.elapse(const Duration(seconds: 20));
@@ -215,7 +240,6 @@ void main() {
 
       when(
         () => meetingRepository.createMeeting(
-          teamId: any(named: 'teamId'),
           timeLimitSeconds: any(named: 'timeLimitSeconds'),
           startedAt: any(named: 'startedAt'),
           endedAt: any(named: 'endedAt'),
@@ -233,7 +257,6 @@ void main() {
 
       when(
         () => meetingRepository.createMeeting(
-          teamId: any(named: 'teamId'),
           timeLimitSeconds: any(named: 'timeLimitSeconds'),
           startedAt: any(named: 'startedAt'),
           endedAt: any(named: 'endedAt'),

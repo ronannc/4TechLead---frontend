@@ -8,10 +8,12 @@ import '../../../core/feedback/daily_cue_player.dart';
 import '../../../core/routing/route_paths.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
+import '../../../core/widgets/buttons/app_dialog_actions.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
 import '../../people/repositories/person_repository.dart';
+import '../../teams/repositories/team_repository.dart';
 import '../models/daily_session_phase.dart';
 import '../repositories/daily_meeting_repository.dart';
 import '../viewmodels/daily_session_view_model.dart';
@@ -23,9 +25,9 @@ import 'daily_running_body.dart';
 /// route (see route_paths.dart) so the app's nav bar/rail is never
 /// reachable mid-session.
 class DailySessionScreen extends StatelessWidget {
-  const DailySessionScreen({super.key, required this.teamId});
+  const DailySessionScreen({super.key, this.initialTeamId});
 
-  final String teamId;
+  final String? initialTeamId;
 
   @override
   Widget build(BuildContext context) {
@@ -33,17 +35,18 @@ class DailySessionScreen extends StatelessWidget {
       create: (_) => DailySessionViewModel(
         getIt<PersonRepository>(),
         getIt<DailyMeetingRepository>(),
-        int.parse(teamId),
-      )..loadMembers(),
-      child: _DailySessionView(teamId: teamId),
+        getIt<TeamRepository>(),
+        initialTeamId: initialTeamId == null ? null : int.parse(initialTeamId!),
+      )..loadParticipants(),
+      child: _DailySessionView(initialTeamId: initialTeamId),
     );
   }
 }
 
 class _DailySessionView extends StatefulWidget {
-  const _DailySessionView({required this.teamId});
+  const _DailySessionView({this.initialTeamId});
 
-  final String teamId;
+  final String? initialTeamId;
 
   @override
   State<_DailySessionView> createState() => _DailySessionViewState();
@@ -94,7 +97,7 @@ class _DailySessionViewState extends State<_DailySessionView> {
         _viewModel.phase == DailySessionPhase.reviewing;
 
     if (!blocked) {
-      _goToTeam();
+      _goBack();
       return;
     }
 
@@ -106,24 +109,27 @@ class _DailySessionViewState extends State<_DailySessionView> {
           'O progresso desta daily ainda não foi salvo e será perdido.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sair'),
+          AppDialogActions(
+            secondaryLabel: 'Cancelar',
+            onSecondaryPressed: () => Navigator.of(context).pop(false),
+            primaryLabel: 'Sair',
+            onPrimaryPressed: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
     );
 
     if (confirmed == true && mounted) {
-      _goToTeam();
+      _goBack();
     }
   }
 
-  void _goToTeam() => context.go(RoutePaths.teamDetailPath(widget.teamId));
+  void _goBack() {
+    final teamId = widget.initialTeamId;
+    context.go(
+      teamId == null ? RoutePaths.home : RoutePaths.teamDetailPath(teamId),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +157,7 @@ class _DailySessionViewState extends State<_DailySessionView> {
               ViewState.idle || ViewState.loading => const LoadingView(),
               ViewState.error => ErrorView(
                 message: viewModel.errorMessage ?? 'Algo deu errado.',
-                onRetry: viewModel.loadMembers,
+                onRetry: viewModel.loadParticipants,
               ),
               ViewState.loaded =>
                 Selector<DailySessionViewModel, DailySessionPhase>(
@@ -161,7 +167,7 @@ class _DailySessionViewState extends State<_DailySessionView> {
                     DailySessionPhase.running => const DailyRunningBody(),
                     DailySessionPhase.reviewing => const DailyReviewBody(),
                     DailySessionPhase.finished => _DailyFinishedBody(
-                      teamId: widget.teamId,
+                      initialTeamId: widget.initialTeamId,
                     ),
                   },
                 ),
@@ -174,9 +180,9 @@ class _DailySessionViewState extends State<_DailySessionView> {
 }
 
 class _DailyFinishedBody extends StatelessWidget {
-  const _DailyFinishedBody({required this.teamId});
+  const _DailyFinishedBody({this.initialTeamId});
 
-  final String teamId;
+  final String? initialTeamId;
 
   @override
   Widget build(BuildContext context) {
@@ -197,8 +203,14 @@ class _DailyFinishedBody extends StatelessWidget {
             Text('Daily registrada!', style: theme.textTheme.titleLarge),
             const SizedBox(height: AppSpacing.lg),
             AppPrimaryButton(
-              label: 'Voltar para o time',
-              onPressed: () => context.go(RoutePaths.teamDetailPath(teamId)),
+              label: initialTeamId == null
+                  ? 'Voltar ao início'
+                  : 'Voltar para o time',
+              onPressed: () => context.go(
+                initialTeamId == null
+                    ? RoutePaths.home
+                    : RoutePaths.teamDetailPath(initialTeamId!),
+              ),
             ),
           ],
         ),

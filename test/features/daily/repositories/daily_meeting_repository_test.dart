@@ -79,7 +79,6 @@ void main() {
     () async {
       when(
         () => service.store(
-          teamId: 1,
           timeLimitSeconds: 90,
           startedAt: any(named: 'startedAt'),
           endedAt: any(named: 'endedAt'),
@@ -90,7 +89,6 @@ void main() {
       ).thenAnswer((_) async => {'data': _meetingJson()});
 
       final meeting = await repository.createMeeting(
-        teamId: 1,
         timeLimitSeconds: 90,
         startedAt: DateTime(2026),
         endedAt: DateTime(2026),

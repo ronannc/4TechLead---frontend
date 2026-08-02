@@ -8,8 +8,8 @@ class TeamRepository {
 
   final TeamService _service;
 
-  Future<List<Team>> getTeams({int page = 1}) async {
-    final json = await _service.index(page: page);
+  Future<List<Team>> getTeams({int page = 1, int? perPage}) async {
+    final json = await _service.index(page: page, perPage: perPage);
     final data = json['data'] as List<dynamic>;
 
     return [

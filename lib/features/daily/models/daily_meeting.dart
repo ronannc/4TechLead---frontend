@@ -8,7 +8,7 @@ import 'daily_meeting_entry.dart';
 class DailyMeeting extends Equatable {
   const DailyMeeting({
     required this.id,
-    required this.teamId,
+    this.teamId,
     required this.timeLimitSeconds,
     required this.startedAt,
     required this.endedAt,
@@ -18,7 +18,7 @@ class DailyMeeting extends Equatable {
   });
 
   final int id;
-  final int teamId;
+  final int? teamId;
   final int timeLimitSeconds;
   final DateTime startedAt;
   final DateTime endedAt;
@@ -31,7 +31,7 @@ class DailyMeeting extends Equatable {
 
     return DailyMeeting(
       id: json['id'] as int,
-      teamId: json['team_id'] as int,
+      teamId: json['team_id'] as int?,
       timeLimitSeconds: json['time_limit_seconds'] as int,
       startedAt: DateTime.parse(json['started_at'] as String),
       endedAt: DateTime.parse(json['ended_at'] as String),

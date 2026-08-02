@@ -81,8 +81,9 @@ GoRouter createAppRouter(AuthSession authSession) {
       // mid-session (see RoutePaths.dailySession's doc comment).
       GoRoute(
         path: RoutePaths.dailySession,
-        builder: (context, state) =>
-            DailySessionScreen(teamId: state.pathParameters['teamId']!),
+        builder: (context, state) => DailySessionScreen(
+          initialTeamId: state.uri.queryParameters['team'],
+        ),
       ),
       ShellRoute(
         builder: (context, state, child) {

@@ -43,13 +43,14 @@ class TeamDetailBody extends StatelessWidget {
               children: [
                 AppPrimaryButton(
                   label: 'Iniciar daily',
-                  onPressed: () =>
-                      context.go(RoutePaths.dailySessionPath('${team.id}')),
+                  onPressed: () => context.go(
+                    RoutePaths.dailySessionPath(initialTeamId: '${team.id}'),
+                  ),
                 ),
-                TextButton(
+                AppSecondaryButton(
+                  label: 'Ver histórico',
                   onPressed: () =>
                       context.push(RoutePaths.dailyHistoryPath('${team.id}')),
-                  child: const Text('Ver histórico'),
                 ),
               ],
             ),
