@@ -9,8 +9,10 @@ import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
 import '../../daily/repositories/daily_meeting_repository.dart';
 import '../../daily/viewmodels/person_daily_stats_view_model.dart';
+import '../repositories/person_growth_repository.dart';
 import '../repositories/person_repository.dart';
 import '../viewmodels/person_detail_view_model.dart';
+import '../viewmodels/person_growth_view_model.dart';
 import 'person_detail_body.dart';
 
 /// Screen depends on [PersonDetailViewModel]/[PersonRepository] for the
@@ -37,6 +39,12 @@ class PersonDetailScreen extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => PersonDailyStatsViewModel(
             getIt<DailyMeetingRepository>(),
+            int.parse(personId),
+          )..load(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PersonGrowthViewModel(
+            getIt<PersonGrowthRepository>(),
             int.parse(personId),
           )..load(),
         ),

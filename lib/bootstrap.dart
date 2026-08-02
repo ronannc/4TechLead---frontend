@@ -8,7 +8,9 @@ import 'features/auth/repositories/auth_repository.dart';
 import 'features/auth/services/auth_service.dart';
 import 'features/daily/repositories/daily_meeting_repository.dart';
 import 'features/daily/services/daily_meeting_service.dart';
+import 'features/people/repositories/person_growth_repository.dart';
 import 'features/people/repositories/person_repository.dart';
+import 'features/people/services/person_growth_service.dart';
 import 'features/people/services/person_service.dart';
 import 'features/teams/repositories/team_repository.dart';
 import 'features/teams/services/team_service.dart';
@@ -52,6 +54,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<PersonRepository>(
     () => PersonRepository(getIt<PersonService>()),
+  );
+  getIt.registerLazySingleton<PersonGrowthService>(
+    () => PersonGrowthService(getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<PersonGrowthRepository>(
+    () => PersonGrowthRepository(getIt<PersonGrowthService>()),
   );
 
   getIt.registerLazySingleton<DailyMeetingService>(
