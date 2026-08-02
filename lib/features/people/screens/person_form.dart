@@ -85,9 +85,7 @@ class _PersonFormState extends State<PersonForm> {
       nameError = 'O nome deve ter no máximo 255 caracteres.';
     }
 
-    if (birthDate == null) {
-      birthDateError = 'Informe a data de nascimento.';
-    } else if (!_dateOnly(birthDate).isBefore(today)) {
+    if (birthDate != null && !_dateOnly(birthDate).isBefore(today)) {
       birthDateError = 'A data de nascimento deve ser anterior a hoje.';
     }
 
@@ -101,9 +99,7 @@ class _PersonFormState extends State<PersonForm> {
       contractTypeError = 'Selecione o tipo de contrato.';
     }
 
-    if (admissionDate == null) {
-      admissionDateError = 'Informe a data de admissão.';
-    } else {
+    if (admissionDate != null) {
       final normalizedAdmission = _dateOnly(admissionDate);
       if (normalizedAdmission.isAfter(today)) {
         admissionDateError = 'A data de admissão deve ser hoje ou anterior.';
@@ -158,8 +154,8 @@ class _PersonFormState extends State<PersonForm> {
       return;
     }
 
-    final birthDate = _birthDate!;
-    final admissionDate = _admissionDate!;
+    final birthDate = _birthDate;
+    final admissionDate = _admissionDate;
     final contractType = _contractType!;
     final seniority = _seniority!;
     final name = _nameController.text.trim();
@@ -263,7 +259,7 @@ class _PersonFormState extends State<PersonForm> {
           ),
           const SizedBox(height: AppSpacing.md),
           AppDateField(
-            label: 'Data de nascimento',
+            label: 'Data de nascimento (opcional)',
             value: _birthDate,
             errorText: _birthDateError,
             lastDate: _today.subtract(const Duration(days: 1)),
@@ -277,7 +273,7 @@ class _PersonFormState extends State<PersonForm> {
           ),
           const SizedBox(height: AppSpacing.md),
           AppDateField(
-            label: 'Data de admissão',
+            label: 'Data de admissão (opcional)',
             value: _admissionDate,
             errorText: _admissionDateError,
             onChanged: (value) => setState(() {

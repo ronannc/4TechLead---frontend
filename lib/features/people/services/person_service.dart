@@ -53,10 +53,10 @@ class PersonService {
   Future<Map<String, dynamic>> store({
     required String name,
     required int teamId,
-    required DateTime birthDate,
+    DateTime? birthDate,
     required String position,
     required ContractType contractType,
-    required DateTime admissionDate,
+    DateTime? admissionDate,
     required SeniorityLevel seniority,
     String? email,
     String? phone,
@@ -67,10 +67,11 @@ class PersonService {
         data: {
           'name': name,
           'team_id': teamId,
-          'birth_date': _dateFormat.format(birthDate),
+          if (birthDate != null) 'birth_date': _dateFormat.format(birthDate),
           'position': position,
           'contract_type': contractType.apiValue,
-          'admission_date': _dateFormat.format(admissionDate),
+          if (admissionDate != null)
+            'admission_date': _dateFormat.format(admissionDate),
           'seniority': seniority.apiValue,
           'email': ?email,
           'phone': ?phone,

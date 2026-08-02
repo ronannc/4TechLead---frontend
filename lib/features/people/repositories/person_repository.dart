@@ -38,10 +38,10 @@ class PersonRepository {
   Future<Person> createPerson({
     required String name,
     required int teamId,
-    required DateTime birthDate,
+    DateTime? birthDate,
     required String position,
     required ContractType contractType,
-    required DateTime admissionDate,
+    DateTime? admissionDate,
     required SeniorityLevel seniority,
     String? email,
     String? phone,

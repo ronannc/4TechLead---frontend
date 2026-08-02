@@ -15,10 +15,10 @@ class PersonFormViewModel extends BaseViewModel {
 
   Future<void> createPerson({
     required String name,
-    required DateTime birthDate,
+    DateTime? birthDate,
     required String position,
     required ContractType contractType,
-    required DateTime admissionDate,
+    DateTime? admissionDate,
     required SeniorityLevel seniority,
     String? email,
     String? phone,

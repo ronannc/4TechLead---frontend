@@ -26,6 +26,15 @@ Map<String, dynamic> _personJson({int id = 1, String name = 'Ada Lovelace'}) {
   };
 }
 
+Map<String, dynamic> _personWithoutDatesJson() {
+  return {
+    ..._personJson(),
+    'birth_date': null,
+    'age': null,
+    'admission_date': null,
+  };
+}
+
 void main() {
   late _MockPersonService service;
   late PersonRepository repository;
@@ -75,6 +84,18 @@ void main() {
       expect(person.name, 'Ada Lovelace');
       expect(person.age, 35);
     });
+
+    test('maps nullable birth and admission dates', () async {
+      when(
+        () => service.show(1),
+      ).thenAnswer((_) async => {'data': _personWithoutDatesJson()});
+
+      final person = await repository.getPerson(1);
+
+      expect(person.birthDate, isNull);
+      expect(person.age, isNull);
+      expect(person.admissionDate, isNull);
+    });
   });
 
   group('createPerson', () {
@@ -105,6 +126,33 @@ void main() {
       );
 
       expect(person.name, 'Ada Lovelace');
+    });
+
+    test('forwards null dates when they are not provided', () async {
+      when(
+        () => service.store(
+          name: 'Ada Lovelace',
+          teamId: 1,
+          birthDate: null,
+          position: 'Software Engineer',
+          contractType: ContractType.clt,
+          admissionDate: null,
+          seniority: SeniorityLevel.senior,
+          email: null,
+          phone: null,
+        ),
+      ).thenAnswer((_) async => {'data': _personWithoutDatesJson()});
+
+      final person = await repository.createPerson(
+        name: 'Ada Lovelace',
+        teamId: 1,
+        position: 'Software Engineer',
+        contractType: ContractType.clt,
+        seniority: SeniorityLevel.senior,
+      );
+
+      expect(person.birthDate, isNull);
+      expect(person.admissionDate, isNull);
     });
   });
 }
