@@ -46,6 +46,14 @@ void main() {
           await _tapTab(tester, tab);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
+
+          if (tab == 'PDI') {
+            for (final view in ['Sugestões', 'Acompanhar']) {
+              await _tapTab(tester, view);
+              await tester.pumpAndSettle();
+              expect(tester.takeException(), isNull);
+            }
+          }
         }
       }
     },
@@ -163,16 +171,8 @@ Future<void> _pumpLoadedBody(WidgetTester tester, Size size) async {
 
 Future<void> _tapTab(WidgetTester tester, String label) async {
   final tab = find.text(label);
-  final tabCenter = tester.getCenter(tab);
-
-  if (tabCenter.dx > tester.view.physicalSize.width) {
-    await tester.drag(
-      find.byType(SingleChildScrollView).last,
-      const Offset(-320, 0),
-    );
-    await tester.pumpAndSettle();
-  }
-
+  await tester.ensureVisible(tab);
+  await tester.pumpAndSettle();
   await tester.tap(tab);
 }
 

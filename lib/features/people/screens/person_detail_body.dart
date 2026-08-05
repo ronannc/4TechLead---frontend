@@ -20,6 +20,26 @@ enum _PersonTab { oneOnOne, pdi, okrs, analysis }
 
 enum _OneOnOneView { register, templates, suggestions, history }
 
+enum _PdiView { create, suggestions, tracking }
+
+extension on _PdiView {
+  String get label {
+    return switch (this) {
+      _PdiView.create => 'Criar',
+      _PdiView.suggestions => 'Sugestões',
+      _PdiView.tracking => 'Acompanhar',
+    };
+  }
+
+  IconData get icon {
+    return switch (this) {
+      _PdiView.create => Icons.add_task_outlined,
+      _PdiView.suggestions => Icons.lightbulb_outline,
+      _PdiView.tracking => Icons.fact_check_outlined,
+    };
+  }
+}
+
 extension on _OneOnOneView {
   String get label {
     return switch (this) {
@@ -84,6 +104,7 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
 
   var _tab = _PersonTab.oneOnOne;
   var _oneOnOneView = _OneOnOneView.register;
+  var _pdiView = _PdiView.create;
   int? _selectedTemplateId;
 
   @override
@@ -170,6 +191,8 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
       ),
       _PersonTab.pdi => _PdiTab(
         growth: growth,
+        selectedView: _pdiView,
+        onViewChanged: (value) => setState(() => _pdiView = value),
         titleController: _planTitleController,
         summaryController: _planSummaryController,
         targetRoleController: _planTargetRoleController,
@@ -304,16 +327,26 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: 'Ação'),
+              decoration: const InputDecoration(
+                labelText: 'Ação',
+                helperText:
+                    'Descreva uma entrega objetiva. Ex.: conduzir o desenho técnico do próximo card.',
+              ),
             ),
             TextField(
               controller: competencyController,
-              decoration: const InputDecoration(labelText: 'Competência'),
+              decoration: const InputDecoration(
+                labelText: 'Competência',
+                helperText:
+                    'Informe a habilidade trabalhada. Ex.: comunicação, arquitetura, autonomia.',
+              ),
             ),
             TextField(
               controller: evidenceController,
               decoration: const InputDecoration(
                 labelText: 'Evidência esperada',
+                helperText:
+                    'Como saberemos que evoluiu? Ex.: decisão registrada e validada no PRD.',
               ),
             ),
           ],
@@ -365,20 +398,35 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: 'Título'),
+              decoration: const InputDecoration(
+                labelText: 'Título',
+                helperText:
+                    'Nome curto do plano. Ex.: Evoluir autonomia técnica.',
+              ),
             ),
             TextField(
               controller: summaryController,
-              decoration: const InputDecoration(labelText: 'Resumo'),
+              decoration: const InputDecoration(
+                labelText: 'Resumo',
+                helperText:
+                    'Explique o contexto, lacuna observada e resultado esperado.',
+              ),
             ),
             TextField(
               controller: statusController,
-              decoration: const InputDecoration(labelText: 'Status'),
+              decoration: const InputDecoration(
+                labelText: 'Status',
+                helperText: 'Use algo simples: active, paused, completed.',
+              ),
             ),
             TextField(
               controller: progressController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Progresso 0-100'),
+              decoration: const InputDecoration(
+                labelText: 'Progresso 0-100',
+                helperText:
+                    'Atualize conforme ações concluídas, evidências e mudança de comportamento.',
+              ),
             ),
           ],
         ),
@@ -427,16 +475,27 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: 'Resultado-chave'),
+              decoration: const InputDecoration(
+                labelText: 'Resultado-chave',
+                helperText:
+                    'Resultado mensurável que prova avanço. Ex.: entregar 3 desenhos técnicos revisados.',
+              ),
             ),
             TextField(
               controller: metricController,
-              decoration: const InputDecoration(labelText: 'Métrica'),
+              decoration: const InputDecoration(
+                labelText: 'Métrica',
+                helperText:
+                    'Nome da medida. Ex.: desenhos aprovados, PRs sem retrabalho.',
+              ),
             ),
             TextField(
               controller: targetController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Valor alvo'),
+              decoration: const InputDecoration(
+                labelText: 'Valor alvo',
+                helperText: 'Número esperado ao fim do ciclo. Ex.: 3.',
+              ),
             ),
           ],
         ),
@@ -489,21 +548,36 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
           children: [
             TextField(
               controller: objectiveController,
-              decoration: const InputDecoration(labelText: 'Objetivo'),
+              decoration: const InputDecoration(
+                labelText: 'Objetivo',
+                helperText:
+                    'Resultado qualitativo do ciclo. Ex.: aumentar autonomia técnica.',
+              ),
             ),
             TextField(
               controller: statusController,
-              decoration: const InputDecoration(labelText: 'Status'),
+              decoration: const InputDecoration(
+                labelText: 'Status',
+                helperText: 'Use algo simples: active, paused, completed.',
+              ),
             ),
             TextField(
               controller: confidenceController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Confiança 0-100'),
+              decoration: const InputDecoration(
+                labelText: 'Confiança 0-100',
+                helperText:
+                    'Quão provável é alcançar o objetivo com as evidências atuais.',
+              ),
             ),
             TextField(
               controller: progressController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Progresso 0-100'),
+              decoration: const InputDecoration(
+                labelText: 'Progresso 0-100',
+                helperText:
+                    'Atualize com base nos resultados-chave e evidências registradas.',
+              ),
             ),
           ],
         ),
@@ -747,6 +821,13 @@ class _OneOnOneRegisterView extends StatelessWidget {
               'Use um template como roteiro e salve as notas do encontro.',
         ),
         const SizedBox(height: AppSpacing.sm),
+        const _GuidanceTile(
+          icon: Icons.forum_outlined,
+          title: 'Como registrar um 1:1',
+          message:
+              'Prepare 2 ou 3 perguntas, anote respostas importantes, decisões, combinados e sinais de evolução ou bloqueio.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
         _Surface(
           child: _FormColumn(
             children: [
@@ -760,11 +841,19 @@ class _OneOnOneRegisterView extends StatelessWidget {
                     ),
                 ],
                 onChanged: onTemplateChanged,
-                decoration: const InputDecoration(labelText: 'Template'),
+                decoration: const InputDecoration(
+                  labelText: 'Template',
+                  helperText:
+                      'Escolha um roteiro. As perguntas entram nas notas para guiar a conversa.',
+                ),
               ),
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(labelText: 'Título'),
+                decoration: const InputDecoration(
+                  labelText: 'Título',
+                  helperText:
+                      'Use data ou tema central. Ex.: 1:1 sobre autonomia no ciclo atual.',
+                ),
               ),
               TextField(
                 controller: notesController,
@@ -772,6 +861,8 @@ class _OneOnOneRegisterView extends StatelessWidget {
                 maxLines: 6,
                 decoration: const InputDecoration(
                   labelText: 'Notas da conversa',
+                  helperText:
+                      'Registre perguntas, respostas, fatos observados, acordos e próximos passos.',
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -816,6 +907,13 @@ class _OneOnOneTemplateView extends StatelessWidget {
               'Cadastre roteiros reutilizáveis para conduzir os próximos 1:1s.',
         ),
         const SizedBox(height: AppSpacing.sm),
+        const _GuidanceTile(
+          icon: Icons.tune_outlined,
+          title: 'Como montar um template',
+          message:
+              'Crie perguntas abertas que ajudem a entender contexto, motivação, bloqueios, feedback e próximos passos.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
         _Surface(
           child: _FormColumn(
             children: [
@@ -823,6 +921,8 @@ class _OneOnOneTemplateView extends StatelessWidget {
                 controller: titleController,
                 decoration: const InputDecoration(
                   labelText: 'Nome do template',
+                  helperText:
+                      'Nome do roteiro. Ex.: Acompanhamento quinzenal, carreira, feedback.',
                 ),
               ),
               TextField(
@@ -831,6 +931,8 @@ class _OneOnOneTemplateView extends StatelessWidget {
                 maxLines: 6,
                 decoration: const InputDecoration(
                   labelText: 'Perguntas, uma por linha',
+                  helperText:
+                      'Uma pergunta por linha. Ex.: O que mais te bloqueou desde nosso último 1:1?',
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -947,6 +1049,8 @@ class _OneOnOneHistoryView extends StatelessWidget {
 class _PdiTab extends StatelessWidget {
   const _PdiTab({
     required this.growth,
+    required this.selectedView,
+    required this.onViewChanged,
     required this.titleController,
     required this.summaryController,
     required this.targetRoleController,
@@ -956,6 +1060,8 @@ class _PdiTab extends StatelessWidget {
   });
 
   final PersonGrowthViewModel growth;
+  final _PdiView selectedView;
+  final ValueChanged<_PdiView> onViewChanged;
   final TextEditingController titleController;
   final TextEditingController summaryController;
   final TextEditingController targetRoleController;
@@ -970,8 +1076,89 @@ class _PdiTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionTitle(
+          title: 'PDI',
+          subtitle:
+              'Crie planos, consulte sugestões e acompanhe ações de evolução.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _PdiNavigation(selected: selectedView, onChanged: onViewChanged),
+        const SizedBox(height: AppSpacing.md),
+        switch (selectedView) {
+          _PdiView.create => _PdiCreateView(
+            titleController: titleController,
+            summaryController: summaryController,
+            targetRoleController: targetRoleController,
+            onCreatePlan: onCreatePlan,
+          ),
+          _PdiView.suggestions => _PdiSuggestionsView(
+            suggestions: growth.suggestions,
+          ),
+          _PdiView.tracking => _PdiTrackingView(
+            plans: growth.plans,
+            onCreateItem: onCreateItem,
+            onEditPlan: onEditPlan,
+          ),
+        },
+      ],
+    );
+  }
+}
+
+class _PdiNavigation extends StatelessWidget {
+  const _PdiNavigation({required this.selected, required this.onChanged});
+
+  final _PdiView selected;
+  final ValueChanged<_PdiView> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SegmentedButton<_PdiView>(
+        segments: [
+          for (final view in _PdiView.values)
+            ButtonSegment(
+              value: view,
+              icon: Icon(view.icon),
+              label: Text(view.label),
+            ),
+        ],
+        selected: {selected},
+        onSelectionChanged: (values) => onChanged(values.single),
+      ),
+    );
+  }
+}
+
+class _PdiCreateView extends StatelessWidget {
+  const _PdiCreateView({
+    required this.titleController,
+    required this.summaryController,
+    required this.targetRoleController,
+    required this.onCreatePlan,
+  });
+
+  final TextEditingController titleController;
+  final TextEditingController summaryController;
+  final TextEditingController targetRoleController;
+  final VoidCallback onCreatePlan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
           title: 'Criar PDI',
           subtitle: 'Transforme objetivos de carreira em ações acompanháveis.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        const _GuidanceTile(
+          icon: Icons.add_task_outlined,
+          title: 'Como criar um PDI',
+          message:
+              'Descreva uma evolução esperada, conecte com uma competência e acompanhe por ações concretas e evidências observáveis.',
         ),
         const SizedBox(height: AppSpacing.sm),
         _Surface(
@@ -979,17 +1166,29 @@ class _PdiTab extends StatelessWidget {
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(labelText: 'Título'),
+                decoration: const InputDecoration(
+                  labelText: 'Título',
+                  helperText:
+                      'Nome curto do plano. Ex.: Evoluir autonomia técnica.',
+                ),
               ),
               TextField(
                 controller: targetRoleController,
-                decoration: const InputDecoration(labelText: 'Papel alvo'),
+                decoration: const InputDecoration(
+                  labelText: 'Papel alvo',
+                  helperText:
+                      'Cargo, papel ou responsabilidade desejada. Ex.: referência técnica do squad.',
+                ),
               ),
               TextField(
                 controller: summaryController,
                 minLines: 2,
                 maxLines: 4,
-                decoration: const InputDecoration(labelText: 'Resumo'),
+                decoration: const InputDecoration(
+                  labelText: 'Resumo',
+                  helperText:
+                      'Explique contexto, lacuna, expectativa e como a evolução será percebida.',
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
@@ -1005,26 +1204,81 @@ class _PdiTab extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        if (growth.suggestions != null) ...[
-          _SectionTitle(title: 'Sugestões para PDI'),
-          const SizedBox(height: AppSpacing.sm),
-          for (final suggestion in growth.suggestions!.pdiSuggestions)
+      ],
+    );
+  }
+}
+
+class _PdiSuggestionsView extends StatelessWidget {
+  const _PdiSuggestionsView({required this.suggestions});
+
+  final GrowthSuggestions? suggestions;
+
+  @override
+  Widget build(BuildContext context) {
+    final pdiSuggestions = suggestions?.pdiSuggestions ?? const [];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
+          title: 'Sugestões para PDI',
+          subtitle: 'Use insumos da análise para planejar próximas ações.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (pdiSuggestions.isEmpty)
+          const _EmptyState(
+            icon: Icons.lightbulb_outline,
+            message: 'Ainda não há sugestões de PDI para esta pessoa.',
+          )
+        else
+          for (final suggestion in pdiSuggestions)
             _TextTile(
               icon: Icons.lightbulb_outline,
               title: suggestion['title'].toString(),
               subtitle: suggestion['evidence']?.toString(),
             ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-        _SectionTitle(title: 'PDIs cadastrados'),
+      ],
+    );
+  }
+}
+
+class _PdiTrackingView extends StatelessWidget {
+  const _PdiTrackingView({
+    required this.plans,
+    required this.onCreateItem,
+    required this.onEditPlan,
+  });
+
+  final List<DevelopmentPlan> plans;
+  final ValueChanged<DevelopmentPlan> onCreateItem;
+  final ValueChanged<DevelopmentPlan> onEditPlan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
+          title: 'Acompanhar PDIs',
+          subtitle:
+              'Atualize progresso e cadastre ações do plano em andamento.',
+        ),
         const SizedBox(height: AppSpacing.sm),
-        for (final plan in growth.plans)
-          _PlanTile(
-            plan: plan,
-            onCreateItem: () => onCreateItem(plan),
-            onEditPlan: () => onEditPlan(plan),
-          ),
+        if (plans.isEmpty)
+          const _EmptyState(
+            icon: Icons.fact_check_outlined,
+            message: 'Nenhum PDI cadastrado ainda.',
+          )
+        else
+          for (final plan in plans)
+            _PlanTile(
+              plan: plan,
+              onCreateItem: () => onCreateItem(plan),
+              onEditPlan: () => onEditPlan(plan),
+            ),
       ],
     );
   }
@@ -1067,30 +1321,55 @@ class _OkrsTab extends StatelessWidget {
               'Cadastre diagnóstico, evidências e alvo antes do objetivo.',
         ),
         const SizedBox(height: AppSpacing.sm),
+        const _GuidanceTile(
+          icon: Icons.track_changes_outlined,
+          title: 'Como criar um OKR',
+          message:
+              'Use OKR para traduzir uma evolução em objetivo claro, resultados mensuráveis e evidências do ciclo.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
         _Surface(
           child: _FormColumn(
             children: [
               TextField(
                 controller: focusController,
-                decoration: const InputDecoration(labelText: 'Área de foco'),
+                decoration: const InputDecoration(
+                  labelText: 'Área de foco',
+                  helperText:
+                      'Tema de evolução. Ex.: autonomia, comunicação, qualidade técnica.',
+                ),
               ),
               TextField(
                 controller: diagnosisController,
-                decoration: const InputDecoration(labelText: 'Diagnóstico'),
+                decoration: const InputDecoration(
+                  labelText: 'Diagnóstico',
+                  helperText:
+                      'O que foi observado hoje? Ex.: depende do tech lead para decisões simples.',
+                ),
               ),
               TextField(
                 controller: evidenceController,
                 decoration: const InputDecoration(
                   labelText: 'Fonte de evidência',
+                  helperText:
+                      'De onde veio a percepção. Ex.: 1:1, PRs, daily, feedback do time.',
                 ),
               ),
               TextField(
                 controller: targetController,
-                decoration: const InputDecoration(labelText: 'Alvo esperado'),
+                decoration: const InputDecoration(
+                  labelText: 'Alvo esperado',
+                  helperText:
+                      'Estado desejado. Ex.: decidir alternativas técnicas com pouca supervisão.',
+                ),
               ),
               TextField(
                 controller: objectiveController,
-                decoration: const InputDecoration(labelText: 'Objetivo'),
+                decoration: const InputDecoration(
+                  labelText: 'Objetivo',
+                  helperText:
+                      'Frase inspiradora e clara. Ex.: aumentar autonomia na tomada de decisão técnica.',
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
@@ -1446,6 +1725,48 @@ class _EmptyState extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuidanceTile extends StatelessWidget {
+  const _GuidanceTile({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return _Surface(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.textTheme.titleSmall),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  message,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
