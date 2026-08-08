@@ -157,49 +157,61 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<PersonDetailViewModel, Person?>(
-      selector: (_, vm) => vm.person,
-      builder: (context, person, _) {
-        if (person == null) {
-          return const SizedBox.shrink();
+    return PopScope(
+      canPop: _focusedFlow == null,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _focusedFlow != null) {
+          _closeFocusedFlow();
         }
-
-        return Selector<PersonGrowthViewModel, ViewState>(
-          selector: (_, vm) => vm.state,
-          builder: (context, growthState, _) {
-            final growth = context.read<PersonGrowthViewModel>();
-
-            if (_focusedFlow != null) {
-              return _focusedFlowBody(context, growth);
-            }
-
-            return _PersonDetailScrollView(
-              children: [
-                _PersonHeader(person: person),
-                const SizedBox(height: AppSpacing.md),
-                _PersonTabSelector(
-                  selected: _tab,
-                  onChanged: (value) => setState(() => _tab = value),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                if (growthState == ViewState.loading &&
-                    growth.templates.isEmpty &&
-                    growth.sessions.isEmpty)
-                  const LoadingView()
-                else if (growthState == ViewState.error &&
-                    growth.templates.isEmpty &&
-                    growth.sessions.isEmpty)
-                  ErrorView(
-                    message: growth.errorMessage ?? 'Algo deu errado.',
-                    onRetry: growth.load,
-                  )
-                else
-                  _tabBody(context, person, growth),
-              ],
-            );
-          },
-        );
       },
+      child: Selector<PersonDetailViewModel, Person?>(
+        selector: (_, vm) => vm.person,
+        builder: (context, person, _) {
+          if (person == null) {
+            return const SizedBox.shrink();
+          }
+
+          return Consumer<PersonGrowthViewModel>(
+            builder: (context, growth, _) {
+              if (_focusedFlow != null) {
+                return _focusedFlowBody(context, growth);
+              }
+
+              return _PersonDetailScrollView(
+                children: [
+                  _PersonHeader(person: person),
+                  const SizedBox(height: AppSpacing.md),
+                  _PersonTabSelector(
+                    selected: _tab,
+                    onChanged: (value) => setState(() => _tab = value),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  if (growth.actionErrorMessage != null) ...[
+                    _ActionErrorBanner(
+                      message: growth.actionErrorMessage!,
+                      onDismiss: growth.clearActionError,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  if (growth.state == ViewState.loading &&
+                      growth.templates.isEmpty &&
+                      growth.sessions.isEmpty)
+                    const LoadingView()
+                  else if (growth.state == ViewState.error &&
+                      growth.templates.isEmpty &&
+                      growth.sessions.isEmpty)
+                    ErrorView(
+                      message: growth.errorMessage ?? 'Algo deu errado.',
+                      onRetry: growth.load,
+                    )
+                  else
+                    _tabBody(context, person, growth),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -262,6 +274,8 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
         _FocusedFlow.okr => 'Defina o contexto antes de criar as métricas.',
       },
       onBack: _closeFocusedFlow,
+      actionErrorMessage: growth.actionErrorMessage,
+      onDismissActionError: growth.clearActionError,
       child: switch (flow) {
         _FocusedFlow.oneOnOne => _OneOnOneRegisterView(
           growth: growth,
@@ -2266,12 +2280,16 @@ class _FocusedFlowView extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onBack,
+    required this.actionErrorMessage,
+    required this.onDismissActionError,
     required this.child,
   });
 
   final String title;
   final String subtitle;
   final VoidCallback onBack;
+  final String? actionErrorMessage;
+  final VoidCallback onDismissActionError;
   final Widget child;
 
   @override
@@ -2302,8 +2320,56 @@ class _FocusedFlowView extends StatelessWidget {
           },
         ),
         const SizedBox(height: AppSpacing.md),
+        if (actionErrorMessage != null) ...[
+          _ActionErrorBanner(
+            message: actionErrorMessage!,
+            onDismiss: onDismissActionError,
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         child,
       ],
+    );
+  }
+}
+
+class _ActionErrorBanner extends StatelessWidget {
+  const _ActionErrorBanner({required this.message, required this.onDismiss});
+
+  final String message;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: colorScheme.error),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onErrorContainer,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Dispensar',
+            onPressed: onDismiss,
+            icon: Icon(Icons.close, color: colorScheme.onErrorContainer),
+          ),
+        ],
+      ),
     );
   }
 }

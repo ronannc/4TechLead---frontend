@@ -29,19 +29,26 @@ class IntegrationsScreen extends StatelessWidget {
           subtitle: 'Webhooks e evidências externas',
           title: 'Integrações',
         ),
-        body: Selector<IntegrationsViewModel, ViewState>(
-          selector: (_, vm) => vm.state,
-          builder: (context, state, _) {
-            final viewModel = context.read<IntegrationsViewModel>();
+        body: Consumer<IntegrationsViewModel>(
+          builder: (context, viewModel, _) {
+            final hasLoadedContent =
+                viewModel.systems.isNotEmpty ||
+                viewModel.people.isNotEmpty ||
+                viewModel.identities.isNotEmpty ||
+                viewModel.metrics.isNotEmpty;
 
-            return switch (state) {
-              ViewState.idle || ViewState.loading => const LoadingView(),
-              ViewState.error => ErrorView(
+            if (viewModel.state == ViewState.loading && !hasLoadedContent) {
+              return const LoadingView();
+            }
+
+            if (viewModel.state == ViewState.error && !hasLoadedContent) {
+              return ErrorView(
                 message: viewModel.errorMessage ?? 'Algo deu errado.',
                 onRetry: viewModel.load,
-              ),
-              ViewState.loaded => const _IntegrationsBody(),
-            };
+              );
+            }
+
+            return const _IntegrationsBody();
           },
         ),
       ),
@@ -88,6 +95,13 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
             _Surface(child: _identityForm(viewModel)),
           ],
         ),
+        if (viewModel.actionErrorMessage != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          _ActionErrorBanner(
+            message: viewModel.actionErrorMessage!,
+            onDismiss: viewModel.clearActionError,
+          ),
+        ],
         if (viewModel.latestToken != null) ...[
           const SizedBox(height: AppSpacing.md),
           _TokenPanel(token: viewModel.latestToken!),
@@ -159,13 +173,15 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
                 return;
               }
 
-              await viewModel.createSystem(
+              final saved = await viewModel.createSystem(
                 name: _nameController.text.trim(),
                 provider: _provider,
                 description: _nullable(_descriptionController.text),
               );
-              _nameController.clear();
-              _descriptionController.clear();
+              if (saved) {
+                _nameController.clear();
+                _descriptionController.clear();
+              }
             },
           ),
         ),
@@ -181,6 +197,7 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
           subtitle: 'Associe o código enviado no webhook a uma pessoa.',
         ),
         DropdownButtonFormField<int>(
+          key: ValueKey('system-$_selectedSystemId'),
           initialValue: _selectedSystemId,
           decoration: const InputDecoration(labelText: 'Integração'),
           items: [
@@ -190,6 +207,7 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
           onChanged: (value) => setState(() => _selectedSystemId = value),
         ),
         DropdownButtonFormField<int>(
+          key: ValueKey('person-$_selectedPersonId'),
           initialValue: _selectedPersonId,
           decoration: const InputDecoration(labelText: 'Pessoa'),
           items: [
@@ -238,7 +256,7 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
                     return;
                   }
 
-                  await viewModel.createExternalIdentity(
+                  final saved = await viewModel.createExternalIdentity(
                     personId: personId,
                     integrationSystemId: systemId,
                     externalCode: externalCode,
@@ -246,8 +264,10 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
                       _externalUsernameController.text,
                     ),
                   );
-                  _externalCodeController.clear();
-                  _externalUsernameController.clear();
+                  if (saved) {
+                    _externalCodeController.clear();
+                    _externalUsernameController.clear();
+                  }
                 },
               ),
             ),
@@ -448,6 +468,47 @@ class _EmptyPanel extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(child: Text(message)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionErrorBanner extends StatelessWidget {
+  const _ActionErrorBanner({required this.message, required this.onDismiss});
+
+  final String message;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: colorScheme.error),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onErrorContainer,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Dispensar',
+            onPressed: onDismiss,
+            icon: Icon(Icons.close, color: colorScheme.onErrorContainer),
+          ),
         ],
       ),
     );

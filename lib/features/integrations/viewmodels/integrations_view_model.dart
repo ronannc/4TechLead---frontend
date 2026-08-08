@@ -1,3 +1,4 @@
+import '../../../core/network/api_exception.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../../people/models/person.dart';
 import '../../people/repositories/person_repository.dart';
@@ -15,16 +16,18 @@ class IntegrationsViewModel extends BaseViewModel {
   List<PersonExternalIdentity> identities = [];
   List<PersonDeliveryMetric> metrics = [];
   String? latestToken;
+  String? actionErrorMessage;
+  bool isMutating = false;
 
   Future<void> load() => runCatching(() async {
     await _loadAll();
   });
 
-  Future<void> createSystem({
+  Future<bool> createSystem({
     required String name,
     required String provider,
     String? description,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     final system = await _repository.createSystem(
       name: name,
       provider: provider,
@@ -34,12 +37,12 @@ class IntegrationsViewModel extends BaseViewModel {
     systems = await _repository.getSystems();
   });
 
-  Future<void> createExternalIdentity({
+  Future<bool> createExternalIdentity({
     required int personId,
     required int integrationSystemId,
     required String externalCode,
     String? externalUsername,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.createExternalIdentity(
       personId: personId,
       integrationSystemId: integrationSystemId,
@@ -48,6 +51,11 @@ class IntegrationsViewModel extends BaseViewModel {
     );
     identities = await _repository.getExternalIdentities();
   });
+
+  void clearActionError() {
+    actionErrorMessage = null;
+    notifyListeners();
+  }
 
   String personName(int personId) {
     return people
@@ -75,5 +83,25 @@ class IntegrationsViewModel extends BaseViewModel {
     people = loadedPeople;
     identities = loadedIdentities;
     metrics = loadedMetrics;
+  }
+
+  Future<bool> _runMutation(Future<void> Function() action) async {
+    actionErrorMessage = null;
+    isMutating = true;
+    notifyListeners();
+
+    try {
+      await action();
+      return true;
+    } on ApiException catch (e) {
+      actionErrorMessage = e.userMessage;
+      return false;
+    } catch (_) {
+      actionErrorMessage = 'Algo deu errado. Tente novamente.';
+      return false;
+    } finally {
+      isMutating = false;
+      notifyListeners();
+    }
   }
 }

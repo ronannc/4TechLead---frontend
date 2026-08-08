@@ -1,3 +1,4 @@
+import '../../../core/network/api_exception.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../models/person_growth_models.dart';
 import '../repositories/person_growth_repository.dart';
@@ -16,6 +17,8 @@ class PersonGrowthViewModel extends BaseViewModel {
 
   int sessionPage = 1;
   String sessionSearch = '';
+  String? actionErrorMessage;
+  bool isMutating = false;
 
   Future<void> load() => runCatching(() async {
     await _loadAll();
@@ -56,7 +59,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     required String title,
     required List<String> questions,
     String? description,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.createTemplate(
       title: title,
       questions: questions,
@@ -70,7 +73,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     String? notes,
     int? templateId,
     List<String>? questions,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.createSession(
       personId: personId,
       title: title,
@@ -90,7 +93,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     required String title,
     String? summary,
     String? targetRole,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.createDevelopmentPlan(
       personId: personId,
       title: title,
@@ -106,7 +109,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     String? summary,
     String? status,
     int? progress,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.updateDevelopmentPlan(
       id: id,
       title: title,
@@ -122,7 +125,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     required String title,
     String? competency,
     String? evidence,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.createDevelopmentPlanItem(
       planId: planId,
       title: title,
@@ -140,7 +143,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     String? evidenceSource,
     String? baseline,
     String? target,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.createOkr(
       personId: personId,
       objective: objective,
@@ -166,7 +169,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     String? target,
     int? confidence,
     int? progress,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.updateOkr(
       id: id,
       objective: objective,
@@ -196,7 +199,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     int? confidence,
     int? progress,
     DateTime? dueDate,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.createKeyResult(
       okrId: okrId,
       title: title,
@@ -228,7 +231,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     int? confidence,
     int? progress,
     DateTime? dueDate,
-  }) => runCatching(() async {
+  }) => _runMutation(() async {
     await _repository.updateKeyResult(
       id: id,
       title: title,
@@ -248,13 +251,35 @@ class PersonGrowthViewModel extends BaseViewModel {
   });
 
   Future<void> generateSuggestions({String? focusArea, String? context}) =>
-      runCatching(() async {
+      _runMutation(() async {
         suggestions = await _repository.getSuggestions(
           personId: personId,
           focusArea: focusArea,
           context: context,
         );
       });
+
+  void clearActionError() {
+    actionErrorMessage = null;
+    notifyListeners();
+  }
+
+  Future<void> _runMutation(Future<void> Function() action) async {
+    actionErrorMessage = null;
+    isMutating = true;
+    notifyListeners();
+
+    try {
+      await action();
+    } on ApiException catch (e) {
+      actionErrorMessage = e.userMessage;
+    } catch (_) {
+      actionErrorMessage = 'Algo deu errado. Tente novamente.';
+    } finally {
+      isMutating = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> _loadAll() async {
     final results = await Future.wait([
