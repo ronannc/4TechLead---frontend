@@ -10,6 +10,10 @@ Flutter (managed via `fvm` — use `fvm flutter ...` for every command, not a ba
 Dart SDK `^3.12.2`. Targets mobile (Android/iOS) first, but must also run well on macOS and Windows
 desktop — all 6 platform folders are scaffolded.
 
+In this local environment, prefer the absolute FVM binary: `/Users/ronan/fvm/bin/fvm flutter ...`.
+The package name is `for_tech_lead`; tests must import app code as `package:for_tech_lead/...`, never
+the old `package:frontend/...` path.
+
 Packages: `go_router` (routing), `provider` (ViewModel exposure + granular rebuilds via
 `Consumer`/`Selector`), `get_it` (DI container for Services/Repositories only), `dio` (HTTP),
 `logger` (debug interceptor console output), `equatable` (value equality on Models), `intl`
@@ -85,15 +89,21 @@ lib/
     │   ├── viewmodels/{people_list,person_form,person_detail}_view_model.dart
     │   ├── screens/{person_form,person_detail}_screen.dart + person_form.dart + person_detail_body.dart
     │   └── utils/birthday_util.dart     # daysUntilNextBirthday() — pure function, used by the Home birthday card
-    └── daily/                       # live session is top-level "focus mode", history nested under Team — see "Navigation"
-        ├── models/{daily_meeting,daily_meeting_entry,daily_note_category,daily_session_phase,daily_cue,daily_turn_draft}.dart
-        ├── repositories/daily_meeting_repository.dart
-        ├── services/daily_meeting_service.dart
-        ├── viewmodels/{daily_session,daily_history,daily_meeting_detail,person_daily_stats}_view_model.dart
-        ├── screens/daily_session_screen.dart + {daily_config,daily_running,daily_review}_body.dart + daily_timer_ring.dart + daily_note_sheet.dart
-        ├── screens/daily_history_screen.dart + daily_history_body.dart, daily_meeting_detail_screen.dart + daily_meeting_detail_body.dart
-        ├── screens/person_daily_section.dart   # appended to PersonDetailBody
-        └── utils/{daily_time_limit,daily_stats}.dart   # pure functions — validation/formatting, client-side stats aggregation
+    ├── daily/                       # live session is top-level "focus mode", history nested under Team — see "Navigation"
+    │   ├── models/{daily_meeting,daily_meeting_entry,daily_note_category,daily_session_phase,daily_cue,daily_turn_draft}.dart
+    │   ├── repositories/daily_meeting_repository.dart
+    │   ├── services/daily_meeting_service.dart
+    │   ├── viewmodels/{daily_session,daily_history,daily_meeting_detail,person_daily_stats}_view_model.dart
+    │   ├── screens/daily_session_screen.dart + {daily_config,daily_running,daily_review}_body.dart + daily_timer_ring.dart + daily_note_sheet.dart
+    │   ├── screens/daily_history_screen.dart + daily_history_body.dart, daily_meeting_detail_screen.dart + daily_meeting_detail_body.dart
+    │   ├── screens/person_daily_section.dart   # appended to PersonDetailBody
+    │   └── utils/{daily_time_limit,daily_stats}.dart   # pure functions — validation/formatting, client-side stats aggregation
+    └── integrations/                # external systems + people mappings + delivery metrics
+        ├── models/integration_models.dart
+        ├── repositories/integration_repository.dart
+        ├── services/integration_service.dart
+        ├── viewmodels/integrations_view_model.dart
+        └── screens/integrations_screen.dart
 ```
 
 ## One class per file
@@ -295,6 +305,21 @@ only ever deal with typed `ApiException` subclasses (`NetworkException`, `Valida
 mirrors Laravel's `{message, errors: {field: [msgs]}}` 422 shape — `NotFoundException`,
 `UnauthenticatedException`, `ForbiddenException`, `ServerException`).
 
+## Integrations
+
+`features/integrations/` configures external systems that send data to the Laravel webhook API. The
+Flutter app does not ingest webhooks directly: it creates integration systems, shows the one-time token
+returned by the backend, maps `person-external-identities`, and lists read-only delivery metrics.
+Keep this feature API-first and typed like the rest of the app: Service returns raw JSON, Repository maps
+to `IntegrationSystem`, `PersonExternalIdentity`, and `PersonDeliveryMetric`, ViewModel owns UI state.
+Tests live under `test/features/integrations/` and should cover repository mapping plus screen rendering
+for the three sections.
+
+Mutation errors in already-loaded screens must not replace the whole body with `ErrorView`. Preserve
+the loaded content and show an inline/snackbar error with retry or dismissal. If a local state flow
+looks like a route (for example a focused 1:1/PDI/OKR document inside a detail screen), add `PopScope`
+and a widget test so Android/system back closes that flow before leaving the page.
+
 ## Adding a new feature — recipe (mirror `features/teams/`)
 
 1. `features/<name>/models/<name>.dart` — `fromJson`/`toJson`, `extends Equatable`.
@@ -312,15 +337,15 @@ mirrors Laravel's `{message, errors: {field: [msgs]}}` 422 shape — `NotFoundEx
 
 ## Commands
 
-Run from `frontend/`, via `fvm` if a bare `flutter` isn't on `PATH` (this environment manages Flutter
-through `fvm`, currently resolving to Flutter 3.44.8 / Dart 3.12.2 — no `.fvmrc` pin file exists yet
-in this project; add one if the team standardizes on `fvm` long-term):
+Run from `frontend/`, via `/Users/ronan/fvm/bin/fvm` in this environment (currently resolving to
+Flutter 3.44.8 / Dart 3.12.2 — no `.fvmrc` pin file exists yet in this project; add one if the team
+standardizes on `fvm` long-term):
 
 ```bash
-fvm flutter pub get
-fvm flutter analyze              # must be clean (strict-casts/strict-inference/strict-raw-types + tightened lints — see analysis_options.yaml)
-fvm flutter test                 # unit + widget tests
-fvm flutter run -d macos          # or -d chrome / a connected mobile device/emulator
+/Users/ronan/fvm/bin/fvm flutter pub get
+/Users/ronan/fvm/bin/fvm flutter analyze              # must be clean (strict-casts/strict-inference/strict-raw-types + tightened lints — see analysis_options.yaml)
+/Users/ronan/fvm/bin/fvm flutter test                 # unit + widget tests
+/Users/ronan/fvm/bin/fvm flutter run -d macos          # or -d chrome / a connected mobile device/emulator
 ```
 
 The backend must be running (`docker compose up -d` from `backend/`) for the `Team`/`auth` features to
