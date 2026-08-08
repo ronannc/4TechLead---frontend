@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/theme/app_theme.dart';
-import 'package:frontend/core/widgets/tables/app_data_table.dart';
+import 'package:for_tech_lead/core/theme/app_theme.dart';
+import 'package:for_tech_lead/core/widgets/tables/app_data_table.dart';
 
 void main() {
   testWidgets('renders the system list header, count, and tappable rows', (

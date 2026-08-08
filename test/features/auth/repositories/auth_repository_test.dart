@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/auth/auth_session.dart';
-import 'package:frontend/core/storage/token_storage.dart';
-import 'package:frontend/features/auth/repositories/auth_repository.dart';
-import 'package:frontend/features/auth/services/auth_service.dart';
+import 'package:for_tech_lead/core/auth/auth_session.dart';
+import 'package:for_tech_lead/core/storage/token_storage.dart';
+import 'package:for_tech_lead/features/auth/repositories/auth_repository.dart';
+import 'package:for_tech_lead/features/auth/services/auth_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockAuthService extends Mock implements AuthService {}

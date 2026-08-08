@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/features/daily/repositories/daily_meeting_repository.dart';
-import 'package:frontend/features/daily/services/daily_meeting_service.dart';
+import 'package:for_tech_lead/features/daily/repositories/daily_meeting_repository.dart';
+import 'package:for_tech_lead/features/daily/services/daily_meeting_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockDailyMeetingService extends Mock implements DailyMeetingService {}

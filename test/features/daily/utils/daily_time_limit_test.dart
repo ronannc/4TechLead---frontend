@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/features/daily/utils/daily_time_limit.dart';
+import 'package:for_tech_lead/features/daily/utils/daily_time_limit.dart';
 
 void main() {
   group('isValidDailyTimeLimit', () {

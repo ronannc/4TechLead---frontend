@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/network/api_exception.dart';
-import 'package:frontend/core/viewmodels/base_view_model.dart';
-import 'package:frontend/features/teams/models/team.dart';
-import 'package:frontend/features/teams/repositories/team_repository.dart';
-import 'package:frontend/features/teams/viewmodels/teams_list_view_model.dart';
+import 'package:for_tech_lead/core/network/api_exception.dart';
+import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
+import 'package:for_tech_lead/features/teams/models/team.dart';
+import 'package:for_tech_lead/features/teams/repositories/team_repository.dart';
+import 'package:for_tech_lead/features/teams/viewmodels/teams_list_view_model.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockTeamRepository extends Mock implements TeamRepository {}

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/network/api_exception.dart';
-import 'package:frontend/features/teams/repositories/team_repository.dart';
-import 'package:frontend/features/teams/services/team_service.dart';
+import 'package:for_tech_lead/core/network/api_exception.dart';
+import 'package:for_tech_lead/features/teams/repositories/team_repository.dart';
+import 'package:for_tech_lead/features/teams/services/team_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockTeamService extends Mock implements TeamService {}

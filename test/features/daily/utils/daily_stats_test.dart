@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/features/daily/models/daily_entry_status.dart';
-import 'package:frontend/features/daily/models/daily_meeting_entry.dart';
-import 'package:frontend/features/daily/models/daily_note_category.dart';
-import 'package:frontend/features/daily/utils/daily_stats.dart';
+import 'package:for_tech_lead/features/daily/models/daily_entry_status.dart';
+import 'package:for_tech_lead/features/daily/models/daily_meeting_entry.dart';
+import 'package:for_tech_lead/features/daily/models/daily_note_category.dart';
+import 'package:for_tech_lead/features/daily/utils/daily_stats.dart';
 
 DailyMeetingEntry _entry({
   int id = 1,

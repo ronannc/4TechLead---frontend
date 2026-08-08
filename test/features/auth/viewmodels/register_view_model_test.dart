@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/network/api_exception.dart';
-import 'package:frontend/core/viewmodels/base_view_model.dart';
-import 'package:frontend/features/auth/models/app_user.dart';
-import 'package:frontend/features/auth/repositories/auth_repository.dart';
-import 'package:frontend/features/auth/viewmodels/register_view_model.dart';
+import 'package:for_tech_lead/core/network/api_exception.dart';
+import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
+import 'package:for_tech_lead/features/auth/models/app_user.dart';
+import 'package:for_tech_lead/features/auth/repositories/auth_repository.dart';
+import 'package:for_tech_lead/features/auth/viewmodels/register_view_model.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockAuthRepository extends Mock implements AuthRepository {}

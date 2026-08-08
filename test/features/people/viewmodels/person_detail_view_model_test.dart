@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/network/api_exception.dart';
-import 'package:frontend/core/viewmodels/base_view_model.dart';
-import 'package:frontend/features/people/models/contract_type.dart';
-import 'package:frontend/features/people/models/person.dart';
-import 'package:frontend/features/people/models/seniority_level.dart';
-import 'package:frontend/features/people/repositories/person_repository.dart';
-import 'package:frontend/features/people/viewmodels/person_detail_view_model.dart';
+import 'package:for_tech_lead/core/network/api_exception.dart';
+import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
+import 'package:for_tech_lead/features/people/models/contract_type.dart';
+import 'package:for_tech_lead/features/people/models/person.dart';
+import 'package:for_tech_lead/features/people/models/seniority_level.dart';
+import 'package:for_tech_lead/features/people/repositories/person_repository.dart';
+import 'package:for_tech_lead/features/people/viewmodels/person_detail_view_model.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockPersonRepository extends Mock implements PersonRepository {}

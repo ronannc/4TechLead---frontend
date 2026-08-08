@@ -44,7 +44,7 @@ void main() {
         ),
       ],
     );
-    when(() => integrationRepository.getDeliveryMetrics()).thenAnswer(
+    when(integrationRepository.getDeliveryMetrics).thenAnswer(
       (_) async => const [
         PersonDeliveryMetric(
           id: 1,
@@ -73,10 +73,7 @@ void main() {
     expect(find.text('GitHub Produto', skipOffstage: false), findsWidgets);
     await tester.drag(find.byType(ListView), const Offset(0, -900));
     await tester.pumpAndSettle();
-    expect(
-      find.text('Qualidade do código'),
-      findsOneWidget,
-    );
+    expect(find.text('Qualidade do código'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

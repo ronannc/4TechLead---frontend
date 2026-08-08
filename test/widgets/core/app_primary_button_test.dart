@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/widgets/buttons/app_dialog_actions.dart';
-import 'package:frontend/core/widgets/buttons/app_primary_button.dart';
+import 'package:for_tech_lead/core/widgets/buttons/app_dialog_actions.dart';
+import 'package:for_tech_lead/core/widgets/buttons/app_primary_button.dart';
 
 void main() {
   testWidgets('invokes onPressed when tapped', (tester) async {

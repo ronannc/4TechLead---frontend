@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/viewmodels/base_view_model.dart';
-import 'package:frontend/features/daily/models/daily_entry_status.dart';
-import 'package:frontend/features/daily/models/daily_meeting_entry.dart';
-import 'package:frontend/features/daily/repositories/daily_meeting_repository.dart';
-import 'package:frontend/features/daily/viewmodels/person_daily_stats_view_model.dart';
+import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
+import 'package:for_tech_lead/features/daily/models/daily_entry_status.dart';
+import 'package:for_tech_lead/features/daily/models/daily_meeting_entry.dart';
+import 'package:for_tech_lead/features/daily/repositories/daily_meeting_repository.dart';
+import 'package:for_tech_lead/features/daily/viewmodels/person_daily_stats_view_model.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockDailyMeetingRepository extends Mock

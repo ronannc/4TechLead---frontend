@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/network/api_exception.dart';
-import 'package:frontend/features/people/models/contract_type.dart';
-import 'package:frontend/features/people/models/seniority_level.dart';
-import 'package:frontend/features/people/repositories/person_repository.dart';
-import 'package:frontend/features/people/services/person_service.dart';
+import 'package:for_tech_lead/core/network/api_exception.dart';
+import 'package:for_tech_lead/features/people/models/contract_type.dart';
+import 'package:for_tech_lead/features/people/models/seniority_level.dart';
+import 'package:for_tech_lead/features/people/repositories/person_repository.dart';
+import 'package:for_tech_lead/features/people/services/person_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockPersonService extends Mock implements PersonService {}

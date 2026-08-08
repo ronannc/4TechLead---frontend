@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/core/viewmodels/base_view_model.dart';
-import 'package:frontend/features/home/viewmodels/home_view_model.dart';
-import 'package:frontend/features/people/models/contract_type.dart';
-import 'package:frontend/features/people/models/person.dart';
-import 'package:frontend/features/people/models/seniority_level.dart';
-import 'package:frontend/features/people/repositories/person_repository.dart';
-import 'package:frontend/features/teams/models/team.dart';
-import 'package:frontend/features/teams/repositories/team_repository.dart';
+import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
+import 'package:for_tech_lead/features/home/viewmodels/home_view_model.dart';
+import 'package:for_tech_lead/features/people/models/contract_type.dart';
+import 'package:for_tech_lead/features/people/models/person.dart';
+import 'package:for_tech_lead/features/people/models/seniority_level.dart';
+import 'package:for_tech_lead/features/people/repositories/person_repository.dart';
+import 'package:for_tech_lead/features/teams/models/team.dart';
+import 'package:for_tech_lead/features/teams/repositories/team_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockTeamRepository extends Mock implements TeamRepository {}

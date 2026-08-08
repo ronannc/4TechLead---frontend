@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/features/people/utils/birthday_util.dart';
+import 'package:for_tech_lead/features/people/utils/birthday_util.dart';
 
 void main() {
   group('daysUntilNextBirthday', () {
