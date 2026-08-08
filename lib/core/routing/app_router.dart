@@ -7,6 +7,7 @@ import '../../features/daily/screens/daily_history_screen.dart';
 import '../../features/daily/screens/daily_meeting_detail_screen.dart';
 import '../../features/daily/screens/daily_session_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/integrations/screens/integrations_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/people/screens/person_detail_screen.dart';
 import '../../features/people/screens/person_form_screen.dart';
@@ -32,6 +33,11 @@ final _navDestinations = [
     label: 'Notificações',
     icon: Icons.notifications_none,
     path: RoutePaths.notifications,
+  ),
+  const AppNavDestination(
+    label: 'Integrações',
+    icon: Icons.hub_outlined,
+    path: RoutePaths.integrations,
   ),
   const AppNavDestination(
     label: 'Perfil',
@@ -136,6 +142,10 @@ GoRouter createAppRouter(AuthSession authSession) {
           GoRoute(
             path: RoutePaths.notifications,
             builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: RoutePaths.integrations,
+            builder: (context, state) => const IntegrationsScreen(),
           ),
           GoRoute(
             path: RoutePaths.profile,

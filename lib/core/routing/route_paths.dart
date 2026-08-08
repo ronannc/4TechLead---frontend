@@ -12,6 +12,7 @@ class RoutePaths {
   static const personCreate = '/teams/:teamId/people/new';
   static const personDetail = '/teams/:teamId/people/:personId';
   static const notifications = '/notifications';
+  static const integrations = '/integrations';
   static const profile = '/profile';
 
   // Live focus-mode flow: deliberately top-level (outside the ShellRoute),
