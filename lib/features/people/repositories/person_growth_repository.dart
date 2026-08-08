@@ -116,17 +116,21 @@ class PersonGrowthRepository {
   Future<PersonOkr> createOkr({
     required int personId,
     required String objective,
+    String? cycle,
     String? focusArea,
     String? diagnosis,
     String? evidenceSource,
+    String? baseline,
     String? target,
   }) async {
     final json = await _service.createOkr(
       personId: personId,
       objective: objective,
+      cycle: cycle,
       focusArea: focusArea,
       diagnosis: diagnosis,
       evidenceSource: evidenceSource,
+      baseline: baseline,
       target: target,
     );
     return PersonOkr.fromJson(json['data'] as Map<String, dynamic>);
@@ -135,14 +139,26 @@ class PersonGrowthRepository {
   Future<PersonOkr> updateOkr({
     required int id,
     String? objective,
+    String? cycle,
     String? status,
+    String? focusArea,
+    String? diagnosis,
+    String? evidenceSource,
+    String? baseline,
+    String? target,
     int? confidence,
     int? progress,
   }) async {
     final json = await _service.updateOkr(
       id: id,
       objective: objective,
+      cycle: cycle,
       status: status,
+      focusArea: focusArea,
+      diagnosis: diagnosis,
+      evidenceSource: evidenceSource,
+      baseline: baseline,
+      target: target,
       confidence: confidence,
       progress: progress,
     );
@@ -153,13 +169,62 @@ class PersonGrowthRepository {
     required int okrId,
     required String title,
     String? metricName,
+    String? dataSource,
+    num? initialValue,
+    num? currentValue,
     num? targetValue,
+    String? unit,
+    String? evidence,
+    int? confidence,
+    int? progress,
+    DateTime? dueDate,
   }) async {
     final json = await _service.createKeyResult(
       okrId: okrId,
       title: title,
       metricName: metricName,
+      dataSource: dataSource,
+      initialValue: initialValue,
+      currentValue: currentValue,
       targetValue: targetValue,
+      unit: unit,
+      evidence: evidence,
+      confidence: confidence,
+      progress: progress,
+      dueDate: dueDate,
+    );
+    return OkrKeyResult.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<OkrKeyResult> updateKeyResult({
+    required int id,
+    String? title,
+    String? metricName,
+    String? dataSource,
+    num? initialValue,
+    num? currentValue,
+    num? targetValue,
+    String? unit,
+    String? status,
+    String? evidence,
+    int? confidence,
+    int? progress,
+    DateTime? dueDate,
+  }) async {
+    final json = await _service.updateKeyResult(
+      id: id,
+      title: title,
+      metricName: metricName,
+      dataSource: dataSource,
+      initialValue: initialValue,
+      currentValue: currentValue,
+      targetValue: targetValue,
+      unit: unit,
+      status: status,
+      evidence: evidence,
+      confidence: confidence,
+      progress: progress,
+      dueDate: dueDate,
     );
     return OkrKeyResult.fromJson(json['data'] as Map<String, dynamic>);
   }

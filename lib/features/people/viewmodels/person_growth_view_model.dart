@@ -134,17 +134,21 @@ class PersonGrowthViewModel extends BaseViewModel {
 
   Future<void> createOkr({
     required String objective,
+    String? cycle,
     String? focusArea,
     String? diagnosis,
     String? evidenceSource,
+    String? baseline,
     String? target,
   }) => runCatching(() async {
     await _repository.createOkr(
       personId: personId,
       objective: objective,
+      cycle: cycle,
       focusArea: focusArea,
       diagnosis: diagnosis,
       evidenceSource: evidenceSource,
+      baseline: baseline,
       target: target,
     );
     okrs = await _repository.getOkrs(personId);
@@ -153,14 +157,26 @@ class PersonGrowthViewModel extends BaseViewModel {
   Future<void> updateOkr({
     required int id,
     String? objective,
+    String? cycle,
     String? status,
+    String? focusArea,
+    String? diagnosis,
+    String? evidenceSource,
+    String? baseline,
+    String? target,
     int? confidence,
     int? progress,
   }) => runCatching(() async {
     await _repository.updateOkr(
       id: id,
       objective: objective,
+      cycle: cycle,
       status: status,
+      focusArea: focusArea,
+      diagnosis: diagnosis,
+      evidenceSource: evidenceSource,
+      baseline: baseline,
+      target: target,
       confidence: confidence,
       progress: progress,
     );
@@ -171,13 +187,62 @@ class PersonGrowthViewModel extends BaseViewModel {
     required int okrId,
     required String title,
     String? metricName,
+    String? dataSource,
+    num? initialValue,
+    num? currentValue,
     num? targetValue,
+    String? unit,
+    String? evidence,
+    int? confidence,
+    int? progress,
+    DateTime? dueDate,
   }) => runCatching(() async {
     await _repository.createKeyResult(
       okrId: okrId,
       title: title,
       metricName: metricName,
+      dataSource: dataSource,
+      initialValue: initialValue,
+      currentValue: currentValue,
       targetValue: targetValue,
+      unit: unit,
+      evidence: evidence,
+      confidence: confidence,
+      progress: progress,
+      dueDate: dueDate,
+    );
+    okrs = await _repository.getOkrs(personId);
+  });
+
+  Future<void> updateKeyResult({
+    required int id,
+    String? title,
+    String? metricName,
+    String? dataSource,
+    num? initialValue,
+    num? currentValue,
+    num? targetValue,
+    String? unit,
+    String? status,
+    String? evidence,
+    int? confidence,
+    int? progress,
+    DateTime? dueDate,
+  }) => runCatching(() async {
+    await _repository.updateKeyResult(
+      id: id,
+      title: title,
+      metricName: metricName,
+      dataSource: dataSource,
+      initialValue: initialValue,
+      currentValue: currentValue,
+      targetValue: targetValue,
+      unit: unit,
+      status: status,
+      evidence: evidence,
+      confidence: confidence,
+      progress: progress,
+      dueDate: dueDate,
     );
     okrs = await _repository.getOkrs(personId);
   });

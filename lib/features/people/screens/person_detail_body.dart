@@ -16,11 +16,33 @@ import '../models/person_growth_models.dart';
 import '../viewmodels/person_detail_view_model.dart';
 import '../viewmodels/person_growth_view_model.dart';
 
-enum _PersonTab { oneOnOne, pdi, okrs, analysis }
+enum _PersonTab { info, oneOnOne, pdi, okrs, analysis }
+
+enum _FocusedFlow { oneOnOne, pdi, okr }
 
 enum _OneOnOneView { register, templates, suggestions, history }
 
 enum _PdiView { create, suggestions, tracking }
+
+enum _OkrView { define, suggestions, tracking }
+
+extension on _OkrView {
+  String get label {
+    return switch (this) {
+      _OkrView.define => 'Definir',
+      _OkrView.suggestions => 'Sugestões',
+      _OkrView.tracking => 'Acompanhar',
+    };
+  }
+
+  IconData get icon {
+    return switch (this) {
+      _OkrView.define => Icons.add_task_outlined,
+      _OkrView.suggestions => Icons.auto_awesome_outlined,
+      _OkrView.tracking => Icons.insights_outlined,
+    };
+  }
+}
 
 extension on _PdiView {
   String get label {
@@ -63,6 +85,7 @@ extension on _OneOnOneView {
 extension on _PersonTab {
   String get label {
     return switch (this) {
+      _PersonTab.info => 'Geral',
       _PersonTab.oneOnOne => '1:1',
       _PersonTab.pdi => 'PDI',
       _PersonTab.okrs => 'OKRs',
@@ -72,6 +95,7 @@ extension on _PersonTab {
 
   IconData get icon {
     return switch (this) {
+      _PersonTab.info => Icons.badge_outlined,
       _PersonTab.oneOnOne => Icons.forum_outlined,
       _PersonTab.pdi => Icons.trending_up,
       _PersonTab.okrs => Icons.track_changes_outlined,
@@ -98,13 +122,17 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
   final _planTargetRoleController = TextEditingController();
   final _okrObjectiveController = TextEditingController();
   final _okrFocusController = TextEditingController();
+  final _okrCycleController = TextEditingController();
   final _okrDiagnosisController = TextEditingController();
   final _okrEvidenceController = TextEditingController();
+  final _okrBaselineController = TextEditingController();
   final _okrTargetController = TextEditingController();
 
-  var _tab = _PersonTab.oneOnOne;
-  var _oneOnOneView = _OneOnOneView.register;
-  var _pdiView = _PdiView.create;
+  var _tab = _PersonTab.info;
+  var _oneOnOneView = _OneOnOneView.history;
+  var _pdiView = _PdiView.tracking;
+  var _okrView = _OkrView.tracking;
+  _FocusedFlow? _focusedFlow;
   int? _selectedTemplateId;
 
   @override
@@ -119,8 +147,10 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     _planTargetRoleController.dispose();
     _okrObjectiveController.dispose();
     _okrFocusController.dispose();
+    _okrCycleController.dispose();
     _okrDiagnosisController.dispose();
     _okrEvidenceController.dispose();
+    _okrBaselineController.dispose();
     _okrTargetController.dispose();
     super.dispose();
   }
@@ -139,7 +169,11 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
           builder: (context, growthState, _) {
             final growth = context.read<PersonGrowthViewModel>();
 
-            return ListView(
+            if (_focusedFlow != null) {
+              return _focusedFlowBody(context, growth);
+            }
+
+            return _PersonDetailScrollView(
               children: [
                 _PersonHeader(person: person),
                 const SizedBox(height: AppSpacing.md),
@@ -175,48 +209,94 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     PersonGrowthViewModel growth,
   ) {
     return switch (_tab) {
+      _PersonTab.info => _PersonInfoTab(person: person),
       _PersonTab.oneOnOne => _OneOnOneTab(
         growth: growth,
         selectedView: _oneOnOneView,
         onViewChanged: (value) => setState(() => _oneOnOneView = value),
-        selectedTemplateId: _selectedTemplateId,
-        onTemplateChanged: (value) => _selectSessionTemplate(value, growth),
         sessionSearchController: _sessionSearchController,
-        sessionTitleController: _sessionTitleController,
-        sessionNotesController: _sessionNotesController,
         templateTitleController: _templateTitleController,
         templateQuestionsController: _templateQuestionsController,
-        onCreateSession: () => _createSession(growth),
         onCreateTemplate: () => _createTemplate(growth),
+        onCreateSession: () => _openFocusedFlow(_FocusedFlow.oneOnOne),
       ),
       _PersonTab.pdi => _PdiTab(
         growth: growth,
         selectedView: _pdiView,
         onViewChanged: (value) => setState(() => _pdiView = value),
-        titleController: _planTitleController,
-        summaryController: _planSummaryController,
-        targetRoleController: _planTargetRoleController,
-        onCreatePlan: () => _createPlan(growth),
         onCreateItem: (plan) => _showPlanItemDialog(context, growth, plan),
         onEditPlan: (plan) => _showEditPlanDialog(context, growth, plan),
+        onCreatePlan: () => _openFocusedFlow(_FocusedFlow.pdi),
       ),
       _PersonTab.okrs => _OkrsTab(
         growth: growth,
-        objectiveController: _okrObjectiveController,
-        focusController: _okrFocusController,
-        diagnosisController: _okrDiagnosisController,
-        evidenceController: _okrEvidenceController,
-        targetController: _okrTargetController,
-        onCreateOkr: () => _createOkr(growth),
+        selectedView: _okrView,
+        onViewChanged: (value) => setState(() => _okrView = value),
         onGenerateSuggestions: () => growth.generateSuggestions(
           focusArea: _okrFocusController.text.trim(),
           context: _okrDiagnosisController.text.trim(),
         ),
         onCreateKeyResult: (okr) => _showKeyResultDialog(context, growth, okr),
+        onEditKeyResult: (keyResult) =>
+            _showEditKeyResultDialog(context, growth, keyResult),
         onEditOkr: (okr) => _showEditOkrDialog(context, growth, okr),
+        onUseSuggestion: _useOkrSuggestion,
+        onCreateOkr: () => _openFocusedFlow(_FocusedFlow.okr),
       ),
       _PersonTab.analysis => _AnalysisTab(person: person, growth: growth),
     };
+  }
+
+  Widget _focusedFlowBody(BuildContext context, PersonGrowthViewModel growth) {
+    final flow = _focusedFlow!;
+
+    return _FocusedFlowView(
+      title: switch (flow) {
+        _FocusedFlow.oneOnOne => 'Novo 1:1',
+        _FocusedFlow.pdi => 'Novo PDI',
+        _FocusedFlow.okr => 'Novo OKR',
+      },
+      subtitle: switch (flow) {
+        _FocusedFlow.oneOnOne => 'Conduza e registre a conversa.',
+        _FocusedFlow.pdi => 'Transforme uma evolução em plano de ação.',
+        _FocusedFlow.okr => 'Defina o contexto antes de criar as métricas.',
+      },
+      onBack: _closeFocusedFlow,
+      child: switch (flow) {
+        _FocusedFlow.oneOnOne => _OneOnOneRegisterView(
+          growth: growth,
+          selectedTemplateId: _selectedTemplateId,
+          onTemplateChanged: (value) => _selectSessionTemplate(value, growth),
+          titleController: _sessionTitleController,
+          notesController: _sessionNotesController,
+          onCreateSession: () => _createSession(growth),
+        ),
+        _FocusedFlow.pdi => _PdiCreateView(
+          titleController: _planTitleController,
+          summaryController: _planSummaryController,
+          targetRoleController: _planTargetRoleController,
+          onCreatePlan: () => _createPlan(growth),
+        ),
+        _FocusedFlow.okr => _OkrDefineView(
+          objectiveController: _okrObjectiveController,
+          focusController: _okrFocusController,
+          cycleController: _okrCycleController,
+          diagnosisController: _okrDiagnosisController,
+          evidenceController: _okrEvidenceController,
+          baselineController: _okrBaselineController,
+          targetController: _okrTargetController,
+          onCreateOkr: () => _createOkr(growth),
+        ),
+      },
+    );
+  }
+
+  void _openFocusedFlow(_FocusedFlow flow) {
+    setState(() => _focusedFlow = flow);
+  }
+
+  void _closeFocusedFlow() {
+    setState(() => _focusedFlow = null);
   }
 
   void _selectSessionTemplate(int? templateId, PersonGrowthViewModel growth) {
@@ -272,6 +352,12 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     );
     _sessionTitleController.clear();
     _sessionNotesController.clear();
+    if (mounted) {
+      setState(() {
+        _focusedFlow = null;
+        _oneOnOneView = _OneOnOneView.history;
+      });
+    }
   }
 
   Future<void> _createPlan(PersonGrowthViewModel growth) async {
@@ -288,6 +374,12 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     _planTitleController.clear();
     _planSummaryController.clear();
     _planTargetRoleController.clear();
+    if (mounted) {
+      setState(() {
+        _focusedFlow = null;
+        _pdiView = _PdiView.tracking;
+      });
+    }
   }
 
   Future<void> _createOkr(PersonGrowthViewModel growth) async {
@@ -298,16 +390,36 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
 
     await growth.createOkr(
       objective: objective,
+      cycle: _nullable(_okrCycleController.text),
       focusArea: _nullable(_okrFocusController.text),
       diagnosis: _nullable(_okrDiagnosisController.text),
       evidenceSource: _nullable(_okrEvidenceController.text),
+      baseline: _nullable(_okrBaselineController.text),
       target: _nullable(_okrTargetController.text),
     );
     _okrObjectiveController.clear();
     _okrFocusController.clear();
+    _okrCycleController.clear();
     _okrDiagnosisController.clear();
     _okrEvidenceController.clear();
+    _okrBaselineController.clear();
     _okrTargetController.clear();
+    if (mounted) {
+      setState(() {
+        _focusedFlow = null;
+        _okrView = _OkrView.tracking;
+      });
+    }
+  }
+
+  void _useOkrSuggestion(Map<String, dynamic> suggestion) {
+    setState(() {
+      _okrObjectiveController.text = suggestion['objective']?.toString() ?? '';
+      _okrFocusController.text = suggestion['focus_area']?.toString() ?? '';
+      _okrDiagnosisController.text = suggestion['diagnosis']?.toString() ?? '';
+      _okrTargetController.text = suggestion['target']?.toString() ?? '';
+      _focusedFlow = _FocusedFlow.okr;
+    });
   }
 
   Future<void> _showPlanItemDialog(
@@ -319,60 +431,54 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     final competencyController = TextEditingController();
     final evidenceController = TextEditingController();
 
-    await showDialog<void>(
+    await _showEditorSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Adicionar ação do PDI'),
-        content: _DialogFormContent(
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Ação',
-                helperText:
-                    'Descreva uma entrega objetiva. Ex.: conduzir o desenho técnico do próximo card.',
-              ),
-            ),
-            TextField(
-              controller: competencyController,
-              decoration: const InputDecoration(
-                labelText: 'Competência',
-                helperText:
-                    'Informe a habilidade trabalhada. Ex.: comunicação, arquitetura, autonomia.',
-              ),
-            ),
-            TextField(
-              controller: evidenceController,
-              decoration: const InputDecoration(
-                labelText: 'Evidência esperada',
-                helperText:
-                    'Como saberemos que evoluiu? Ex.: decisão registrada e validada no PRD.',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          AppDialogActions(
-            secondaryLabel: 'Cancelar',
-            onSecondaryPressed: () => Navigator.pop(context),
-            primaryLabel: 'Adicionar',
-            onPrimaryPressed: () async {
-              if (titleController.text.trim().isEmpty) {
-                return;
-              }
-              await growth.createPlanItem(
-                planId: plan.id,
-                title: titleController.text.trim(),
-                competency: _nullable(competencyController.text),
-                evidence: _nullable(evidenceController.text),
-              );
-              if (context.mounted) {
-                Navigator.pop(context);
-              }
-            },
+      title: 'Nova ação do PDI',
+      subtitle:
+          'Defina uma prática concreta e como a evolução será comprovada.',
+      primaryLabel: 'Adicionar ação',
+      children: [
+        TextField(
+          controller: titleController,
+          decoration: const InputDecoration(
+            labelText: 'Ação',
+            helperText:
+                'Entrega objetiva. Ex.: conduzir o desenho técnico do próximo card.',
           ),
-        ],
-      ),
+        ),
+        TextField(
+          controller: competencyController,
+          decoration: const InputDecoration(
+            labelText: 'Competência',
+            helperText:
+                'Habilidade trabalhada. Ex.: comunicação, arquitetura, autonomia.',
+          ),
+        ),
+        TextField(
+          controller: evidenceController,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Evidência esperada',
+            helperText:
+                'Como a evolução será percebida? Ex.: decisão registrada e validada.',
+          ),
+        ),
+      ],
+      onSubmit: (sheetContext) async {
+        if (titleController.text.trim().isEmpty) {
+          return;
+        }
+        await growth.createPlanItem(
+          planId: plan.id,
+          title: titleController.text.trim(),
+          competency: _nullable(competencyController.text),
+          evidence: _nullable(evidenceController.text),
+        );
+        if (sheetContext.mounted) {
+          Navigator.pop(sheetContext);
+        }
+      },
     );
 
     titleController.dispose();
@@ -390,66 +496,56 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     final statusController = TextEditingController(text: plan.status);
     final progressController = TextEditingController(text: '${plan.progress}');
 
-    await showDialog<void>(
+    await _showEditorSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar PDI'),
-        content: _DialogFormContent(
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Título',
-                helperText:
-                    'Nome curto do plano. Ex.: Evoluir autonomia técnica.',
-              ),
-            ),
-            TextField(
-              controller: summaryController,
-              decoration: const InputDecoration(
-                labelText: 'Resumo',
-                helperText:
-                    'Explique o contexto, lacuna observada e resultado esperado.',
-              ),
-            ),
-            TextField(
-              controller: statusController,
-              decoration: const InputDecoration(
-                labelText: 'Status',
-                helperText: 'Use algo simples: active, paused, completed.',
-              ),
-            ),
-            TextField(
-              controller: progressController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Progresso 0-100',
-                helperText:
-                    'Atualize conforme ações concluídas, evidências e mudança de comportamento.',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          AppDialogActions(
-            secondaryLabel: 'Cancelar',
-            onSecondaryPressed: () => Navigator.pop(context),
-            primaryLabel: 'Atualizar',
-            onPrimaryPressed: () async {
-              await growth.updatePlan(
-                id: plan.id,
-                title: titleController.text.trim(),
-                summary: _nullable(summaryController.text),
-                status: statusController.text.trim(),
-                progress: int.tryParse(progressController.text.trim()),
-              );
-              if (context.mounted) {
-                Navigator.pop(context);
-              }
-            },
+      title: 'Editar PDI',
+      subtitle: 'Ajuste o objetivo do plano e reflita o acompanhamento atual.',
+      primaryLabel: 'Atualizar PDI',
+      children: [
+        TextField(
+          controller: titleController,
+          decoration: const InputDecoration(
+            labelText: 'Título',
+            helperText: 'Nome curto do plano. Ex.: Evoluir autonomia técnica.',
           ),
-        ],
-      ),
+        ),
+        TextField(
+          controller: summaryController,
+          decoration: const InputDecoration(
+            labelText: 'Resumo',
+            helperText:
+                'Explique o contexto, lacuna observada e resultado esperado.',
+          ),
+        ),
+        TextField(
+          controller: statusController,
+          decoration: const InputDecoration(
+            labelText: 'Status',
+            helperText: 'Use algo simples: active, paused, completed.',
+          ),
+        ),
+        TextField(
+          controller: progressController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Progresso 0-100',
+            helperText:
+                'Atualize conforme ações concluídas, evidências e mudança de comportamento.',
+          ),
+        ),
+      ],
+      onSubmit: (sheetContext) async {
+        await growth.updatePlan(
+          id: plan.id,
+          title: titleController.text.trim(),
+          summary: _nullable(summaryController.text),
+          status: statusController.text.trim(),
+          progress: int.tryParse(progressController.text.trim()),
+        );
+        if (sheetContext.mounted) {
+          Navigator.pop(sheetContext);
+        }
+      },
     );
 
     titleController.dispose();
@@ -462,70 +558,225 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     BuildContext context,
     PersonGrowthViewModel growth,
     PersonOkr okr,
-  ) async {
-    final titleController = TextEditingController();
-    final metricController = TextEditingController();
-    final targetController = TextEditingController();
+  ) => _showKeyResultEditor(context: context, growth: growth, okrId: okr.id);
 
-    await showDialog<void>(
+  Future<void> _showEditKeyResultDialog(
+    BuildContext context,
+    PersonGrowthViewModel growth,
+    OkrKeyResult keyResult,
+  ) => _showKeyResultEditor(
+    context: context,
+    growth: growth,
+    okrId: keyResult.okrId,
+    keyResult: keyResult,
+  );
+
+  Future<void> _showKeyResultEditor({
+    required BuildContext context,
+    required PersonGrowthViewModel growth,
+    required int okrId,
+    OkrKeyResult? keyResult,
+  }) async {
+    final titleController = TextEditingController(text: keyResult?.title);
+    final metricController = TextEditingController(text: keyResult?.metricName);
+    final initialController = TextEditingController(
+      text: _numberText(keyResult?.initialValue),
+    );
+    final currentController = TextEditingController(
+      text: _numberText(keyResult?.currentValue),
+    );
+    final targetController = TextEditingController(
+      text: _numberText(keyResult?.targetValue),
+    );
+    final unitController = TextEditingController(text: keyResult?.unit);
+    final evidenceController = TextEditingController(text: keyResult?.evidence);
+    final statusController = TextEditingController(
+      text: keyResult?.status ?? 'todo',
+    );
+    final confidenceController = TextEditingController(
+      text: '${keyResult?.confidence ?? 50}',
+    );
+    final dueDateController = TextEditingController(
+      text: keyResult?.dueDate == null
+          ? ''
+          : DateFormat('yyyy-MM-dd').format(keyResult!.dueDate!),
+    );
+    var dataSource = keyResult?.dataSource ?? 'manual';
+
+    await _showEditorSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Adicionar KR'),
-        content: _DialogFormContent(
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Resultado-chave',
-                helperText:
-                    'Resultado mensurável que prova avanço. Ex.: entregar 3 desenhos técnicos revisados.',
-              ),
-            ),
-            TextField(
-              controller: metricController,
-              decoration: const InputDecoration(
-                labelText: 'Métrica',
-                helperText:
-                    'Nome da medida. Ex.: desenhos aprovados, PRs sem retrabalho.',
-              ),
-            ),
-            TextField(
-              controller: targetController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Valor alvo',
-                helperText: 'Número esperado ao fim do ciclo. Ex.: 3.',
-              ),
-            ),
-          ],
+      title: keyResult == null ? 'Nova métrica' : 'Atualizar métrica',
+      subtitle:
+          'Defina como o resultado será medido. A origem escolhida prepara o dado para atualização manual ou futura automação.',
+      primaryLabel: keyResult == null
+          ? 'Adicionar métrica'
+          : 'Atualizar métrica',
+      children: [
+        TextField(
+          controller: titleController,
+          decoration: const InputDecoration(
+            labelText: 'Resultado-chave',
+            helperText:
+                'Resultado mensurável. Ex.: entregar 3 desenhos técnicos revisados.',
+          ),
         ),
-        actions: [
-          AppDialogActions(
-            secondaryLabel: 'Cancelar',
-            onSecondaryPressed: () => Navigator.pop(context),
-            primaryLabel: 'Adicionar',
-            onPrimaryPressed: () async {
-              if (titleController.text.trim().isEmpty) {
-                return;
-              }
-              await growth.createKeyResult(
-                okrId: okr.id,
-                title: titleController.text.trim(),
-                metricName: _nullable(metricController.text),
-                targetValue: num.tryParse(targetController.text.trim()),
-              );
-              if (context.mounted) {
-                Navigator.pop(context);
+        TextField(
+          controller: metricController,
+          decoration: const InputDecoration(
+            labelText: 'Métrica',
+            helperText:
+                'O que será contado ou acompanhado. Ex.: PRs aprovados.',
+          ),
+        ),
+        StatefulBuilder(
+          builder: (context, setSheetState) => DropdownButtonFormField<String>(
+            initialValue: dataSource,
+            decoration: const InputDecoration(
+              labelText: 'Origem dos dados',
+              helperText:
+                  'Manual agora; integrações futuras usam a mesma métrica.',
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: 'manual',
+                child: Text('Atualização manual'),
+              ),
+              DropdownMenuItem(
+                value: 'pull_requests',
+                child: Text('Pull requests'),
+              ),
+              DropdownMenuItem(value: 'tasks', child: Text('Tarefas')),
+              DropdownMenuItem(value: 'dailies', child: Text('Dailies')),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                setSheetState(() => dataSource = value);
               }
             },
           ),
+        ),
+        TextField(
+          controller: initialController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Valor inicial',
+            helperText: 'Ponto de partida da métrica. Ex.: 0.',
+          ),
+        ),
+        TextField(
+          controller: currentController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Valor atual',
+            helperText: 'Valor observado no momento.',
+          ),
+        ),
+        TextField(
+          controller: targetController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Valor alvo',
+            helperText: 'Valor esperado ao fim do ciclo. Ex.: 3.',
+          ),
+        ),
+        TextField(
+          controller: unitController,
+          decoration: const InputDecoration(
+            labelText: 'Unidade',
+            helperText: 'Ex.: PRs, tarefas, percentual, horas.',
+          ),
+        ),
+        TextField(
+          controller: dueDateController,
+          keyboardType: TextInputType.datetime,
+          decoration: const InputDecoration(
+            labelText: 'Data de revisão',
+            helperText: 'Opcional, no formato AAAA-MM-DD.',
+          ),
+        ),
+        if (keyResult != null) ...[
+          TextField(
+            controller: statusController,
+            decoration: const InputDecoration(labelText: 'Status'),
+          ),
+          TextField(
+            controller: confidenceController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Confiança 0-100'),
+          ),
         ],
-      ),
+        TextField(
+          controller: evidenceController,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            labelText: 'Evidência',
+            helperText:
+                'Registre o dado, link ou contexto que explica a atualização.',
+          ),
+        ),
+      ],
+      onSubmit: (sheetContext) async {
+        final initialValue = num.tryParse(initialController.text.trim());
+        final currentValue = num.tryParse(currentController.text.trim());
+        final targetValue = num.tryParse(targetController.text.trim());
+        final progress = _metricProgress(
+          initialValue: initialValue,
+          currentValue: currentValue,
+          targetValue: targetValue,
+        );
+
+        if (titleController.text.trim().isEmpty) {
+          return;
+        }
+
+        if (keyResult == null) {
+          await growth.createKeyResult(
+            okrId: okrId,
+            title: titleController.text.trim(),
+            metricName: _nullable(metricController.text),
+            dataSource: dataSource,
+            initialValue: initialValue,
+            currentValue: currentValue,
+            targetValue: targetValue,
+            unit: _nullable(unitController.text),
+            evidence: _nullable(evidenceController.text),
+            progress: progress,
+            dueDate: DateTime.tryParse(dueDateController.text.trim()),
+          );
+        } else {
+          await growth.updateKeyResult(
+            id: keyResult.id,
+            title: titleController.text.trim(),
+            metricName: _nullable(metricController.text),
+            dataSource: dataSource,
+            initialValue: initialValue,
+            currentValue: currentValue,
+            targetValue: targetValue,
+            unit: _nullable(unitController.text),
+            status: _nullable(statusController.text),
+            evidence: _nullable(evidenceController.text),
+            confidence: int.tryParse(confidenceController.text.trim()),
+            progress: progress ?? keyResult.progress,
+            dueDate: DateTime.tryParse(dueDateController.text.trim()),
+          );
+        }
+        if (sheetContext.mounted) {
+          Navigator.pop(sheetContext);
+        }
+      },
     );
 
     titleController.dispose();
     metricController.dispose();
+    initialController.dispose();
+    currentController.dispose();
     targetController.dispose();
+    unitController.dispose();
+    evidenceController.dispose();
+    statusController.dispose();
+    confidenceController.dispose();
+    dueDateController.dispose();
   }
 
   Future<void> _showEditOkrDialog(
@@ -534,76 +785,117 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
     PersonOkr okr,
   ) async {
     final objectiveController = TextEditingController(text: okr.objective);
+    final cycleController = TextEditingController(text: okr.cycle);
+    final focusController = TextEditingController(text: okr.focusArea);
+    final diagnosisController = TextEditingController(text: okr.diagnosis);
+    final evidenceController = TextEditingController(text: okr.evidenceSource);
+    final baselineController = TextEditingController(text: okr.baseline);
+    final targetController = TextEditingController(text: okr.target);
     final statusController = TextEditingController(text: okr.status);
     final confidenceController = TextEditingController(
       text: '${okr.confidence}',
     );
     final progressController = TextEditingController(text: '${okr.progress}');
 
-    await showDialog<void>(
+    await _showEditorSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar OKR'),
-        content: _DialogFormContent(
-          children: [
-            TextField(
-              controller: objectiveController,
-              decoration: const InputDecoration(
-                labelText: 'Objetivo',
-                helperText:
-                    'Resultado qualitativo do ciclo. Ex.: aumentar autonomia técnica.',
-              ),
-            ),
-            TextField(
-              controller: statusController,
-              decoration: const InputDecoration(
-                labelText: 'Status',
-                helperText: 'Use algo simples: active, paused, completed.',
-              ),
-            ),
-            TextField(
-              controller: confidenceController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Confiança 0-100',
-                helperText:
-                    'Quão provável é alcançar o objetivo com as evidências atuais.',
-              ),
-            ),
-            TextField(
-              controller: progressController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Progresso 0-100',
-                helperText:
-                    'Atualize com base nos resultados-chave e evidências registradas.',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          AppDialogActions(
-            secondaryLabel: 'Cancelar',
-            onSecondaryPressed: () => Navigator.pop(context),
-            primaryLabel: 'Atualizar',
-            onPrimaryPressed: () async {
-              await growth.updateOkr(
-                id: okr.id,
-                objective: objectiveController.text.trim(),
-                status: statusController.text.trim(),
-                confidence: int.tryParse(confidenceController.text.trim()),
-                progress: int.tryParse(progressController.text.trim()),
-              );
-              if (context.mounted) {
-                Navigator.pop(context);
-              }
-            },
+      title: 'Editar OKR',
+      subtitle:
+          'Mantenha o objetivo, o contexto e o acompanhamento do ciclo alinhados.',
+      primaryLabel: 'Atualizar OKR',
+      children: [
+        TextField(
+          controller: objectiveController,
+          decoration: const InputDecoration(
+            labelText: 'Objetivo',
+            helperText:
+                'Resultado qualitativo do ciclo. Ex.: aumentar autonomia técnica.',
           ),
-        ],
-      ),
+        ),
+        TextField(
+          controller: cycleController,
+          decoration: const InputDecoration(
+            labelText: 'Ciclo',
+            helperText: 'Período de acompanhamento. Ex.: 2026-Q3.',
+          ),
+        ),
+        TextField(
+          controller: focusController,
+          decoration: const InputDecoration(labelText: 'Área de foco'),
+        ),
+        TextField(
+          controller: diagnosisController,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(labelText: 'Diagnóstico'),
+        ),
+        TextField(
+          controller: evidenceController,
+          minLines: 2,
+          maxLines: 4,
+          decoration: const InputDecoration(labelText: 'Fonte de evidência'),
+        ),
+        TextField(
+          controller: baselineController,
+          decoration: const InputDecoration(labelText: 'Linha de base'),
+        ),
+        TextField(
+          controller: targetController,
+          decoration: const InputDecoration(labelText: 'Alvo esperado'),
+        ),
+        TextField(
+          controller: statusController,
+          decoration: const InputDecoration(
+            labelText: 'Status',
+            helperText: 'Use algo simples: active, paused, completed.',
+          ),
+        ),
+        TextField(
+          controller: confidenceController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Confiança 0-100',
+            helperText:
+                'Quão provável é alcançar o objetivo com as evidências atuais.',
+          ),
+        ),
+        TextField(
+          controller: progressController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Progresso 0-100',
+            helperText:
+                'Atualize com base nos resultados-chave e evidências registradas.',
+          ),
+        ),
+      ],
+      onSubmit: (sheetContext) async {
+        await growth.updateOkr(
+          id: okr.id,
+          objective: objectiveController.text.trim(),
+          cycle: _nullable(cycleController.text),
+          status: statusController.text.trim(),
+          focusArea: _nullable(focusController.text),
+          diagnosis: _nullable(diagnosisController.text),
+          evidenceSource: _nullable(evidenceController.text),
+          baseline: _nullable(baselineController.text),
+          target: _nullable(targetController.text),
+          confidence: int.tryParse(confidenceController.text.trim()),
+          progress: int.tryParse(progressController.text.trim()),
+        );
+        if (sheetContext.mounted) {
+          Navigator.pop(sheetContext);
+        }
+      },
     );
 
     objectiveController.dispose();
+    cycleController.dispose();
+    focusController.dispose();
+    diagnosisController.dispose();
+    evidenceController.dispose();
+    baselineController.dispose();
+    targetController.dispose();
     statusController.dispose();
     confidenceController.dispose();
     progressController.dispose();
@@ -618,53 +910,94 @@ class _PersonHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final detailsWidth =
+            _availableWidth(constraints, context) - (56 + AppSpacing.md);
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(radius: 28, child: Text(_initials(person.name))),
+                const SizedBox(width: AppSpacing.md),
+                SizedBox(
+                  width: detailsWidth > 0 ? detailsWidth : 0,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(person.name, style: theme.textTheme.headlineMedium),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Perfil do colaborador',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PersonInfoTab extends StatelessWidget {
+  const _PersonInfoTab({required this.person});
+
+  final Person person;
+
+  @override
+  Widget build(BuildContext context) {
     final dateFormat = DateFormat.yMMMd('pt_BR');
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            CircleAvatar(radius: 28, child: Text(_initials(person.name))),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(person.name, style: theme.textTheme.headlineMedium),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    '${person.position} · ${person.seniority.label}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+        const _SectionTitle(
+          title: 'Informações gerais',
+          subtitle: 'Dados básicos e sinais recentes do colaborador.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _Surface(
+          child: Wrap(
+            spacing: AppSpacing.lg,
+            runSpacing: AppSpacing.sm,
+            children: [
+              AppKeyValueRow(label: 'Cargo', value: person.position),
+              AppKeyValueRow(
+                label: 'Senioridade',
+                value: person.seniority.label,
               ),
-            ),
-          ],
+              AppKeyValueRow(
+                label: 'Contrato',
+                value: person.contractType.label,
+              ),
+              AppKeyValueRow(
+                label: 'Nascimento',
+                value: person.birthDate == null
+                    ? 'Não informado'
+                    : '${dateFormat.format(person.birthDate!)} (${person.age} anos)',
+              ),
+              AppKeyValueRow(
+                label: 'Admissão',
+                value: person.admissionDate == null
+                    ? 'Não informado'
+                    : dateFormat.format(person.admissionDate!),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
-        Wrap(
-          spacing: AppSpacing.lg,
-          runSpacing: AppSpacing.sm,
-          children: [
-            AppKeyValueRow(label: 'Contrato', value: person.contractType.label),
-            AppKeyValueRow(
-              label: 'Nascimento',
-              value: person.birthDate == null
-                  ? 'Não informado'
-                  : '${dateFormat.format(person.birthDate!)} (${person.age} anos)',
-            ),
-            AppKeyValueRow(
-              label: 'Admissão',
-              value: person.admissionDate == null
-                  ? 'Não informado'
-                  : dateFormat.format(person.admissionDate!),
-            ),
-          ],
-        ),
+        PersonDailySection(teamId: person.teamId),
       ],
     );
   }
@@ -678,20 +1011,12 @@ class _PersonTabSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<_PersonTab>(
-        segments: [
-          for (final tab in _PersonTab.values)
-            ButtonSegment(
-              value: tab,
-              icon: Icon(tab.icon),
-              label: Text(tab.label),
-            ),
-        ],
-        selected: {selected},
-        onSelectionChanged: (values) => onChanged(values.single),
-      ),
+    return _ContextualTabBar<_PersonTab>(
+      selected: selected,
+      values: _PersonTab.values,
+      labelOf: (tab) => tab.label,
+      iconOf: (tab) => tab.icon,
+      onChanged: onChanged,
     );
   }
 }
@@ -701,11 +1026,7 @@ class _OneOnOneTab extends StatelessWidget {
     required this.growth,
     required this.selectedView,
     required this.onViewChanged,
-    required this.selectedTemplateId,
-    required this.onTemplateChanged,
     required this.sessionSearchController,
-    required this.sessionTitleController,
-    required this.sessionNotesController,
     required this.templateTitleController,
     required this.templateQuestionsController,
     required this.onCreateSession,
@@ -715,11 +1036,7 @@ class _OneOnOneTab extends StatelessWidget {
   final PersonGrowthViewModel growth;
   final _OneOnOneView selectedView;
   final ValueChanged<_OneOnOneView> onViewChanged;
-  final int? selectedTemplateId;
-  final ValueChanged<int?> onTemplateChanged;
   final TextEditingController sessionSearchController;
-  final TextEditingController sessionTitleController;
-  final TextEditingController sessionNotesController;
   final TextEditingController templateTitleController;
   final TextEditingController templateQuestionsController;
   final VoidCallback onCreateSession;
@@ -731,22 +1048,32 @@ class _OneOnOneTab extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(
+        _ModuleHeader(
           title: '1:1',
-          subtitle:
-              'Registre conversas, configure templates e consulte o histórico.',
+          subtitle: 'Consulte registros e prepare os próximos encontros.',
+          helpMessage:
+              'Prepare 2 ou 3 perguntas, anote respostas importantes, decisões, combinados e sinais de evolução ou bloqueio.',
+          primaryLabel: 'Novo 1:1',
+          onPrimaryPressed: onCreateSession,
         ),
         const SizedBox(height: AppSpacing.sm),
-        _OneOnOneNavigation(selected: selectedView, onChanged: onViewChanged),
+        _ContextualTabBar<_OneOnOneView>(
+          selected: selectedView,
+          values: const [
+            _OneOnOneView.history,
+            _OneOnOneView.templates,
+            _OneOnOneView.suggestions,
+          ],
+          labelOf: (view) => view.label,
+          iconOf: (view) => view.icon,
+          onChanged: onViewChanged,
+        ),
         const SizedBox(height: AppSpacing.md),
         switch (selectedView) {
-          _OneOnOneView.register => _OneOnOneRegisterView(
+          _OneOnOneView.register ||
+          _OneOnOneView.history => _OneOnOneHistoryView(
             growth: growth,
-            selectedTemplateId: selectedTemplateId,
-            onTemplateChanged: onTemplateChanged,
-            titleController: sessionTitleController,
-            notesController: sessionNotesController,
-            onCreateSession: onCreateSession,
+            searchController: sessionSearchController,
           ),
           _OneOnOneView.templates => _OneOnOneTemplateView(
             titleController: templateTitleController,
@@ -756,38 +1083,8 @@ class _OneOnOneTab extends StatelessWidget {
           _OneOnOneView.suggestions => _OneOnOneSuggestionsView(
             suggestions: growth.suggestions,
           ),
-          _OneOnOneView.history => _OneOnOneHistoryView(
-            growth: growth,
-            searchController: sessionSearchController,
-          ),
         },
       ],
-    );
-  }
-}
-
-class _OneOnOneNavigation extends StatelessWidget {
-  const _OneOnOneNavigation({required this.selected, required this.onChanged});
-
-  final _OneOnOneView selected;
-  final ValueChanged<_OneOnOneView> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<_OneOnOneView>(
-        segments: [
-          for (final view in _OneOnOneView.values)
-            ButtonSegment(
-              value: view,
-              icon: Icon(view.icon),
-              label: Text(view.label),
-            ),
-        ],
-        selected: {selected},
-        onSelectionChanged: (values) => onChanged(values.single),
-      ),
     );
   }
 }
@@ -815,17 +1112,11 @@ class _OneOnOneRegisterView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(
+        const _SectionTitle(
           title: 'Registrar conversa',
-          subtitle:
-              'Use um template como roteiro e salve as notas do encontro.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        const _GuidanceTile(
-          icon: Icons.forum_outlined,
-          title: 'Como registrar um 1:1',
-          message:
-              'Prepare 2 ou 3 perguntas, anote respostas importantes, decisões, combinados e sinais de evolução ou bloqueio.',
+          subtitle: 'Use template, título e notas para guiar o encontro.',
+          helpMessage:
+              'Prepare poucas perguntas, registre respostas relevantes, decisões, combinados e próximos passos.',
         ),
         const SizedBox(height: AppSpacing.sm),
         _Surface(
@@ -857,8 +1148,8 @@ class _OneOnOneRegisterView extends StatelessWidget {
               ),
               TextField(
                 controller: notesController,
-                minLines: 3,
-                maxLines: 6,
+                minLines: 12,
+                maxLines: 24,
                 decoration: const InputDecoration(
                   labelText: 'Notas da conversa',
                   helperText:
@@ -905,12 +1196,7 @@ class _OneOnOneTemplateView extends StatelessWidget {
           title: 'Configurar templates',
           subtitle:
               'Cadastre roteiros reutilizáveis para conduzir os próximos 1:1s.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        const _GuidanceTile(
-          icon: Icons.tune_outlined,
-          title: 'Como montar um template',
-          message:
+          helpMessage:
               'Crie perguntas abertas que ajudem a entender contexto, motivação, bloqueios, feedback e próximos passos.',
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -1006,24 +1292,32 @@ class _OneOnOneHistoryView extends StatelessWidget {
           subtitle: 'Paginado e pesquisável por título/notas.',
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: searchController,
-                decoration: const InputDecoration(
-                  labelText: 'Buscar histórico',
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final searchWidth =
+                _availableWidth(constraints, context) - (48 + AppSpacing.sm);
+
+            return Row(
+              children: [
+                SizedBox(
+                  width: searchWidth > 0 ? searchWidth : 0,
+                  child: TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Buscar histórico',
+                    ),
+                    onSubmitted: growth.searchSessions,
+                  ),
                 ),
-                onSubmitted: growth.searchSessions,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton(
-              tooltip: 'Buscar',
-              onPressed: () => growth.searchSessions(searchController.text),
-              icon: const Icon(Icons.search),
-            ),
-          ],
+                const SizedBox(width: AppSpacing.sm),
+                IconButton(
+                  tooltip: 'Buscar',
+                  onPressed: () => growth.searchSessions(searchController.text),
+                  icon: const Icon(Icons.search),
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.sm),
         if (growth.sessions.isEmpty)
@@ -1051,9 +1345,6 @@ class _PdiTab extends StatelessWidget {
     required this.growth,
     required this.selectedView,
     required this.onViewChanged,
-    required this.titleController,
-    required this.summaryController,
-    required this.targetRoleController,
     required this.onCreatePlan,
     required this.onCreateItem,
     required this.onEditPlan,
@@ -1062,9 +1353,6 @@ class _PdiTab extends StatelessWidget {
   final PersonGrowthViewModel growth;
   final _PdiView selectedView;
   final ValueChanged<_PdiView> onViewChanged;
-  final TextEditingController titleController;
-  final TextEditingController summaryController;
-  final TextEditingController targetRoleController;
   final VoidCallback onCreatePlan;
   final ValueChanged<DevelopmentPlan> onCreateItem;
   final ValueChanged<DevelopmentPlan> onEditPlan;
@@ -1075,57 +1363,34 @@ class _PdiTab extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(
+        _ModuleHeader(
           title: 'PDI',
-          subtitle:
-              'Crie planos, consulte sugestões e acompanhe ações de evolução.',
+          subtitle: 'Organize planos de desenvolvimento e evidências.',
+          helpMessage:
+              'Descreva uma evolução esperada, conecte com uma competência e acompanhe por ações concretas e evidências observáveis.',
+          primaryLabel: 'Novo PDI',
+          onPrimaryPressed: onCreatePlan,
         ),
         const SizedBox(height: AppSpacing.sm),
-        _PdiNavigation(selected: selectedView, onChanged: onViewChanged),
+        _ContextualTabBar<_PdiView>(
+          selected: selectedView,
+          values: const [_PdiView.tracking, _PdiView.suggestions],
+          labelOf: (view) => view == _PdiView.tracking ? 'Planos' : view.label,
+          iconOf: (view) => view.icon,
+          onChanged: onViewChanged,
+        ),
         const SizedBox(height: AppSpacing.md),
         switch (selectedView) {
-          _PdiView.create => _PdiCreateView(
-            titleController: titleController,
-            summaryController: summaryController,
-            targetRoleController: targetRoleController,
-            onCreatePlan: onCreatePlan,
-          ),
-          _PdiView.suggestions => _PdiSuggestionsView(
-            suggestions: growth.suggestions,
-          ),
-          _PdiView.tracking => _PdiTrackingView(
+          _PdiView.create || _PdiView.tracking => _PdiTrackingView(
             plans: growth.plans,
             onCreateItem: onCreateItem,
             onEditPlan: onEditPlan,
           ),
+          _PdiView.suggestions => _PdiSuggestionsView(
+            suggestions: growth.suggestions,
+          ),
         },
       ],
-    );
-  }
-}
-
-class _PdiNavigation extends StatelessWidget {
-  const _PdiNavigation({required this.selected, required this.onChanged});
-
-  final _PdiView selected;
-  final ValueChanged<_PdiView> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<_PdiView>(
-        segments: [
-          for (final view in _PdiView.values)
-            ButtonSegment(
-              value: view,
-              icon: Icon(view.icon),
-              label: Text(view.label),
-            ),
-        ],
-        selected: {selected},
-        onSelectionChanged: (values) => onChanged(values.single),
-      ),
     );
   }
 }
@@ -1149,16 +1414,11 @@ class _PdiCreateView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(
+        const _SectionTitle(
           title: 'Criar PDI',
-          subtitle: 'Transforme objetivos de carreira em ações acompanháveis.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        const _GuidanceTile(
-          icon: Icons.add_task_outlined,
-          title: 'Como criar um PDI',
-          message:
-              'Descreva uma evolução esperada, conecte com uma competência e acompanhe por ações concretas e evidências observáveis.',
+          subtitle: 'Defina o objetivo antes de cadastrar ações de evolução.',
+          helpMessage:
+              'Use o PDI para transformar uma necessidade de evolução em ações acompanháveis e evidências observáveis.',
         ),
         const SizedBox(height: AppSpacing.sm),
         _Surface(
@@ -1182,8 +1442,8 @@ class _PdiCreateView extends StatelessWidget {
               ),
               TextField(
                 controller: summaryController,
-                minLines: 2,
-                maxLines: 4,
+                minLines: 8,
+                maxLines: 16,
                 decoration: const InputDecoration(
                   labelText: 'Resumo',
                   helperText:
@@ -1287,26 +1547,234 @@ class _PdiTrackingView extends StatelessWidget {
 class _OkrsTab extends StatelessWidget {
   const _OkrsTab({
     required this.growth,
-    required this.objectiveController,
-    required this.focusController,
-    required this.diagnosisController,
-    required this.evidenceController,
-    required this.targetController,
+    required this.selectedView,
+    required this.onViewChanged,
     required this.onCreateOkr,
     required this.onGenerateSuggestions,
     required this.onCreateKeyResult,
+    required this.onEditKeyResult,
     required this.onEditOkr,
+    required this.onUseSuggestion,
   });
 
   final PersonGrowthViewModel growth;
-  final TextEditingController objectiveController;
-  final TextEditingController focusController;
-  final TextEditingController diagnosisController;
-  final TextEditingController evidenceController;
-  final TextEditingController targetController;
+  final _OkrView selectedView;
+  final ValueChanged<_OkrView> onViewChanged;
   final VoidCallback onCreateOkr;
   final VoidCallback onGenerateSuggestions;
   final ValueChanged<PersonOkr> onCreateKeyResult;
+  final ValueChanged<OkrKeyResult> onEditKeyResult;
+  final ValueChanged<PersonOkr> onEditOkr;
+  final ValueChanged<Map<String, dynamic>> onUseSuggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ModuleHeader(
+          title: 'OKRs',
+          subtitle: 'Acompanhe objetivos e métricas de evolução.',
+          helpMessage:
+              'Descreva o que precisa evoluir, defina uma métrica com valor inicial e alvo, e acompanhe por evidências.',
+          primaryLabel: 'Novo OKR',
+          onPrimaryPressed: onCreateOkr,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _ContextualTabBar<_OkrView>(
+          selected: selectedView,
+          values: const [_OkrView.tracking, _OkrView.suggestions],
+          labelOf: (view) => view == _OkrView.tracking ? 'OKRs' : view.label,
+          iconOf: (view) => view.icon,
+          onChanged: onViewChanged,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        switch (selectedView) {
+          _OkrView.define || _OkrView.tracking => _OkrTrackingView(
+            okrs: growth.okrs,
+            onCreateKeyResult: onCreateKeyResult,
+            onEditKeyResult: onEditKeyResult,
+            onEditOkr: onEditOkr,
+          ),
+          _OkrView.suggestions => _OkrSuggestionsView(
+            suggestions: growth.suggestions,
+            onGenerateSuggestions: onGenerateSuggestions,
+            onUseSuggestion: onUseSuggestion,
+          ),
+        },
+      ],
+    );
+  }
+}
+
+class _OkrDefineView extends StatelessWidget {
+  const _OkrDefineView({
+    required this.objectiveController,
+    required this.focusController,
+    required this.cycleController,
+    required this.diagnosisController,
+    required this.evidenceController,
+    required this.baselineController,
+    required this.targetController,
+    required this.onCreateOkr,
+  });
+
+  final TextEditingController objectiveController;
+  final TextEditingController focusController;
+  final TextEditingController cycleController;
+  final TextEditingController diagnosisController;
+  final TextEditingController evidenceController;
+  final TextEditingController baselineController;
+  final TextEditingController targetController;
+  final VoidCallback onCreateOkr;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle(
+          title: 'Definir OKR',
+          subtitle: 'Crie o objetivo e depois acompanhe por métricas.',
+          helpMessage:
+              'O objetivo descreve a evolução esperada; as métricas mostram como essa evolução será mensurada no ciclo.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _Surface(
+          child: _FormColumn(
+            children: [
+              TextField(
+                controller: objectiveController,
+                decoration: const InputDecoration(
+                  labelText: 'Objetivo',
+                  helperText:
+                      'Direção clara e qualitativa. Ex.: aumentar a autonomia técnica.',
+                ),
+              ),
+              TextField(
+                controller: cycleController,
+                decoration: const InputDecoration(
+                  labelText: 'Ciclo',
+                  helperText: 'Período de acompanhamento. Ex.: 2026-Q3.',
+                ),
+              ),
+              TextField(
+                controller: focusController,
+                decoration: const InputDecoration(
+                  labelText: 'Área de foco',
+                  helperText:
+                      'Ex.: autonomia, comunicação ou qualidade técnica.',
+                ),
+              ),
+              TextField(
+                controller: diagnosisController,
+                minLines: 5,
+                maxLines: 10,
+                decoration: const InputDecoration(
+                  labelText: 'Diagnóstico',
+                  helperText: 'O que foi observado e em quais situações?',
+                ),
+              ),
+              TextField(
+                controller: evidenceController,
+                minLines: 5,
+                maxLines: 10,
+                decoration: const InputDecoration(
+                  labelText: 'Fonte de evidência',
+                  helperText: 'Ex.: 1:1, PRs, tarefas, daily ou feedbacks.',
+                ),
+              ),
+              TextField(
+                controller: baselineController,
+                decoration: const InputDecoration(
+                  labelText: 'Linha de base',
+                  helperText: 'Situação atual que servirá de comparação.',
+                ),
+              ),
+              TextField(
+                controller: targetController,
+                decoration: const InputDecoration(
+                  labelText: 'Alvo esperado',
+                  helperText: 'Estado desejado ao término do ciclo.',
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: AppPrimaryButton(
+                  label: 'Criar OKR e definir métricas',
+                  onPressed: onCreateOkr,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OkrSuggestionsView extends StatelessWidget {
+  const _OkrSuggestionsView({
+    required this.suggestions,
+    required this.onGenerateSuggestions,
+    required this.onUseSuggestion,
+  });
+
+  final GrowthSuggestions? suggestions;
+  final VoidCallback onGenerateSuggestions;
+  final ValueChanged<Map<String, dynamic>> onUseSuggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = suggestions?.okrSuggestions ?? const <Map<String, dynamic>>[];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
+          title: 'Sugestões de OKR',
+          subtitle: 'Use os sinais já registrados como ponto de partida.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppSecondaryButton(
+          label: 'Atualizar sugestões',
+          onPressed: onGenerateSuggestions,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (items.isEmpty)
+          const _EmptyState(
+            icon: Icons.auto_awesome_outlined,
+            message: 'Ainda não há sugestões para esta pessoa.',
+          )
+        else
+          for (final suggestion in items)
+            _ActionTile(
+              icon: Icons.auto_awesome_outlined,
+              title: suggestion['objective']?.toString() ?? 'Sugestão de OKR',
+              subtitle: suggestion['diagnosis']?.toString(),
+              actionLabel: 'Usar como base',
+              onPressed: () => onUseSuggestion(suggestion),
+            ),
+      ],
+    );
+  }
+}
+
+class _OkrTrackingView extends StatelessWidget {
+  const _OkrTrackingView({
+    required this.okrs,
+    required this.onCreateKeyResult,
+    required this.onEditKeyResult,
+    required this.onEditOkr,
+  });
+
+  final List<PersonOkr> okrs;
+  final ValueChanged<PersonOkr> onCreateKeyResult;
+  final ValueChanged<OkrKeyResult> onEditKeyResult;
   final ValueChanged<PersonOkr> onEditOkr;
 
   @override
@@ -1316,102 +1784,24 @@ class _OkrsTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionTitle(
-          title: 'Criar OKR',
+          title: 'Acompanhar OKRs',
           subtitle:
-              'Cadastre diagnóstico, evidências e alvo antes do objetivo.',
+              'Atualize os resultados-chave; o progresso usa os valores registrados.',
         ),
         const SizedBox(height: AppSpacing.sm),
-        const _GuidanceTile(
-          icon: Icons.track_changes_outlined,
-          title: 'Como criar um OKR',
-          message:
-              'Use OKR para traduzir uma evolução em objetivo claro, resultados mensuráveis e evidências do ciclo.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _Surface(
-          child: _FormColumn(
-            children: [
-              TextField(
-                controller: focusController,
-                decoration: const InputDecoration(
-                  labelText: 'Área de foco',
-                  helperText:
-                      'Tema de evolução. Ex.: autonomia, comunicação, qualidade técnica.',
-                ),
-              ),
-              TextField(
-                controller: diagnosisController,
-                decoration: const InputDecoration(
-                  labelText: 'Diagnóstico',
-                  helperText:
-                      'O que foi observado hoje? Ex.: depende do tech lead para decisões simples.',
-                ),
-              ),
-              TextField(
-                controller: evidenceController,
-                decoration: const InputDecoration(
-                  labelText: 'Fonte de evidência',
-                  helperText:
-                      'De onde veio a percepção. Ex.: 1:1, PRs, daily, feedback do time.',
-                ),
-              ),
-              TextField(
-                controller: targetController,
-                decoration: const InputDecoration(
-                  labelText: 'Alvo esperado',
-                  helperText:
-                      'Estado desejado. Ex.: decidir alternativas técnicas com pouca supervisão.',
-                ),
-              ),
-              TextField(
-                controller: objectiveController,
-                decoration: const InputDecoration(
-                  labelText: 'Objetivo',
-                  helperText:
-                      'Frase inspiradora e clara. Ex.: aumentar autonomia na tomada de decisão técnica.',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppSecondaryButton(
-                      label: 'Sugerir',
-                      onPressed: onGenerateSuggestions,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: AppPrimaryButton(
-                      label: 'Criar OKR',
-                      onPressed: onCreateOkr,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        if (growth.suggestions != null) ...[
-          _SectionTitle(title: 'OKRs sugeridos'),
-          const SizedBox(height: AppSpacing.sm),
-          for (final suggestion in growth.suggestions!.okrSuggestions)
-            _TextTile(
-              icon: Icons.auto_awesome_outlined,
-              title: suggestion['objective'].toString(),
-              subtitle: suggestion['diagnosis']?.toString(),
+        if (okrs.isEmpty)
+          const _EmptyState(
+            icon: Icons.insights_outlined,
+            message: 'Nenhum OKR cadastrado ainda.',
+          )
+        else
+          for (final okr in okrs)
+            _OkrTile(
+              okr: okr,
+              onCreateKeyResult: () => onCreateKeyResult(okr),
+              onEditKeyResult: onEditKeyResult,
+              onEditOkr: () => onEditOkr(okr),
             ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-        _SectionTitle(title: 'OKRs cadastrados'),
-        const SizedBox(height: AppSpacing.sm),
-        for (final okr in growth.okrs)
-          _OkrTile(
-            okr: okr,
-            onCreateKeyResult: () => onCreateKeyResult(okr),
-            onEditOkr: () => onEditOkr(okr),
-          ),
       ],
     );
   }
@@ -1474,8 +1864,6 @@ class _AnalysisTab extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: AppSpacing.md),
-        PersonDailySection(teamId: person.teamId),
       ],
     );
   }
@@ -1567,11 +1955,13 @@ class _OkrTile extends StatelessWidget {
   const _OkrTile({
     required this.okr,
     required this.onCreateKeyResult,
+    required this.onEditKeyResult,
     required this.onEditOkr,
   });
 
   final PersonOkr okr;
   final VoidCallback onCreateKeyResult;
+  final ValueChanged<OkrKeyResult> onEditKeyResult;
   final VoidCallback onEditOkr;
 
   @override
@@ -1581,34 +1971,86 @@ class _OkrTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(okr.objective, style: Theme.of(context).textTheme.titleSmall),
+          if (okr.cycle != null) Text('Ciclo: ${okr.cycle}'),
           if (okr.diagnosis != null) Text(okr.diagnosis!),
           const SizedBox(height: AppSpacing.sm),
           LinearProgressIndicator(value: okr.progress / 100),
           const SizedBox(height: AppSpacing.sm),
           for (final kr in okr.keyResults)
-            _TextTile(
-              icon: Icons.track_changes_outlined,
-              title: kr.title,
-              subtitle: '${kr.progress}% · ${kr.metricName ?? 'sem métrica'}',
-            ),
+            _KeyResultTile(keyResult: kr, onEdit: () => onEditKeyResult(kr)),
           Row(
             children: [
-              Expanded(
-                child: AppSecondaryButton(
-                  label: 'Editar',
-                  onPressed: onEditOkr,
-                ),
+              IconButton(
+                tooltip: 'Editar OKR',
+                onPressed: onEditOkr,
+                icon: const Icon(Icons.edit_outlined),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: AppPrimaryButton(
-                  label: 'Adicionar KR',
+                  label: 'Adicionar métrica',
                   onPressed: onCreateKeyResult,
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _KeyResultTile extends StatelessWidget {
+  const _KeyResultTile({required this.keyResult, required this.onEdit});
+
+  final OkrKeyResult keyResult;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _metricProgress(
+      initialValue: keyResult.initialValue,
+      currentValue: keyResult.currentValue,
+      targetValue: keyResult.targetValue,
+    );
+    final unit = keyResult.unit == null ? '' : ' ${keyResult.unit}';
+    final valueText = keyResult.targetValue == null
+        ? '${keyResult.progress}%'
+        : '${_numberText(keyResult.currentValue) ?? '0'} / ${_numberText(keyResult.targetValue)}$unit';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: _Surface(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    keyResult.title,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Atualizar métrica',
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+              ],
+            ),
+            Text(
+              '${keyResult.metricName ?? 'Métrica sem nome'} · ${_dataSourceLabel(keyResult.dataSource)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(valueText),
+            const SizedBox(height: AppSpacing.xs),
+            LinearProgressIndicator(
+              value: (progress ?? keyResult.progress) / 100,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1627,28 +2069,270 @@ class _InlinePagination extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Row(
-        children: [
-          Expanded(
-            child: AppSecondaryButton(label: 'Anterior', onPressed: onPrevious),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          SizedBox(
-            width: 78,
-            child: Text(
-              'Página $page',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelLarge,
+    return Center(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 132,
+              child: AppSecondaryButton(
+                label: 'Anterior',
+                onPressed: onPrevious,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            SizedBox(
+              width: 78,
+              child: Text(
+                'Página $page',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            SizedBox(
+              width: 132,
+              child: AppSecondaryButton(label: 'Próxima', onPressed: onNext),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModuleHeader extends StatelessWidget {
+  const _ModuleHeader({
+    required this.title,
+    required this.subtitle,
+    required this.helpMessage,
+    required this.primaryLabel,
+    required this.onPrimaryPressed,
+  });
+
+  final String title;
+  final String subtitle;
+  final String helpMessage;
+  final String primaryLabel;
+  final VoidCallback onPrimaryPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = _availableWidth(constraints, context);
+        final titleBlock = _SectionTitle(
+          title: title,
+          subtitle: subtitle,
+          helpMessage: helpMessage,
+        );
+        final primaryAction = AppPrimaryButton(
+          label: primaryLabel,
+          onPressed: onPrimaryPressed,
+        );
+
+        return SizedBox(
+          width: availableWidth,
+          child: availableWidth < 460
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    titleBlock,
+                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(width: double.infinity, child: primaryAction),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(width: availableWidth - 160, child: titleBlock),
+                    const SizedBox(width: AppSpacing.md),
+                    SizedBox(width: 144, child: primaryAction),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+}
+
+class _ContextualTabBar<T> extends StatelessWidget {
+  const _ContextualTabBar({
+    required this.selected,
+    required this.values,
+    required this.labelOf,
+    required this.iconOf,
+    required this.onChanged,
+  });
+
+  final T selected;
+  final Iterable<T> values;
+  final String Function(T value) labelOf;
+  final IconData Function(T value) iconOf;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = values.toList(growable: false);
+    final theme = Theme.of(context);
+    final borderColor = theme.colorScheme.outlineVariant.withValues(
+      alpha: 0.55,
+    );
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var index = 0; index < items.length; index++) ...[
+              if (index > 0)
+                VerticalDivider(width: 1, thickness: 1, color: borderColor),
+              _TabPill(
+                icon: iconOf(items[index]),
+                label: labelOf(items[index]),
+                selected: items[index] == selected,
+                onPressed: () => onChanged(items[index]),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TabPill extends StatelessWidget {
+  const _TabPill({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final foreground = selected
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface;
+
+    return Material(
+      color: selected ? theme.colorScheme.primary : Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: DefaultTextStyle.merge(
+              style: theme.textTheme.labelLarge?.copyWith(color: foreground),
+              child: IconTheme.merge(
+                data: IconThemeData(color: foreground),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, size: 18),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(label),
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: AppSecondaryButton(label: 'Próxima', onPressed: onNext),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _FocusedFlowView extends StatelessWidget {
+  const _FocusedFlowView({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onBack;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PersonDetailScrollView(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = _availableWidth(constraints, context);
+
+            return SizedBox(
+              width: width,
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Voltar para Pessoa',
+                    onPressed: onBack,
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  SizedBox(
+                    width: _nonNegative(width - (48 + AppSpacing.xs)),
+                    child: _SectionTitle(title: title, subtitle: subtitle),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        child,
+      ],
+    );
+  }
+}
+
+class _PersonDetailScrollView extends StatelessWidget {
+  const _PersonDetailScrollView({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewport = MediaQuery.sizeOf(context);
+        final hasBoundedHeight = constraints.hasBoundedHeight;
+
+        return SizedBox(
+          width: constraints.hasBoundedWidth
+              ? constraints.maxWidth
+              : viewport.width,
+          height: hasBoundedHeight ? constraints.maxHeight : null,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            primary: hasBoundedHeight,
+            shrinkWrap: !hasBoundedHeight,
+            children: children,
+          ),
+        );
+      },
     );
   }
 }
@@ -1693,15 +2377,101 @@ class _FormColumn extends StatelessWidget {
   }
 }
 
-class _DialogFormContent extends StatelessWidget {
-  const _DialogFormContent({required this.children});
+class _EditorSheet extends StatelessWidget {
+  const _EditorSheet({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+    required this.primaryLabel,
+    required this.onSubmit,
+  });
 
+  final String title;
+  final String subtitle;
   final List<Widget> children;
+  final String primaryLabel;
+  final Future<void> Function(BuildContext context) onSubmit;
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(child: _FormColumn(children: children));
+    final maxHeight = MediaQuery.sizeOf(context).height * .92;
+
+    return SafeArea(
+      top: false,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 720, maxHeight: maxHeight),
+          child: SizedBox(
+            height: maxHeight,
+            child: Material(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadius.md),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SectionTitle(
+                            title: title,
+                            subtitle: subtitle,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Fechar',
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: _FormColumn(children: children),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    AppDialogActions(
+                      secondaryLabel: 'Cancelar',
+                      onSecondaryPressed: () => Navigator.pop(context),
+                      primaryLabel: primaryLabel,
+                      onPrimaryPressed: () => onSubmit(context),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
+}
+
+Future<void> _showEditorSheet({
+  required BuildContext context,
+  required String title,
+  required String subtitle,
+  required List<Widget> children,
+  required String primaryLabel,
+  required Future<void> Function(BuildContext context) onSubmit,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => _EditorSheet(
+      title: title,
+      subtitle: subtitle,
+      primaryLabel: primaryLabel,
+      onSubmit: onSubmit,
+      children: children,
+    ),
+  );
 }
 
 class _EmptyState extends StatelessWidget {
@@ -1733,53 +2503,12 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _GuidanceTile extends StatelessWidget {
-  const _GuidanceTile({
-    required this.icon,
-    required this.title,
-    required this.message,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return _Surface(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: theme.colorScheme.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: theme.textTheme.titleSmall),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  message,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, this.subtitle});
+  const _SectionTitle({required this.title, this.subtitle, this.helpMessage});
 
   final String title;
   final String? subtitle;
+  final String? helpMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -1789,7 +2518,24 @@ class _SectionTitle extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: theme.textTheme.titleMedium),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: Text(title, style: theme.textTheme.titleMedium)),
+            if (helpMessage != null) ...[
+              const SizedBox(width: AppSpacing.xs),
+              Tooltip(
+                message: helpMessage!,
+                triggerMode: TooltipTriggerMode.tap,
+                child: Icon(
+                  Icons.help_outline,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ),
         if (subtitle != null)
           Text(
             subtitle!,
@@ -1816,26 +2562,84 @@ class _TextTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: _Surface(
-        child: Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final contentWidth = _nonNegative(
+              _availableWidth(constraints, context) - (24 + AppSpacing.sm),
+            );
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: theme.colorScheme.primary),
+                const SizedBox(width: AppSpacing.sm),
+                SizedBox(
+                  width: contentWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleSmall),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
+    required this.title,
+    required this.actionLabel,
+    required this.onPressed,
+    this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final String actionLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: _Surface(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: theme.colorScheme.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: theme.textTheme.titleSmall),
-                  if (subtitle != null)
-                    Text(
-                      subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+              ],
             ),
+            if (subtitle != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(subtitle!),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            AppSecondaryButton(label: actionLabel, onPressed: onPressed),
           ],
         ),
       ),
@@ -1872,6 +2676,14 @@ String _initials(String name) {
       .toUpperCase();
 }
 
+double _availableWidth(BoxConstraints constraints, BuildContext context) {
+  return constraints.hasBoundedWidth
+      ? constraints.maxWidth
+      : MediaQuery.sizeOf(context).width;
+}
+
+double _nonNegative(double value) => value > 0 ? value : 0;
+
 List<String> _lines(String text) {
   return text
       .split('\n')
@@ -1883,6 +2695,45 @@ List<String> _lines(String text) {
 String? _nullable(String text) {
   final value = text.trim();
   return value.isEmpty ? null : value;
+}
+
+String? _numberText(num? value) {
+  if (value == null) {
+    return null;
+  }
+  return value == value.roundToDouble()
+      ? value.toInt().toString()
+      : value.toString();
+}
+
+int? _metricProgress({
+  required num? initialValue,
+  required num? currentValue,
+  required num? targetValue,
+}) {
+  if (currentValue == null || targetValue == null) {
+    return null;
+  }
+
+  final initial = initialValue ?? 0;
+  final distance = targetValue - initial;
+  if (distance == 0) {
+    return currentValue >= targetValue ? 100 : 0;
+  }
+
+  return (((currentValue - initial) / distance) * 100)
+      .round()
+      .clamp(0, 100)
+      .toInt();
+}
+
+String _dataSourceLabel(String value) {
+  return switch (value) {
+    'pull_requests' => 'Pull requests',
+    'tasks' => 'Tarefas',
+    'dailies' => 'Dailies',
+    _ => 'Manual',
+  };
 }
 
 String _templateDraft(OneOnOneTemplate template) {

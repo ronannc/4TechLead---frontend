@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend/features/people/repositories/person_growth_repository.dart';
-import 'package:frontend/features/people/services/person_growth_service.dart';
+import 'package:for_tech_lead/features/people/repositories/person_growth_repository.dart';
+import 'package:for_tech_lead/features/people/services/person_growth_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockPersonGrowthService extends Mock implements PersonGrowthService {}
@@ -74,6 +74,7 @@ Map<String, dynamic> _okrJson() {
         'okr_id': 4,
         'title': 'Concluir ações do PDI',
         'metric_name': 'Ações',
+        'data_source': 'tasks',
         'initial_value': '0.00',
         'current_value': '1.00',
         'target_value': '4.00',
@@ -137,6 +138,7 @@ void main() {
 
     expect(okrs.single.objective, 'Aumentar autonomia técnica');
     expect(okrs.single.keyResults.single.targetValue, 4);
+    expect(okrs.single.keyResults.single.dataSource, 'tasks');
   });
 
   test('maps growth suggestions', () async {
