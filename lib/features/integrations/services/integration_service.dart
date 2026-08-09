@@ -28,6 +28,13 @@ class IntegrationService {
     );
   }
 
+  Future<Map<String, dynamic>> regenerateSystemToken(int systemId) {
+    return _post(
+      '/integration-systems/$systemId/regenerate-token',
+      data: const {},
+    );
+  }
+
   Future<Map<String, dynamic>> getExternalIdentities() {
     return _get('/person-external-identities', query: {'per_page': 100});
   }
@@ -35,16 +42,12 @@ class IntegrationService {
   Future<Map<String, dynamic>> createExternalIdentity({
     required int personId,
     required int integrationSystemId,
-    required String externalCode,
-    String? externalUsername,
   }) {
     return _post(
       '/person-external-identities',
       data: {
         'person_id': personId,
         'integration_system_id': integrationSystemId,
-        'external_code': externalCode,
-        'external_username': ?externalUsername,
         'active': true,
       },
     );

@@ -53,7 +53,6 @@ class PersonExternalIdentity extends Equatable {
     required this.personId,
     required this.integrationSystemId,
     required this.externalCode,
-    this.externalUsername,
     required this.active,
   });
 
@@ -61,7 +60,6 @@ class PersonExternalIdentity extends Equatable {
   final int personId;
   final int integrationSystemId;
   final String externalCode;
-  final String? externalUsername;
   final bool active;
 
   factory PersonExternalIdentity.fromJson(Map<String, dynamic> json) {
@@ -70,7 +68,6 @@ class PersonExternalIdentity extends Equatable {
       personId: json['person_id'] as int,
       integrationSystemId: json['integration_system_id'] as int,
       externalCode: json['external_code'] as String,
-      externalUsername: json['external_username'] as String?,
       active: json['active'] as bool,
     );
   }
@@ -81,7 +78,6 @@ class PersonExternalIdentity extends Equatable {
     personId,
     integrationSystemId,
     externalCode,
-    externalUsername,
     active,
   ];
 }
@@ -96,6 +92,7 @@ class PersonDeliveryMetric extends Equatable {
     this.unit,
     this.sourceRef,
     this.occurredAt,
+    this.metadata,
   });
 
   final int id;
@@ -106,6 +103,7 @@ class PersonDeliveryMetric extends Equatable {
   final String? unit;
   final String? sourceRef;
   final DateTime? occurredAt;
+  final Map<String, dynamic>? metadata;
 
   factory PersonDeliveryMetric.fromJson(Map<String, dynamic> json) {
     return PersonDeliveryMetric(
@@ -117,6 +115,7 @@ class PersonDeliveryMetric extends Equatable {
       unit: json['unit'] as String?,
       sourceRef: json['source_ref'] as String?,
       occurredAt: _date(json['occurred_at']),
+      metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
 
@@ -130,9 +129,53 @@ class PersonDeliveryMetric extends Equatable {
     unit,
     sourceRef,
     occurredAt,
+    metadata,
   ];
+}
+
+class DeliveryMetricsPage extends Equatable {
+  const DeliveryMetricsPage({
+    required this.items,
+    required this.currentPage,
+    required this.lastPage,
+    required this.total,
+  });
+
+  final List<PersonDeliveryMetric> items;
+  final int currentPage;
+  final int lastPage;
+  final int total;
+
+  factory DeliveryMetricsPage.fromJson(Map<String, dynamic> json) {
+    final meta = json['meta'] as Map<String, dynamic>?;
+
+    return DeliveryMetricsPage(
+      items: [
+        for (final item in json['data'] as List<dynamic>)
+          PersonDeliveryMetric.fromJson(item as Map<String, dynamic>),
+      ],
+      currentPage: _int(meta?['current_page']) ?? 1,
+      lastPage: _int(meta?['last_page']) ?? 1,
+      total: _int(meta?['total']) ?? (json['data'] as List<dynamic>).length,
+    );
+  }
+
+  @override
+  List<Object?> get props => [items, currentPage, lastPage, total];
 }
 
 DateTime? _date(Object? value) {
   return value == null ? null : DateTime.parse(value as String);
+}
+
+int? _int(Object? value) {
+  if (value is int) {
+    return value;
+  }
+
+  if (value is String) {
+    return int.tryParse(value);
+  }
+
+  return null;
 }

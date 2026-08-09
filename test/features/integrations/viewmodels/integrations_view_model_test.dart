@@ -43,9 +43,14 @@ void main() {
       when(
         integrationRepository.getExternalIdentities,
       ).thenAnswer((_) async => const []);
-      when(
-        integrationRepository.getDeliveryMetrics,
-      ).thenAnswer((_) async => const []);
+      when(() => integrationRepository.getDeliveryMetrics(page: 1)).thenAnswer(
+        (_) async => const DeliveryMetricsPage(
+          items: [],
+          currentPage: 1,
+          lastPage: 1,
+          total: 0,
+        ),
+      );
       await viewModel.load();
 
       when(
@@ -72,4 +77,29 @@ void main() {
       expect(viewModel.isMutating, isFalse);
     },
   );
+
+  test('regenerateSystemToken() exposes the new one time token', () async {
+    const rotatedSystem = IntegrationSystem(
+      id: 1,
+      name: 'GitHub Produto',
+      provider: 'github',
+      tokenPrefix: 'new12345',
+      webhookToken: 'new-secret-token',
+      active: true,
+    );
+
+    when(
+      () => integrationRepository.regenerateSystemToken(1),
+    ).thenAnswer((_) async => rotatedSystem);
+    when(
+      integrationRepository.getSystems,
+    ).thenAnswer((_) async => const [rotatedSystem]);
+
+    final saved = await viewModel.regenerateSystemToken(1);
+
+    expect(saved, isTrue);
+    expect(viewModel.latestToken, 'new-secret-token');
+    expect(viewModel.systems.single.tokenPrefix, 'new12345');
+    expect(viewModel.isMutating, isFalse);
+  });
 }

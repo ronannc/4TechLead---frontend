@@ -44,18 +44,23 @@ void main() {
         ),
       ],
     );
-    when(integrationRepository.getDeliveryMetrics).thenAnswer(
-      (_) async => const [
-        PersonDeliveryMetric(
-          id: 1,
-          personId: 1,
-          integrationSystemId: 1,
-          metricType: 'code_quality_score',
-          metricValue: 91,
-          unit: 'score',
-          sourceRef: 'org/repo#42',
-        ),
-      ],
+    when(() => integrationRepository.getDeliveryMetrics(page: 1)).thenAnswer(
+      (_) async => const DeliveryMetricsPage(
+        items: [
+          PersonDeliveryMetric(
+            id: 1,
+            personId: 1,
+            integrationSystemId: 1,
+            metricType: 'code_quality_score',
+            metricValue: 91,
+            unit: 'score',
+            sourceRef: 'org/repo#42',
+          ),
+        ],
+        currentPage: 1,
+        lastPage: 1,
+        total: 1,
+      ),
     );
     when(
       () => personRepository.getPeople(page: 1, perPage: 100),
@@ -69,9 +74,13 @@ void main() {
 
     expect(find.text('Integrações'), findsOneWidget);
     expect(find.text('Novo sistema'), findsOneWidget);
-    expect(find.text('Vínculo externo'), findsOneWidget);
     expect(find.text('GitHub Produto', skipOffstage: false), findsWidgets);
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
+
+    await tester.tap(find.text('Vínculos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Vínculo externo'), findsOneWidget);
+
+    await tester.tap(find.text('Métricas'));
     await tester.pumpAndSettle();
     expect(find.text('Qualidade do código'), findsOneWidget);
     expect(tester.takeException(), isNull);

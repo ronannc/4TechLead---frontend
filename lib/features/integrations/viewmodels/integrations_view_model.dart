@@ -15,9 +15,30 @@ class IntegrationsViewModel extends BaseViewModel {
   List<Person> people = [];
   List<PersonExternalIdentity> identities = [];
   List<PersonDeliveryMetric> metrics = [];
+  int systemsPage = 1;
+  int identitiesPage = 1;
+  int metricsPage = 1;
+  int metricsLastPage = 1;
+  int metricsTotal = 0;
   String? latestToken;
   String? actionErrorMessage;
   bool isMutating = false;
+
+  static const int localPageSize = 5;
+
+  List<IntegrationSystem> get pagedSystems {
+    final start = (systemsPage - 1) * localPageSize;
+    return systems.skip(start).take(localPageSize).toList(growable: false);
+  }
+
+  List<PersonExternalIdentity> get pagedIdentities {
+    final start = (identitiesPage - 1) * localPageSize;
+    return identities.skip(start).take(localPageSize).toList(growable: false);
+  }
+
+  int get systemsLastPage => _lastLocalPage(systems.length);
+
+  int get identitiesLastPage => _lastLocalPage(identities.length);
 
   Future<void> load() => runCatching(() async {
     await _loadAll();
@@ -35,22 +56,43 @@ class IntegrationsViewModel extends BaseViewModel {
     );
     latestToken = system.webhookToken;
     systems = await _repository.getSystems();
+    systemsPage = 1;
+  });
+
+  Future<bool> regenerateSystemToken(int systemId) => _runMutation(() async {
+    final system = await _repository.regenerateSystemToken(systemId);
+    latestToken = system.webhookToken;
+    systems = await _repository.getSystems();
   });
 
   Future<bool> createExternalIdentity({
     required int personId,
     required int integrationSystemId,
-    required String externalCode,
-    String? externalUsername,
   }) => _runMutation(() async {
     await _repository.createExternalIdentity(
       personId: personId,
       integrationSystemId: integrationSystemId,
-      externalCode: externalCode,
-      externalUsername: externalUsername,
     );
     identities = await _repository.getExternalIdentities();
+    identitiesPage = 1;
   });
+
+  void changeSystemsPage(int page) {
+    systemsPage = page.clamp(1, systemsLastPage).toInt();
+    notifyListeners();
+  }
+
+  void changeIdentitiesPage(int page) {
+    identitiesPage = page.clamp(1, identitiesLastPage).toInt();
+    notifyListeners();
+  }
+
+  Future<void> changeMetricsPage(int page) async {
+    final nextPage = page.clamp(1, metricsLastPage).toInt();
+    await _runMutation(() async {
+      await _loadMetrics(page: nextPage);
+    });
+  }
 
   void clearActionError() {
     actionErrorMessage = null;
@@ -77,12 +119,24 @@ class IntegrationsViewModel extends BaseViewModel {
     final loadedSystems = await _repository.getSystems();
     final loadedPeople = await _personRepository.getPeople(perPage: 100);
     final loadedIdentities = await _repository.getExternalIdentities();
-    final loadedMetrics = await _repository.getDeliveryMetrics();
 
     systems = loadedSystems;
     people = loadedPeople;
     identities = loadedIdentities;
-    metrics = loadedMetrics;
+    systemsPage = 1;
+    identitiesPage = 1;
+    await _loadMetrics(page: 1);
+  }
+
+  Future<void> _loadMetrics({required int page}) async {
+    final metricsPageResponse = await _repository.getDeliveryMetrics(
+      page: page,
+    );
+
+    metrics = metricsPageResponse.items;
+    metricsPage = metricsPageResponse.currentPage;
+    metricsLastPage = metricsPageResponse.lastPage;
+    metricsTotal = metricsPageResponse.total;
   }
 
   Future<bool> _runMutation(Future<void> Function() action) async {
@@ -103,5 +157,13 @@ class IntegrationsViewModel extends BaseViewModel {
       isMutating = false;
       notifyListeners();
     }
+  }
+
+  int _lastLocalPage(int total) {
+    if (total <= 0) {
+      return 1;
+    }
+
+    return ((total - 1) ~/ localPageSize) + 1;
   }
 }

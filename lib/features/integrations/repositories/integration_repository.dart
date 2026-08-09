@@ -25,6 +25,12 @@ class IntegrationRepository {
     return IntegrationSystem.fromJson(json['data'] as Map<String, dynamic>);
   }
 
+  Future<IntegrationSystem> regenerateSystemToken(int systemId) async {
+    final json = await _service.regenerateSystemToken(systemId);
+
+    return IntegrationSystem.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
   Future<List<PersonExternalIdentity>> getExternalIdentities() async {
     final json = await _service.getExternalIdentities();
     return _list(json, PersonExternalIdentity.fromJson);
@@ -33,14 +39,10 @@ class IntegrationRepository {
   Future<PersonExternalIdentity> createExternalIdentity({
     required int personId,
     required int integrationSystemId,
-    required String externalCode,
-    String? externalUsername,
   }) async {
     final json = await _service.createExternalIdentity(
       personId: personId,
       integrationSystemId: integrationSystemId,
-      externalCode: externalCode,
-      externalUsername: externalUsername,
     );
 
     return PersonExternalIdentity.fromJson(
@@ -48,9 +50,9 @@ class IntegrationRepository {
     );
   }
 
-  Future<List<PersonDeliveryMetric>> getDeliveryMetrics({int page = 1}) async {
+  Future<DeliveryMetricsPage> getDeliveryMetrics({int page = 1}) async {
     final json = await _service.getDeliveryMetrics(page: page);
-    return _list(json, PersonDeliveryMetric.fromJson);
+    return DeliveryMetricsPage.fromJson(json);
   }
 
   List<T> _list<T>(

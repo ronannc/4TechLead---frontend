@@ -5,6 +5,7 @@ import '../../../bootstrap.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
+import '../../../core/widgets/buttons/app_dialog_actions.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
 import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
@@ -66,10 +67,9 @@ class _IntegrationsBody extends StatefulWidget {
 class _IntegrationsBodyState extends State<_IntegrationsBody> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _externalCodeController = TextEditingController();
-  final _externalUsernameController = TextEditingController();
 
   var _provider = 'github';
+  var _selectedTab = _IntegrationTab.systems;
   int? _selectedPersonId;
   int? _selectedSystemId;
 
@@ -77,8 +77,6 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _externalCodeController.dispose();
-    _externalUsernameController.dispose();
     super.dispose();
   }
 
@@ -89,11 +87,9 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
-        _ResponsiveGrid(
-          children: [
-            _Surface(child: _integrationForm(viewModel)),
-            _Surface(child: _identityForm(viewModel)),
-          ],
+        _IntegrationTabBar(
+          selected: _selectedTab,
+          onChanged: (tab) => setState(() => _selectedTab = tab),
         ),
         if (viewModel.actionErrorMessage != null) ...[
           const SizedBox(height: AppSpacing.md),
@@ -107,28 +103,96 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
           _TokenPanel(token: viewModel.latestToken!),
         ],
         const SizedBox(height: AppSpacing.md),
-        _SectionTitle(title: 'Integrações cadastradas'),
-        const SizedBox(height: AppSpacing.sm),
+        switch (_selectedTab) {
+          _IntegrationTab.systems => _systemsSection(viewModel),
+          _IntegrationTab.identities => _identitiesSection(viewModel),
+          _IntegrationTab.metrics => _metricsSection(viewModel),
+        },
+      ],
+    );
+  }
+
+  Widget _systemsSection(IntegrationsViewModel viewModel) {
+    return _SectionStack(
+      children: [
+        _Surface(child: _integrationForm(viewModel)),
+        const _SectionTitle(title: 'Integrações cadastradas'),
         if (viewModel.systems.isEmpty)
           const _EmptyPanel(message: 'Nenhuma integração cadastrada ainda.')
-        else
-          for (final system in viewModel.systems) _SystemTile(system: system),
-        const SizedBox(height: AppSpacing.md),
-        _SectionTitle(title: 'Códigos externos por pessoa'),
-        const SizedBox(height: AppSpacing.sm),
+        else ...[
+          for (final system in viewModel.pagedSystems)
+            _SystemTile(system: system, viewModel: viewModel),
+          _InlinePagination(
+            page: viewModel.systemsPage,
+            lastPage: viewModel.systemsLastPage,
+            onPrevious: viewModel.systemsPage <= 1
+                ? null
+                : () => viewModel.changeSystemsPage(viewModel.systemsPage - 1),
+            onNext: viewModel.systemsPage >= viewModel.systemsLastPage
+                ? null
+                : () => viewModel.changeSystemsPage(viewModel.systemsPage + 1),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _identitiesSection(IntegrationsViewModel viewModel) {
+    return _SectionStack(
+      children: [
+        _Surface(child: _identityForm(viewModel)),
+        const _SectionTitle(title: 'Códigos externos por pessoa'),
         if (viewModel.identities.isEmpty)
           const _EmptyPanel(message: 'Nenhum vínculo externo cadastrado.')
-        else
-          for (final identity in viewModel.identities)
+        else ...[
+          for (final identity in viewModel.pagedIdentities)
             _IdentityTile(identity: identity, viewModel: viewModel),
-        const SizedBox(height: AppSpacing.md),
-        _SectionTitle(title: 'Métricas recebidas'),
-        const SizedBox(height: AppSpacing.sm),
+          _InlinePagination(
+            page: viewModel.identitiesPage,
+            lastPage: viewModel.identitiesLastPage,
+            onPrevious: viewModel.identitiesPage <= 1
+                ? null
+                : () => viewModel.changeIdentitiesPage(
+                    viewModel.identitiesPage - 1,
+                  ),
+            onNext: viewModel.identitiesPage >= viewModel.identitiesLastPage
+                ? null
+                : () => viewModel.changeIdentitiesPage(
+                    viewModel.identitiesPage + 1,
+                  ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _metricsSection(IntegrationsViewModel viewModel) {
+    return _SectionStack(
+      children: [
+        _SectionTitle(
+          title: 'Métricas recebidas',
+          subtitle: viewModel.metricsTotal == 0
+              ? 'Dados calculados a partir dos webhooks recebidos.'
+              : '${viewModel.metricsTotal} métricas calculadas via webhook.',
+        ),
         if (viewModel.metrics.isEmpty)
           const _EmptyPanel(message: 'Nenhuma métrica recebida via webhook.')
-        else
+        else ...[
           for (final metric in viewModel.metrics)
             _MetricTile(metric: metric, viewModel: viewModel),
+          _InlinePagination(
+            page: viewModel.metricsPage,
+            lastPage: viewModel.metricsLastPage,
+            onPrevious: viewModel.metricsPage <= 1 || viewModel.isMutating
+                ? null
+                : () => viewModel.changeMetricsPage(viewModel.metricsPage - 1),
+            onNext:
+                viewModel.metricsPage >= viewModel.metricsLastPage ||
+                    viewModel.isMutating
+                ? null
+                : () => viewModel.changeMetricsPage(viewModel.metricsPage + 1),
+          ),
+        ],
       ],
     );
   }
@@ -194,7 +258,7 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
       children: [
         const _SectionTitle(
           title: 'Vínculo externo',
-          subtitle: 'Associe o código enviado no webhook a uma pessoa.',
+          subtitle: 'O sistema gera o código que o webhook deve enviar.',
         ),
         DropdownButtonFormField<int>(
           key: ValueKey('system-$_selectedSystemId'),
@@ -216,25 +280,13 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
           ],
           onChanged: (value) => setState(() => _selectedPersonId = value),
         ),
-        TextField(
-          controller: _externalCodeController,
-          decoration: const InputDecoration(
-            labelText: 'Código externo',
-            helperText: 'Ex.: usuário GitHub, ID ClickUp ou e-mail externo.',
-          ),
-        ),
-        TextField(
-          controller: _externalUsernameController,
-          decoration: const InputDecoration(labelText: 'Nome externo'),
-        ),
+        const _GeneratedCodeHint(),
         Row(
           children: [
             Expanded(
               child: AppSecondaryButton(
                 label: 'Limpar',
                 onPressed: () {
-                  _externalCodeController.clear();
-                  _externalUsernameController.clear();
                   setState(() {
                     _selectedPersonId = null;
                     _selectedSystemId = null;
@@ -245,35 +297,149 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: AppPrimaryButton(
-                label: 'Vincular',
+                label: 'Gerar vínculo',
                 onPressed: () async {
                   final personId = _selectedPersonId;
                   final systemId = _selectedSystemId;
-                  final externalCode = _externalCodeController.text.trim();
-                  if (personId == null ||
-                      systemId == null ||
-                      externalCode.isEmpty) {
+                  if (personId == null || systemId == null) {
                     return;
                   }
 
-                  final saved = await viewModel.createExternalIdentity(
+                  await viewModel.createExternalIdentity(
                     personId: personId,
                     integrationSystemId: systemId,
-                    externalCode: externalCode,
-                    externalUsername: _nullable(
-                      _externalUsernameController.text,
-                    ),
                   );
-                  if (saved) {
-                    _externalCodeController.clear();
-                    _externalUsernameController.clear();
-                  }
                 },
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _GeneratedCodeHint extends StatelessWidget {
+  const _GeneratedCodeHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.key_outlined, color: theme.colorScheme.primary),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            'Depois de gerar, use o código exibido na lista como '
+            'external_actor_code no JSON do webhook.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _IntegrationTab {
+  systems(Icons.hub_outlined, 'Sistemas'),
+  identities(Icons.link_outlined, 'Vínculos'),
+  metrics(Icons.analytics_outlined, 'Métricas');
+
+  const _IntegrationTab(this.icon, this.label);
+
+  final IconData icon;
+  final String label;
+}
+
+class _IntegrationTabBar extends StatelessWidget {
+  const _IntegrationTabBar({required this.selected, required this.onChanged});
+
+  final _IntegrationTab selected;
+  final ValueChanged<_IntegrationTab> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderColor = theme.colorScheme.outlineVariant.withValues(
+      alpha: 0.55,
+    );
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (
+              var index = 0;
+              index < _IntegrationTab.values.length;
+              index++
+            ) ...[
+              if (index > 0)
+                VerticalDivider(width: 1, thickness: 1, color: borderColor),
+              _IntegrationTabButton(
+                tab: _IntegrationTab.values[index],
+                selected: _IntegrationTab.values[index] == selected,
+                onPressed: () => onChanged(_IntegrationTab.values[index]),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IntegrationTabButton extends StatelessWidget {
+  const _IntegrationTabButton({
+    required this.tab,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final _IntegrationTab tab;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final foreground = selected
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface;
+
+    return Material(
+      color: selected ? theme.colorScheme.primary : Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(tab.icon, size: 19, color: foreground),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                tab.label,
+                style: theme.textTheme.labelLarge?.copyWith(color: foreground),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -308,28 +474,98 @@ class _TokenPanel extends StatelessWidget {
 }
 
 class _SystemTile extends StatelessWidget {
-  const _SystemTile({required this.system});
+  const _SystemTile({required this.system, required this.viewModel});
 
   final IntegrationSystem system;
+  final IntegrationsViewModel viewModel;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return _Surface(
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(_providerIcon(system.provider)),
-        title: Text(system.name),
-        subtitle: Text(
-          '${system.provider} · token ${system.tokenPrefix}...'
-          '${system.lastReceivedAt == null ? '' : ' · recebeu evento'}',
-        ),
-        trailing: Icon(
-          system.active
-              ? Icons.check_circle_outline
-              : Icons.pause_circle_outline,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(_providerIcon(system.provider)),
+            title: Text(system.name),
+            subtitle: Text(
+              '${system.provider} · token ${system.tokenPrefix}...'
+              '${system.lastReceivedAt == null ? '' : ' · recebeu evento'}',
+            ),
+            trailing: Icon(
+              system.active
+                  ? Icons.check_circle_outline
+                  : Icons.pause_circle_outline,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'O token completo só aparece ao criar ou gerar um novo token.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: viewModel.isMutating
+                  ? null
+                  : () => _confirmTokenRegeneration(context, system, viewModel),
+              icon: const Icon(Icons.sync),
+              label: const Text('Gerar novo token'),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _confirmTokenRegeneration(
+    BuildContext context,
+    IntegrationSystem system,
+    IntegrationsViewModel viewModel,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gerar novo token?'),
+        content: Text(
+          'O token atual de ${system.name} vai parar de funcionar. '
+          'Atualize o segredo no sistema externo depois de copiar o novo token.',
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        actions: [
+          AppDialogActions(
+            secondaryLabel: 'Cancelar',
+            onSecondaryPressed: () => Navigator.of(context).pop(false),
+            primaryLabel: 'Gerar token',
+            onPrimaryPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final saved = await viewModel.regenerateSystemToken(system.id);
+    if (saved && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Novo token gerado. Copie antes de sair da tela.'),
+        ),
+      );
+    }
   }
 }
 
@@ -346,8 +582,13 @@ class _IdentityTile extends StatelessWidget {
         contentPadding: EdgeInsets.zero,
         leading: const Icon(Icons.link_outlined),
         title: Text(viewModel.personName(identity.personId)),
-        subtitle: Text(
-          '${viewModel.systemName(identity.integrationSystemId)} · ${identity.externalCode}',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(viewModel.systemName(identity.integrationSystemId)),
+            const SizedBox(height: AppSpacing.xs),
+            SelectableText('external_actor_code: ${identity.externalCode}'),
+          ],
         ),
       ),
     );
@@ -371,35 +612,76 @@ class _MetricTile extends StatelessWidget {
           '${viewModel.personName(metric.personId)}'
           '${metric.sourceRef == null ? '' : ' · ${metric.sourceRef}'}',
         ),
-        trailing: Text('${metric.metricValue} ${metric.unit ?? ''}'),
+        trailing: Text('${metric.metricValue} ${metric.unit ?? ''}'.trim()),
       ),
     );
   }
 }
 
-class _ResponsiveGrid extends StatelessWidget {
-  const _ResponsiveGrid({required this.children});
+class _SectionStack extends StatelessWidget {
+  const _SectionStack({required this.children});
 
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 840;
-        final itemWidth = compact
-            ? constraints.maxWidth
-            : (constraints.maxWidth - AppSpacing.md) / 2;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var index = 0; index < children.length; index++) ...[
+          if (index > 0) const SizedBox(height: AppSpacing.sm),
+          children[index],
+        ],
+      ],
+    );
+  }
+}
 
-        return Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.md,
+class _InlinePagination extends StatelessWidget {
+  const _InlinePagination({
+    required this.page,
+    required this.lastPage,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int page;
+  final int lastPage;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            for (final child in children)
-              SizedBox(width: itemWidth, child: child),
+            SizedBox(
+              width: 132,
+              child: AppSecondaryButton(
+                label: 'Anterior',
+                onPressed: onPrevious,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            SizedBox(
+              width: 120,
+              child: Text(
+                'Página $page de $lastPage',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            SizedBox(
+              width: 132,
+              child: AppSecondaryButton(label: 'Próxima', onPressed: onNext),
+            ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -551,6 +833,12 @@ String _metricLabel(String type) {
     'ci_failures_count' => 'Falhas de CI',
     'rework_count' => 'Retrabalho',
     'changed_files_count' => 'Arquivos alterados',
+    'annual_pull_request_count' => 'PRs no ano',
+    'annual_quality_average' => 'Qualidade média anual',
+    'annual_review_comment_average' => 'Review / PR',
+    'annual_ci_failure_average' => 'CI falhando / PR',
+    'annual_rework_average' => 'Retrabalho / PR',
+    'annual_delivery_points_total' => 'Pontos entregues no ano',
     _ => type,
   };
 }
