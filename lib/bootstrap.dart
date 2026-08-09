@@ -10,6 +10,8 @@ import 'features/daily/repositories/daily_meeting_repository.dart';
 import 'features/daily/services/daily_meeting_service.dart';
 import 'features/integrations/repositories/integration_repository.dart';
 import 'features/integrations/services/integration_service.dart';
+import 'features/notifications/repositories/notification_repository.dart';
+import 'features/notifications/services/notification_service.dart';
 import 'features/people/repositories/person_growth_repository.dart';
 import 'features/people/repositories/person_repository.dart';
 import 'features/people/services/person_growth_service.dart';
@@ -78,5 +80,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<IntegrationRepository>(
     () => IntegrationRepository(getIt<IntegrationService>()),
+  );
+
+  getIt.registerLazySingleton<NotificationService>(
+    () => NotificationService(getIt<DioClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepository(getIt<NotificationService>()),
   );
 }
