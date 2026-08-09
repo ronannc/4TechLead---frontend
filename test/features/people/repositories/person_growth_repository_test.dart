@@ -53,42 +53,6 @@ Map<String, dynamic> _planJson() {
   };
 }
 
-Map<String, dynamic> _okrJson() {
-  return {
-    'id': 4,
-    'person_id': 10,
-    'development_plan_id': null,
-    'objective': 'Aumentar autonomia técnica',
-    'cycle': '2026-Q3',
-    'status': 'active',
-    'focus_area': 'Autonomia',
-    'diagnosis': 'Precisa decidir com menos apoio.',
-    'evidence_source': 'PRs e decisões',
-    'baseline': null,
-    'target': 'Conduzir entregas médias',
-    'confidence': 50,
-    'progress': 15,
-    'key_results': [
-      {
-        'id': 5,
-        'okr_id': 4,
-        'title': 'Concluir ações do PDI',
-        'metric_name': 'Ações',
-        'data_source': 'tasks',
-        'initial_value': '0.00',
-        'current_value': '1.00',
-        'target_value': '4.00',
-        'unit': 'itens',
-        'confidence': 60,
-        'status': 'doing',
-        'due_date': null,
-        'evidence': 'Itens fechados',
-        'progress': 25,
-      },
-    ],
-  };
-}
-
 void main() {
   late _MockPersonGrowthService service;
   late PersonGrowthRepository repository;
@@ -127,20 +91,6 @@ void main() {
     expect(plans.single.items.single.competency, 'Arquitetura');
   });
 
-  test('maps okrs with key results and numeric values', () async {
-    when(() => service.getOkrs(10)).thenAnswer(
-      (_) async => {
-        'data': [_okrJson()],
-      },
-    );
-
-    final okrs = await repository.getOkrs(10);
-
-    expect(okrs.single.objective, 'Aumentar autonomia técnica');
-    expect(okrs.single.keyResults.single.targetValue, 4);
-    expect(okrs.single.keyResults.single.dataSource, 'tasks');
-  });
-
   test('maps growth suggestions', () async {
     when(
       () =>
@@ -152,8 +102,8 @@ void main() {
           'pdi_suggestions': [
             {'title': 'Ação'},
           ],
-          'okr_suggestions': [
-            {'objective': 'Objetivo'},
+          'kpi_suggestions': [
+            {'title': 'Indicador'},
           ],
         },
       },
@@ -163,6 +113,6 @@ void main() {
 
     expect(suggestions.oneOnOneQuestions.single, 'Pergunta');
     expect(suggestions.pdiSuggestions.single['title'], 'Ação');
-    expect(suggestions.okrSuggestions.single['objective'], 'Objetivo');
+    expect(suggestions.kpiSuggestions.single['title'], 'Indicador');
   });
 }

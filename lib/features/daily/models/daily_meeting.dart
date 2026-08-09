@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import 'daily_meeting_annotation.dart';
 import 'daily_meeting_entry.dart';
 
 /// Mirrors the backend's `DailyMeetingResource`. `entries` defaults to an
@@ -13,6 +14,7 @@ class DailyMeeting extends Equatable {
     required this.startedAt,
     required this.endedAt,
     required this.entries,
+    required this.annotations,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -23,11 +25,13 @@ class DailyMeeting extends Equatable {
   final DateTime startedAt;
   final DateTime endedAt;
   final List<DailyMeetingEntry> entries;
+  final List<DailyMeetingAnnotation> annotations;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   factory DailyMeeting.fromJson(Map<String, dynamic> json) {
     final entriesJson = json['entries'] as List<dynamic>?;
+    final annotationsJson = json['annotations'] as List<dynamic>?;
 
     return DailyMeeting(
       id: json['id'] as int,
@@ -43,6 +47,15 @@ class DailyMeeting extends Equatable {
                       DailyMeetingEntry.fromJson(entry as Map<String, dynamic>),
                 )
                 .toList(),
+      annotations: annotationsJson == null
+          ? const []
+          : annotationsJson
+                .map(
+                  (annotation) => DailyMeetingAnnotation.fromJson(
+                    annotation as Map<String, dynamic>,
+                  ),
+                )
+                .toList(),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -56,6 +69,7 @@ class DailyMeeting extends Equatable {
     startedAt,
     endedAt,
     entries,
+    annotations,
     createdAt,
     updatedAt,
   ];

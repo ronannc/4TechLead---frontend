@@ -317,7 +317,7 @@ for the three sections.
 
 Mutation errors in already-loaded screens must not replace the whole body with `ErrorView`. Preserve
 the loaded content and show an inline/snackbar error with retry or dismissal. If a local state flow
-looks like a route (for example a focused 1:1/PDI/OKR document inside a detail screen), add `PopScope`
+looks like a route (for example a focused 1:1/PDI document inside a detail screen), add `PopScope`
 and a widget test so Android/system back closes that flow before leaving the page.
 
 ## Adding a new feature — recipe (mirror `features/teams/`)

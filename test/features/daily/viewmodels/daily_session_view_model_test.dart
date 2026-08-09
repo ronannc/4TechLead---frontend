@@ -55,6 +55,7 @@ DailyMeeting _savedMeeting() {
     startedAt: DateTime(2026),
     endedAt: DateTime(2026),
     entries: const [],
+    annotations: const [],
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
   );
@@ -110,6 +111,51 @@ void main() {
         DailyCue.aboutToBurn,
         DailyCue.burned,
       ]);
+
+      viewModel.dispose();
+    });
+  });
+
+  test('togglePause freezes elapsed time until the timer is resumed', () {
+    fakeAsync((async) {
+      final start = DateTime(2026);
+      final viewModel = DailySessionViewModel(
+        personRepository,
+        meetingRepository,
+        teamRepository,
+        initialTeamId: 1,
+        now: () => start.add(async.elapsed),
+      );
+      final cues = <DailyCue>[];
+      viewModel.cue.addListener(() {
+        final cue = viewModel.cue.value;
+        if (cue != null) {
+          cues.add(cue);
+        }
+      });
+
+      viewModel.loadParticipants();
+      async.flushMicrotasks();
+      viewModel.start();
+
+      async.elapse(const Duration(seconds: 15));
+      viewModel.togglePause();
+
+      expect(viewModel.isPaused, isTrue);
+      expect(viewModel.elapsedSeconds.value, 15);
+
+      async.elapse(const Duration(seconds: 40));
+
+      expect(viewModel.elapsedSeconds.value, 15);
+      expect(cues, [DailyCue.turnStarted]);
+
+      viewModel.togglePause();
+      expect(viewModel.isPaused, isFalse);
+
+      async.elapse(const Duration(seconds: 35));
+
+      expect(viewModel.elapsedSeconds.value, 50);
+      expect(cues, [DailyCue.turnStarted, DailyCue.aboutToBurn]);
 
       viewModel.dispose();
     });
@@ -179,6 +225,31 @@ void main() {
     });
   });
 
+  test('reorderMemberByPersonId updates order from the unified list', () {
+    fakeAsync((async) {
+      final start = DateTime(2026);
+      final viewModel = DailySessionViewModel(
+        personRepository,
+        meetingRepository,
+        teamRepository,
+        initialTeamId: 1,
+        now: () => start.add(async.elapsed),
+      );
+
+      viewModel.loadParticipants();
+      async.flushMicrotasks();
+
+      viewModel.reorderMemberByPersonId(1, 2);
+
+      expect(viewModel.members.map((person) => person.name), [
+        'Grace Hopper',
+        'Ada Lovelace',
+      ]);
+
+      viewModel.dispose();
+    });
+  });
+
   test('addTopic and addBlocker keep local facilitation notes', () {
     final viewModel = DailySessionViewModel(
       personRepository,
@@ -221,6 +292,71 @@ void main() {
     });
   });
 
+  test('save() sends turn timings plus current daily annotations', () {
+    fakeAsync((async) {
+      final start = DateTime(2026);
+      final viewModel = DailySessionViewModel(
+        personRepository,
+        meetingRepository,
+        teamRepository,
+        initialTeamId: 1,
+        now: () => start.add(async.elapsed),
+      );
+
+      viewModel.loadParticipants();
+      async.flushMicrotasks();
+      viewModel.start();
+      viewModel.addTopic('Webhook validado');
+      viewModel.addBlocker('Credencial pendente');
+      viewModel.toggleBlocker(0);
+      async.elapse(const Duration(seconds: 20));
+      viewModel.finishNow();
+
+      when(
+        () => meetingRepository.createMeeting(
+          timeLimitSeconds: 60,
+          startedAt: any(named: 'startedAt'),
+          endedAt: any(named: 'endedAt'),
+          entries: const [
+            {'person_id': 1, 'actual_seconds': 20},
+          ],
+          annotations: const [
+            {'type': 'topico', 'text': 'Webhook validado'},
+            {
+              'type': 'bloqueio',
+              'text': 'Credencial pendente',
+              'resolved': true,
+            },
+          ],
+        ),
+      ).thenAnswer((_) async => _savedMeeting());
+
+      viewModel.save();
+      async.flushMicrotasks();
+
+      verify(
+        () => meetingRepository.createMeeting(
+          timeLimitSeconds: 60,
+          startedAt: any(named: 'startedAt'),
+          endedAt: any(named: 'endedAt'),
+          entries: const [
+            {'person_id': 1, 'actual_seconds': 20},
+          ],
+          annotations: const [
+            {'type': 'topico', 'text': 'Webhook validado'},
+            {
+              'type': 'bloqueio',
+              'text': 'Credencial pendente',
+              'resolved': true,
+            },
+          ],
+        ),
+      ).called(1);
+
+      viewModel.dispose();
+    });
+  });
+
   test('save() preserves drafts and allows retry after a failure', () {
     fakeAsync((async) {
       final start = DateTime(2026);
@@ -244,6 +380,7 @@ void main() {
           startedAt: any(named: 'startedAt'),
           endedAt: any(named: 'endedAt'),
           entries: any(named: 'entries'),
+          annotations: any(named: 'annotations'),
         ),
       ).thenThrow(const NotFoundException());
 
@@ -261,6 +398,7 @@ void main() {
           startedAt: any(named: 'startedAt'),
           endedAt: any(named: 'endedAt'),
           entries: any(named: 'entries'),
+          annotations: any(named: 'annotations'),
         ),
       ).thenAnswer((_) async => _savedMeeting());
 

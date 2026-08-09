@@ -17,7 +17,7 @@ void main() {
     await initializeDateFormatting('pt_BR');
 
     final repository = _MockTeamRepository();
-    when(() => repository.getTeams()).thenAnswer(
+    when(() => repository.getTeams(page: 1, perPage: null)).thenAnswer(
       (_) async => [
         Team(
           id: 1,

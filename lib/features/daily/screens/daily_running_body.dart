@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,8 +11,33 @@ import '../models/daily_turn_draft.dart';
 import '../utils/daily_stats.dart';
 import '../utils/daily_time_limit.dart';
 import '../viewmodels/daily_session_view_model.dart';
-import 'daily_note_sheet.dart';
 import 'daily_timer_ring.dart';
+
+enum _DailyAnnotationKind { topic, blocker }
+
+extension on _DailyAnnotationKind {
+  String get fieldLabel => switch (this) {
+    _DailyAnnotationKind.topic => 'Tópico levantado',
+    _DailyAnnotationKind.blocker => 'Bloqueio',
+  };
+
+  String get hintText => switch (this) {
+    _DailyAnnotationKind.topic => 'Ex.: Finalizou integração do webhook',
+    _DailyAnnotationKind.blocker => 'Ex.: Aguardando credencial de staging',
+  };
+
+  String get helperText => switch (this) {
+    _DailyAnnotationKind.topic =>
+      'Registre um assunto que precisa de alinhamento depois da rodada.',
+    _DailyAnnotationKind.blocker =>
+      'Registre um impedimento que precisa sair da daily com responsável.',
+  };
+
+  String get addTooltip => switch (this) {
+    _DailyAnnotationKind.topic => 'Adicionar tópico',
+    _DailyAnnotationKind.blocker => 'Adicionar bloqueio',
+  };
+}
 
 class DailyRunningBody extends StatefulWidget {
   const DailyRunningBody({super.key});
@@ -21,14 +47,29 @@ class DailyRunningBody extends StatefulWidget {
 }
 
 class _DailyRunningBodyState extends State<DailyRunningBody> {
-  final _topicController = TextEditingController();
-  final _blockerController = TextEditingController();
+  final _annotationController = TextEditingController();
+  _DailyAnnotationKind _annotationKind = _DailyAnnotationKind.topic;
 
   @override
   void dispose() {
-    _topicController.dispose();
-    _blockerController.dispose();
+    _annotationController.dispose();
     super.dispose();
+  }
+
+  void _submitAnnotation(DailySessionViewModel viewModel, String rawText) {
+    final text = rawText.trim();
+    if (text.isEmpty) {
+      return;
+    }
+
+    if (_annotationKind == _DailyAnnotationKind.topic) {
+      viewModel.addTopic(text);
+    } else {
+      viewModel.addBlocker(text);
+    }
+
+    _annotationController.clear();
+    FocusScope.of(context).unfocus();
   }
 
   @override
@@ -56,22 +97,31 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
                 turn: turn,
               ),
               const SizedBox(height: AppSpacing.sm),
-              Center(
-                child: DailyTimerRing(
-                  allowedSeconds: turn.allowedSeconds,
-                  elapsedSeconds: viewModel.elapsedSeconds,
-                ),
+              _TimerPanel(
+                allowedSeconds: turn.allowedSeconds,
+                elapsedSeconds: viewModel.elapsedSeconds,
               ),
+              const SizedBox(height: AppSpacing.sm),
+              const _PauseBanner(),
               const SizedBox(height: AppSpacing.sm),
               _ParticipantsStrip(turns: viewModel.turns, currentIndex: index),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => showDailyNoteSheet(context, viewModel),
-                      icon: const Icon(Icons.edit_note),
-                      label: const Text('Nota'),
+                    child: Selector<DailySessionViewModel, bool>(
+                      selector: (_, vm) => vm.isPaused,
+                      builder: (context, isPaused, _) => OutlinedButton.icon(
+                        onPressed: viewModel.togglePause,
+                        icon: Icon(
+                          isPaused
+                              ? Icons.play_arrow_outlined
+                              : Icons.pause_outlined,
+                        ),
+                        label: Text(
+                          isPaused ? 'Retomar timer' : 'Pausar timer',
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -87,47 +137,116 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
               const SizedBox(height: AppSpacing.sm),
               AppPrimaryButton(label: 'Próximo', onPressed: viewModel.nextTurn),
               const SizedBox(height: AppSpacing.sm),
-              _QuickCapture(
-                title: 'Tópicos levantados',
-                hint: 'Ex.: Finalizou integração do webhook',
-                controller: _topicController,
-                icon: Icons.add_comment_outlined,
-                onAdd: (text) {
-                  viewModel.addTopic(text);
-                  _topicController.clear();
-                },
+              _AnnotationComposer(
+                kind: _annotationKind,
+                controller: _annotationController,
+                onKindChanged: (kind) => setState(() => _annotationKind = kind),
+                onAdd: (text) => _submitAnnotation(viewModel, text),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Selector<DailySessionViewModel, List<String>>(
-                selector: (_, vm) => vm.topics,
-                builder: (context, topics, _) => _TopicList(topics: topics),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _QuickCapture(
-                title: 'Bloqueios',
-                hint: 'Ex.: Aguardando credencial de staging',
-                controller: _blockerController,
-                icon: Icons.report_problem_outlined,
-                onAdd: (text) {
-                  viewModel.addBlocker(text);
-                  _blockerController.clear();
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Selector<DailySessionViewModel, List<DailyBlockerDraft>>(
-                selector: (_, vm) => vm.blockers,
-                builder: (context, blockers, _) =>
-                    _BlockerList(blockers: blockers),
+              Selector<
+                DailySessionViewModel,
+                ({List<String> topics, List<DailyBlockerDraft> blockers})
+              >(
+                selector: (_, vm) => (topics: vm.topics, blockers: vm.blockers),
+                builder: (context, notes, _) => _AnnotationList(
+                  topics: notes.topics,
+                  blockers: notes.blockers,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Use tópicos para alinhar avanços e bloqueios para marcar riscos que precisam sair da daily com dono.',
+                'Use tópico levantado para registrar assuntos que exigem alinhamento. Use bloqueio quando algo precisar sair da daily com dono.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+class _TimerPanel extends StatelessWidget {
+  const _TimerPanel({
+    required this.allowedSeconds,
+    required this.elapsedSeconds,
+  });
+
+  final int allowedSeconds;
+  final ValueListenable<int> elapsedSeconds;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.lg,
+        ),
+        child: Center(
+          child: DailyTimerRing(
+            allowedSeconds: allowedSeconds,
+            elapsedSeconds: elapsedSeconds,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PauseBanner extends StatelessWidget {
+  const _PauseBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Selector<DailySessionViewModel, bool>(
+      selector: (_, vm) => vm.isPaused,
+      builder: (context, isPaused, _) {
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: isPaused
+              ? Container(
+                  key: const ValueKey('daily-paused-banner'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.pause_circle_filled,
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Timer pausado. Retome quando quiser continuar este turno.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Text(
+                  'Pause o timer se a conversa sair da daily ou precisar interromper o turno atual.',
+                  key: const ValueKey('daily-running-hint'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
         );
       },
     );
@@ -148,49 +267,76 @@ class _LiveHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final status = ValueListenableBuilder<int>(
+      valueListenable: context.read<DailySessionViewModel>().elapsedSeconds,
+      builder: (context, elapsed, _) {
+        final status = computeDraftStatus(
+          allottedSeconds: turn.allowedSeconds,
+          actualSeconds: elapsed,
+        );
+
+        return _StatusPill(status: status);
+      },
+    );
+    final identity = Row(
+      children: [
+        CircleAvatar(radius: 26, child: Text(_initials(turn.person.name))),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${index + 1} de $total',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              Text(
+                turn.person.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge,
+              ),
+              Text(
+                turn.person.position,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
 
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            CircleAvatar(radius: 26, child: Text(_initials(turn.person.name))),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 360) {
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${index + 1} de $total',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  Text(turn.person.name, style: theme.textTheme.titleLarge),
-                  Text(
-                    turn.person.position,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  identity,
+                  const SizedBox(height: AppSpacing.sm),
+                  Align(alignment: Alignment.centerLeft, child: status),
                 ],
-              ),
-            ),
-            ValueListenableBuilder<int>(
-              valueListenable: context
-                  .read<DailySessionViewModel>()
-                  .elapsedSeconds,
-              builder: (context, elapsed, _) {
-                final status = computeDraftStatus(
-                  allottedSeconds: turn.allowedSeconds,
-                  actualSeconds: elapsed,
-                );
+              );
+            }
 
-                return _StatusPill(status: status);
-              },
-            ),
-          ],
+            return Row(
+              children: [
+                Expanded(child: identity),
+                const SizedBox(width: AppSpacing.md),
+                status,
+              ],
+            );
+          },
         ),
       ),
     );
@@ -253,87 +399,91 @@ class _ParticipantsStrip extends StatelessWidget {
   }
 }
 
-class _QuickCapture extends StatelessWidget {
-  const _QuickCapture({
-    required this.title,
-    required this.hint,
+class _AnnotationComposer extends StatelessWidget {
+  const _AnnotationComposer({
+    required this.kind,
     required this.controller,
-    required this.icon,
+    required this.onKindChanged,
     required this.onAdd,
   });
 
-  final String title;
-  final String hint;
+  final _DailyAnnotationKind kind;
   final TextEditingController controller;
-  final IconData icon;
+  final ValueChanged<_DailyAnnotationKind> onKindChanged;
   final ValueChanged<String> onAdd;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: theme.textTheme.titleMedium),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: TextField(
-                controller: controller,
-                decoration: InputDecoration(hintText: hint),
-                onSubmitted: onAdd,
-              ),
+            Text('Anotações da daily', style: theme.textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.sm),
+            SegmentedButton<_DailyAnnotationKind>(
+              segments: const [
+                ButtonSegment(
+                  value: _DailyAnnotationKind.topic,
+                  icon: Icon(Icons.chat_bubble_outline),
+                  label: Text('Tópico'),
+                ),
+                ButtonSegment(
+                  value: _DailyAnnotationKind.blocker,
+                  icon: Icon(Icons.report_problem_outlined),
+                  label: Text('Bloqueio'),
+                ),
+              ],
+              selected: {kind},
+              onSelectionChanged: (selection) =>
+                  onKindChanged(selection.single),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton.filled(
-              tooltip: 'Adicionar',
-              onPressed: () => onAdd(controller.text),
-              icon: Icon(icon),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: kind.fieldLabel,
+                      hintText: kind.hintText,
+                      helperText: kind.helperText,
+                    ),
+                    onSubmitted: onAdd,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                IconButton.filled(
+                  tooltip: kind.addTooltip,
+                  onPressed: () => onAdd(controller.text),
+                  icon: Icon(
+                    kind == _DailyAnnotationKind.blocker
+                        ? Icons.report_problem_outlined
+                        : Icons.add_comment_outlined,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class _TopicList extends StatelessWidget {
-  const _TopicList({required this.topics});
-
-  final List<String> topics;
-
-  @override
-  Widget build(BuildContext context) {
-    if (topics.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (final topic in topics)
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.chat_bubble_outline),
-              title: Text(topic),
-            ),
-        ],
       ),
     );
   }
 }
 
-class _BlockerList extends StatelessWidget {
-  const _BlockerList({required this.blockers});
+class _AnnotationList extends StatelessWidget {
+  const _AnnotationList({required this.topics, required this.blockers});
 
+  final List<String> topics;
   final List<DailyBlockerDraft> blockers;
 
   @override
   Widget build(BuildContext context) {
-    if (blockers.isEmpty) {
+    if (topics.isEmpty && blockers.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -355,7 +505,16 @@ class _BlockerList extends StatelessWidget {
                       : null,
                 ),
               ),
+              subtitle: const Text('Bloqueio'),
+              secondary: const Icon(Icons.report_problem_outlined),
               controlAffinity: ListTileControlAffinity.leading,
+            ),
+          for (final topic in topics)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.chat_bubble_outline),
+              title: Text(topic),
+              subtitle: const Text('Tópico levantado'),
             ),
         ],
       ),

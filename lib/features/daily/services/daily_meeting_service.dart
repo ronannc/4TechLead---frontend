@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/dio_client.dart';
-import '../models/daily_note_category.dart';
 
 /// Raw HTTP calls to `/daily-meetings` and `/daily-meeting-entries`. Returns
 /// decoded JSON — mapping JSON into models is the repository's job.
@@ -45,13 +44,14 @@ class DailyMeetingService {
     }
   }
 
-  /// `entries` is a list of `{person_id, actual_seconds, note_type?, note?}`
-  /// maps — `speaking_order`/`allotted_seconds` are derived server-side.
+  /// `entries` is a list of `{person_id, actual_seconds}` maps —
+  /// `speaking_order`/`allotted_seconds` are derived server-side.
   Future<Map<String, dynamic>> store({
     required int timeLimitSeconds,
     required DateTime startedAt,
     required DateTime endedAt,
     required List<Map<String, dynamic>> entries,
+    required List<Map<String, dynamic>> annotations,
   }) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
@@ -61,6 +61,7 @@ class DailyMeetingService {
           'started_at': startedAt.toIso8601String(),
           'ended_at': endedAt.toIso8601String(),
           'entries': entries,
+          'annotations': annotations,
         },
       );
 
@@ -74,7 +75,6 @@ class DailyMeetingService {
     int? teamId,
     int? personId,
     int? dailyMeetingId,
-    DailyNoteCategory? noteType,
     int page = 1,
     int perPage = 100,
   }) async {
@@ -87,7 +87,6 @@ class DailyMeetingService {
           'filters[team_id]': ?teamId,
           'filters[person_id]': ?personId,
           'filters[daily_meeting_id]': ?dailyMeetingId,
-          'filters[note_type]': ?noteType?.apiValue,
           'order[created_at]': 'desc',
         },
       );

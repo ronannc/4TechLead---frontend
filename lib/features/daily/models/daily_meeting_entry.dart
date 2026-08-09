@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 
 import '../../people/models/person.dart';
 import 'daily_entry_status.dart';
-import 'daily_note_category.dart';
 
 /// Mirrors the backend's `DailyMeetingEntryResource` — one person's speaking
 /// turn within a [DailyMeeting]. `status` is always server-computed, never
@@ -20,8 +19,6 @@ class DailyMeetingEntry extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     this.person,
-    this.noteType,
-    this.note,
   });
 
   final int id;
@@ -33,8 +30,6 @@ class DailyMeetingEntry extends Equatable {
   final int allottedSeconds;
   final int actualSeconds;
   final DailyEntryStatus status;
-  final DailyNoteCategory? noteType;
-  final String? note;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -51,10 +46,6 @@ class DailyMeetingEntry extends Equatable {
       allottedSeconds: json['allotted_seconds'] as int,
       actualSeconds: json['actual_seconds'] as int,
       status: DailyEntryStatus.fromApiValue(json['status'] as String),
-      noteType: json['note_type'] != null
-          ? DailyNoteCategory.fromApiValue(json['note_type'] as String)
-          : null,
-      note: json['note'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -71,8 +62,6 @@ class DailyMeetingEntry extends Equatable {
     allottedSeconds,
     actualSeconds,
     status,
-    noteType,
-    note,
     createdAt,
     updatedAt,
   ];

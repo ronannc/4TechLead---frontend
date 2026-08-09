@@ -156,152 +156,27 @@ class DevelopmentPlanItem {
   }
 }
 
-class PersonOkr {
-  const PersonOkr({
-    required this.id,
-    required this.personId,
-    required this.objective,
-    required this.status,
-    required this.confidence,
-    required this.progress,
-    this.developmentPlanId,
-    this.cycle,
-    this.focusArea,
-    this.diagnosis,
-    this.evidenceSource,
-    this.baseline,
-    this.target,
-    this.startDate,
-    this.endDate,
-    this.keyResults = const [],
-  });
-
-  final int id;
-  final int personId;
-  final int? developmentPlanId;
-  final String objective;
-  final String? cycle;
-  final String status;
-  final String? focusArea;
-  final String? diagnosis;
-  final String? evidenceSource;
-  final String? baseline;
-  final String? target;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final int confidence;
-  final int progress;
-  final List<OkrKeyResult> keyResults;
-
-  factory PersonOkr.fromJson(Map<String, dynamic> json) {
-    return PersonOkr(
-      id: json['id'] as int,
-      personId: json['person_id'] as int,
-      developmentPlanId: json['development_plan_id'] as int?,
-      objective: json['objective'] as String,
-      cycle: json['cycle'] as String?,
-      status: json['status'] as String,
-      focusArea: json['focus_area'] as String?,
-      diagnosis: json['diagnosis'] as String?,
-      evidenceSource: json['evidence_source'] as String?,
-      baseline: json['baseline'] as String?,
-      target: json['target'] as String?,
-      startDate: _date(json['start_date'] as String?),
-      endDate: _date(json['end_date'] as String?),
-      confidence: json['confidence'] as int? ?? 50,
-      progress: json['progress'] as int? ?? 0,
-      keyResults: [
-        for (final item in (json['key_results'] as List<dynamic>? ?? []))
-          OkrKeyResult.fromJson(item as Map<String, dynamic>),
-      ],
-    );
-  }
-}
-
-class OkrKeyResult {
-  const OkrKeyResult({
-    required this.id,
-    required this.okrId,
-    required this.title,
-    required this.status,
-    required this.progress,
-    this.metricName,
-    this.dataSource = 'manual',
-    this.initialValue,
-    this.currentValue,
-    this.targetValue,
-    this.unit,
-    this.confidence = 50,
-    this.dueDate,
-    this.evidence,
-  });
-
-  final int id;
-  final int okrId;
-  final String title;
-  final String? metricName;
-  final String dataSource;
-  final num? initialValue;
-  final num? currentValue;
-  final num? targetValue;
-  final String? unit;
-  final int confidence;
-  final DateTime? dueDate;
-  final String status;
-  final String? evidence;
-  final int progress;
-
-  factory OkrKeyResult.fromJson(Map<String, dynamic> json) {
-    return OkrKeyResult(
-      id: json['id'] as int,
-      okrId: json['okr_id'] as int,
-      title: json['title'] as String,
-      metricName: json['metric_name'] as String?,
-      dataSource: json['data_source'] as String? ?? 'manual',
-      initialValue: _num(json['initial_value']),
-      currentValue: _num(json['current_value']),
-      targetValue: _num(json['target_value']),
-      unit: json['unit'] as String?,
-      confidence: json['confidence'] as int? ?? 50,
-      dueDate: _date(json['due_date'] as String?),
-      status: json['status'] as String,
-      evidence: json['evidence'] as String?,
-      progress: json['progress'] as int? ?? 0,
-    );
-  }
-}
-
 class GrowthSuggestions {
   const GrowthSuggestions({
     required this.oneOnOneQuestions,
     required this.pdiSuggestions,
-    required this.okrSuggestions,
+    required this.kpiSuggestions,
   });
 
   final List<String> oneOnOneQuestions;
   final List<Map<String, dynamic>> pdiSuggestions;
-  final List<Map<String, dynamic>> okrSuggestions;
+  final List<Map<String, dynamic>> kpiSuggestions;
 
   factory GrowthSuggestions.fromJson(Map<String, dynamic> json) {
     return GrowthSuggestions(
       oneOnOneQuestions: _stringList(json['one_on_one_questions']),
       pdiSuggestions: _mapList(json['pdi_suggestions']),
-      okrSuggestions: _mapList(json['okr_suggestions']),
+      kpiSuggestions: _mapList(json['kpi_suggestions']),
     );
   }
 }
 
 DateTime? _date(String? value) => value == null ? null : DateTime.parse(value);
-
-num? _num(Object? value) {
-  if (value == null) {
-    return null;
-  }
-  if (value is num) {
-    return value;
-  }
-  return num.tryParse(value.toString());
-}
 
 List<String> _stringList(Object? value) {
   return [for (final item in (value as List<dynamic>? ?? [])) item.toString()];

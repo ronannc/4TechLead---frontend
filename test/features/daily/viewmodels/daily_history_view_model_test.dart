@@ -81,6 +81,7 @@ void main() {
             startedAt: DateTime(2026),
             endedAt: DateTime(2026),
             entries: const [],
+            annotations: const [],
             createdAt: DateTime(2026),
             updatedAt: DateTime(2026),
           ),

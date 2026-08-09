@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:for_tech_lead/core/theme/app_theme.dart';
 import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
+import 'package:for_tech_lead/features/daily/models/daily_annotation_type.dart';
 import 'package:for_tech_lead/features/daily/models/daily_entry_status.dart';
 import 'package:for_tech_lead/features/daily/models/daily_meeting.dart';
+import 'package:for_tech_lead/features/daily/models/daily_meeting_annotation.dart';
 import 'package:for_tech_lead/features/daily/models/daily_meeting_entry.dart';
-import 'package:for_tech_lead/features/daily/models/daily_note_category.dart';
 import 'package:for_tech_lead/features/daily/repositories/daily_meeting_repository.dart';
 import 'package:for_tech_lead/features/daily/screens/daily_meeting_detail_body.dart';
 import 'package:for_tech_lead/features/daily/viewmodels/daily_meeting_detail_view_model.dart';
@@ -55,9 +56,13 @@ void main() {
     expect(find.text('Participantes'), findsOneWidget);
     expect(find.text('Ronan'), findsOneWidget);
     expect(find.text('Lucas Farias'), findsOneWidget);
+    expect(find.text('Anotações'), findsOneWidget);
     expect(find.text('Falou bem'), findsOneWidget);
-    expect(find.text('Impedimento: Aguardando staging'), findsOneWidget);
-    expect(find.byType(Card), findsNWidgets(2));
+    expect(find.text('Aguardando staging'), findsOneWidget);
+    expect(find.text('aberto'), findsOneWidget);
+    expect(find.text('Webhook validado'), findsOneWidget);
+    expect(find.text('Tópico levantado'), findsOneWidget);
+    expect(find.byType(Card), findsNWidgets(3));
     expect(tester.takeException(), isNull);
   });
 }
@@ -90,8 +95,18 @@ DailyMeeting _meeting() {
         actualSeconds: 120,
         status: DailyEntryStatus.burned,
         personName: 'Lucas Farias',
-        noteType: DailyNoteCategory.impediment,
-        note: 'Aguardando staging',
+      ),
+    ],
+    annotations: [
+      _annotation(
+        id: 1,
+        type: DailyAnnotationType.topic,
+        text: 'Webhook validado',
+      ),
+      _annotation(
+        id: 2,
+        type: DailyAnnotationType.blocker,
+        text: 'Aguardando staging',
       ),
     ],
   );
@@ -104,8 +119,6 @@ DailyMeetingEntry _entry({
   required int actualSeconds,
   required DailyEntryStatus status,
   required String personName,
-  DailyNoteCategory? noteType,
-  String? note,
 }) {
   final now = DateTime(2026, 8, 9, 11, 25);
 
@@ -128,8 +141,25 @@ DailyMeetingEntry _entry({
     allottedSeconds: 90,
     actualSeconds: actualSeconds,
     status: status,
-    noteType: noteType,
-    note: note,
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
+DailyMeetingAnnotation _annotation({
+  required int id,
+  required DailyAnnotationType type,
+  required String text,
+  bool resolved = false,
+}) {
+  final now = DateTime(2026, 8, 9, 11, 25);
+
+  return DailyMeetingAnnotation(
+    id: id,
+    dailyMeetingId: 1,
+    type: type,
+    text: text,
+    resolved: resolved,
     createdAt: now,
     updatedAt: now,
   );

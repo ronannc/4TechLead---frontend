@@ -74,7 +74,7 @@ class _DailySessionViewState extends State<_DailySessionView> {
   }
 
   void _onViewModelChanged() {
-    if (_viewModel.phase == DailySessionPhase.running) {
+    if (_viewModel.phase == DailySessionPhase.running && !_viewModel.isPaused) {
       WakelockPlus.enable();
       _cuePlayer.startTicking();
     } else {

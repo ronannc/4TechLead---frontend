@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:for_tech_lead/features/daily/models/daily_entry_status.dart';
 import 'package:for_tech_lead/features/daily/models/daily_meeting_entry.dart';
-import 'package:for_tech_lead/features/daily/models/daily_note_category.dart';
 import 'package:for_tech_lead/features/daily/utils/daily_stats.dart';
 
 DailyMeetingEntry _entry({
@@ -10,7 +9,6 @@ DailyMeetingEntry _entry({
   int allottedSeconds = 100,
   int actualSeconds = 100,
   DailyEntryStatus status = DailyEntryStatus.onTime,
-  DailyNoteCategory? noteType,
 }) {
   return DailyMeetingEntry(
     id: id,
@@ -21,7 +19,6 @@ DailyMeetingEntry _entry({
     allottedSeconds: allottedSeconds,
     actualSeconds: actualSeconds,
     status: status,
-    noteType: noteType,
     createdAt: DateTime(2026),
     updatedAt: DateTime(2026),
   );
@@ -66,13 +63,9 @@ void main() {
       expect(summary.averageActualSeconds, 0);
     });
 
-    test('computes averages, percentages, and note counts', () {
+    test('computes averages and percentages', () {
       final entries = [
-        _entry(
-          actualSeconds: 100,
-          status: DailyEntryStatus.onTime,
-          noteType: DailyNoteCategory.impediment,
-        ),
+        _entry(actualSeconds: 100, status: DailyEntryStatus.onTime),
         _entry(actualSeconds: 150, status: DailyEntryStatus.burned),
         _entry(actualSeconds: 50, status: DailyEntryStatus.spokeTooLittle),
         _entry(actualSeconds: 100, status: DailyEntryStatus.onTime),
@@ -85,7 +78,6 @@ void main() {
       expect(summary.onTimePercentage, 50);
       expect(summary.burnedPercentage, 25);
       expect(summary.spokeTooLittlePercentage, 25);
-      expect(summary.noteCounts[DailyNoteCategory.impediment], 1);
     });
   });
 

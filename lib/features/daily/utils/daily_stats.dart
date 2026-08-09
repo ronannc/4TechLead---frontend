@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 
 import '../models/daily_entry_status.dart';
 import '../models/daily_meeting_entry.dart';
-import '../models/daily_note_category.dart';
 
 /// Aggregate stats over a set of [DailyMeetingEntry] — used for both the
 /// team-level history screen and a single person's stats section. Computed
@@ -15,7 +14,6 @@ class DailyStatsSummary extends Equatable {
     required this.onTimePercentage,
     required this.burnedPercentage,
     required this.spokeTooLittlePercentage,
-    required this.noteCounts,
   });
 
   factory DailyStatsSummary.empty() {
@@ -25,7 +23,6 @@ class DailyStatsSummary extends Equatable {
       onTimePercentage: 0,
       burnedPercentage: 0,
       spokeTooLittlePercentage: 0,
-      noteCounts: {},
     );
   }
 
@@ -34,7 +31,6 @@ class DailyStatsSummary extends Equatable {
   final double onTimePercentage;
   final double burnedPercentage;
   final double spokeTooLittlePercentage;
-  final Map<DailyNoteCategory, int> noteCounts;
 
   @override
   List<Object?> get props => [
@@ -43,7 +39,6 @@ class DailyStatsSummary extends Equatable {
     onTimePercentage,
     burnedPercentage,
     spokeTooLittlePercentage,
-    noteCounts,
   ];
 }
 
@@ -81,14 +76,6 @@ DailyStatsSummary computeDailyStatsSummary(List<DailyMeetingEntry> entries) {
   int countWithStatus(DailyEntryStatus status) =>
       entries.where((entry) => entry.status == status).length;
 
-  final noteCounts = <DailyNoteCategory, int>{};
-  for (final entry in entries) {
-    final category = entry.noteType;
-    if (category != null) {
-      noteCounts[category] = (noteCounts[category] ?? 0) + 1;
-    }
-  }
-
   return DailyStatsSummary(
     entryCount: total,
     averageActualSeconds: totalActualSeconds / total,
@@ -96,7 +83,6 @@ DailyStatsSummary computeDailyStatsSummary(List<DailyMeetingEntry> entries) {
     burnedPercentage: countWithStatus(DailyEntryStatus.burned) / total * 100,
     spokeTooLittlePercentage:
         countWithStatus(DailyEntryStatus.spokeTooLittle) / total * 100,
-    noteCounts: noteCounts,
   );
 }
 

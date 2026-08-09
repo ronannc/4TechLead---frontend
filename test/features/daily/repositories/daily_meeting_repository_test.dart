@@ -13,6 +13,7 @@ Map<String, dynamic> _meetingJson({int id = 1}) {
     'started_at': '2026-01-01T10:00:00.000000Z',
     'ended_at': '2026-01-01T10:15:00.000000Z',
     'entries': <dynamic>[],
+    'annotations': <dynamic>[],
     'created_at': '2026-01-01T10:15:00.000000Z',
     'updated_at': '2026-01-01T10:15:00.000000Z',
   };
@@ -28,8 +29,6 @@ Map<String, dynamic> _entryJson({int id = 1}) {
     'allotted_seconds': 90,
     'actual_seconds': 60,
     'status': 'no_tempo',
-    'note_type': null,
-    'note': null,
     'created_at': '2026-01-01T10:00:00.000000Z',
     'updated_at': '2026-01-01T10:00:00.000000Z',
   };
@@ -85,6 +84,7 @@ void main() {
           entries: [
             {'person_id': 1, 'actual_seconds': 60},
           ],
+          annotations: const [],
         ),
       ).thenAnswer((_) async => {'data': _meetingJson()});
 
@@ -95,6 +95,7 @@ void main() {
         entries: [
           {'person_id': 1, 'actual_seconds': 60},
         ],
+        annotations: const [],
       );
 
       expect(meeting.id, 1);
@@ -108,7 +109,6 @@ void main() {
           teamId: any(named: 'teamId'),
           personId: any(named: 'personId'),
           dailyMeetingId: any(named: 'dailyMeetingId'),
-          noteType: any(named: 'noteType'),
           page: any(named: 'page'),
           perPage: any(named: 'perPage'),
         ),
@@ -135,7 +135,6 @@ void main() {
             teamId: any(named: 'teamId'),
             personId: any(named: 'personId'),
             dailyMeetingId: any(named: 'dailyMeetingId'),
-            noteType: any(named: 'noteType'),
             page: any(named: 'page'),
             perPage: any(named: 'perPage'),
           ),
