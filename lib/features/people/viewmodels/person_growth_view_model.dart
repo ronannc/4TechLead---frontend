@@ -1,5 +1,6 @@
 import '../../../core/network/api_exception.dart';
 import '../../../core/viewmodels/base_view_model.dart';
+import '../../integrations/models/integration_models.dart';
 import '../models/person_growth_models.dart';
 import '../repositories/person_growth_repository.dart';
 
@@ -13,6 +14,7 @@ class PersonGrowthViewModel extends BaseViewModel {
   List<OneOnOneSession> sessions = [];
   List<DevelopmentPlan> plans = [];
   List<PersonOkr> okrs = [];
+  List<PersonDeliveryMetric> deliveryMetrics = [];
   GrowthSuggestions? suggestions;
 
   int sessionPage = 1;
@@ -288,6 +290,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       _repository.getDevelopmentPlans(personId),
       _repository.getOkrs(personId),
       _repository.getSuggestions(personId: personId),
+      _repository.getDeliveryMetrics(personId),
     ]);
 
     templates = results[0] as List<OneOnOneTemplate>;
@@ -295,5 +298,6 @@ class PersonGrowthViewModel extends BaseViewModel {
     plans = results[2] as List<DevelopmentPlan>;
     okrs = results[3] as List<PersonOkr>;
     suggestions = results[4] as GrowthSuggestions;
+    deliveryMetrics = results[5] as List<PersonDeliveryMetric>;
   }
 }

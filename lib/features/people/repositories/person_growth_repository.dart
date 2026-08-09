@@ -1,3 +1,4 @@
+import '../../integrations/models/integration_models.dart';
 import '../models/person_growth_models.dart';
 import '../services/person_growth_service.dart';
 
@@ -240,6 +241,11 @@ class PersonGrowthRepository {
       context: context,
     );
     return GrowthSuggestions.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<List<PersonDeliveryMetric>> getDeliveryMetrics(int personId) async {
+    final json = await _service.getDeliveryMetrics(personId);
+    return _list(json, PersonDeliveryMetric.fromJson);
   }
 
   List<T> _list<T>(

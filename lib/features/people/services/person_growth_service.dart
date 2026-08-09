@@ -279,6 +279,17 @@ class PersonGrowthService {
     );
   }
 
+  Future<Map<String, dynamic>> getDeliveryMetrics(int personId) {
+    return _get(
+      '/person-delivery-metrics',
+      query: {
+        'per_page': 20,
+        'filters[person_id]': personId,
+        'order[occurred_at]': 'desc',
+      },
+    );
+  }
+
   Future<Map<String, dynamic>> _get(
     String path, {
     Map<String, dynamic>? query,

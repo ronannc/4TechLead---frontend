@@ -4,6 +4,7 @@ import 'package:for_tech_lead/bootstrap.dart';
 import 'package:for_tech_lead/core/responsive/adaptive_scaffold.dart';
 import 'package:for_tech_lead/features/daily/repositories/daily_meeting_repository.dart';
 import 'package:for_tech_lead/features/daily/viewmodels/person_daily_stats_view_model.dart';
+import 'package:for_tech_lead/features/integrations/models/integration_models.dart';
 import 'package:for_tech_lead/features/people/models/contract_type.dart';
 import 'package:for_tech_lead/features/people/models/person.dart';
 import 'package:for_tech_lead/features/people/models/person_growth_models.dart';
@@ -151,6 +152,13 @@ void main() {
           await _tapTab(tester, tab);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
+
+          if (tab == 'Análises') {
+            expect(find.text('Evidências recentes'), findsOneWidget);
+            expect(find.text('PRs no ano'), findsOneWidget);
+            expect(find.text('CI falhando / PR'), findsOneWidget);
+            expect(find.text('Qualidade do código'), findsOneWidget);
+          }
 
           if (tab == 'PDI') {
             for (final view in ['Sugestões', 'Planos']) {
@@ -340,8 +348,86 @@ void _stubRepositories({
     ),
   );
   when(
+    () => growthRepository.getDeliveryMetrics(1),
+  ).thenAnswer((_) async => _deliveryMetrics());
+  when(
     () => dailyRepository.getAllEntries(personId: 1),
   ).thenAnswer((_) async => []);
+}
+
+List<PersonDeliveryMetric> _deliveryMetrics() {
+  return [
+    PersonDeliveryMetric(
+      id: 10,
+      personId: 1,
+      metricType: 'annual_pull_request_count',
+      metricValue: 1,
+      unit: 'pr',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 11,
+      personId: 1,
+      metricType: 'annual_quality_average',
+      metricValue: 55,
+      unit: 'score',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 12,
+      personId: 1,
+      metricType: 'annual_ci_failure_average',
+      metricValue: 1,
+      unit: 'failures/pr',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 13,
+      personId: 1,
+      metricType: 'annual_review_comment_average',
+      metricValue: 5,
+      unit: 'comments/pr',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 14,
+      personId: 1,
+      metricType: 'annual_rework_average',
+      metricValue: 1,
+      unit: 'times/pr',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 15,
+      personId: 1,
+      metricType: 'annual_delivery_points_total',
+      metricValue: 8,
+      unit: 'points',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 1,
+      personId: 1,
+      metricType: 'code_quality_score',
+      metricValue: 55,
+      unit: 'score',
+      sourceRef: 'org/repo#42',
+    ),
+    PersonDeliveryMetric(
+      id: 2,
+      personId: 1,
+      metricType: 'delivery_points',
+      metricValue: 8,
+      unit: 'points',
+      sourceRef: 'org/repo#42',
+    ),
+  ];
 }
 
 Future<void> _tapTab(WidgetTester tester, String label) async {

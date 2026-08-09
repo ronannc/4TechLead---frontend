@@ -11,6 +11,7 @@ import '../../../core/widgets/data/app_key_value_row.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
 import '../../daily/screens/person_daily_section.dart';
+import '../../integrations/models/integration_models.dart';
 import '../models/person.dart';
 import '../models/person_growth_models.dart';
 import '../viewmodels/person_detail_view_model.dart';
@@ -1829,6 +1830,38 @@ class _AnalysisTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recentMetrics = growth.deliveryMetrics
+        .where((metric) => !metric.metricType.startsWith('annual_'))
+        .take(6)
+        .toList(growable: false);
+    final pullRequests =
+        _metricLatestValue(
+          growth.deliveryMetrics,
+          'annual_pull_request_count',
+        ) ??
+        _metricSum(growth.deliveryMetrics, 'pull_request_count');
+    final qualityAverage =
+        _metricLatestValue(growth.deliveryMetrics, 'annual_quality_average') ??
+        _metricAverage(growth.deliveryMetrics, 'code_quality_score');
+    final ciFailureAverage = _metricLatestValue(
+      growth.deliveryMetrics,
+      'annual_ci_failure_average',
+    );
+    final reviewAverage = _metricLatestValue(
+      growth.deliveryMetrics,
+      'annual_review_comment_average',
+    );
+    final reworkAverage = _metricLatestValue(
+      growth.deliveryMetrics,
+      'annual_rework_average',
+    );
+    final deliveryPoints =
+        _metricLatestValue(
+          growth.deliveryMetrics,
+          'annual_delivery_points_total',
+        ) ??
+        _metricSum(growth.deliveryMetrics, 'delivery_points');
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1863,24 +1896,130 @@ class _AnalysisTab extends StatelessWidget {
                 SizedBox(
                   width: itemWidth,
                   child: _MetricCard(
-                    label: 'OKRs ativos',
-                    value: '${growth.okrs.length}',
+                    label: 'PRs no ano',
+                    value: _compactMetric(pullRequests),
                   ),
                 ),
                 SizedBox(
                   width: itemWidth,
                   child: _MetricCard(
-                    label: 'Sugestões',
-                    value: '${growth.suggestions?.okrSuggestions.length ?? 0}',
+                    label: 'Qualidade média',
+                    value: qualityAverage == null
+                        ? '-'
+                        : qualityAverage.toStringAsFixed(0),
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _MetricCard(
+                    label: 'CI falhando / PR',
+                    value: _decimalMetric(ciFailureAverage),
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _MetricCard(
+                    label: 'Review / PR',
+                    value: _decimalMetric(reviewAverage),
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _MetricCard(
+                    label: 'Retrabalho / PR',
+                    value: _decimalMetric(reworkAverage),
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _MetricCard(
+                    label: 'Pontos entregues',
+                    value: _compactMetric(deliveryPoints),
                   ),
                 ),
               ],
             );
           },
         ),
+        const SizedBox(height: AppSpacing.md),
+        _SectionTitle(
+          title: 'Evidências recentes',
+          subtitle: 'Últimas métricas numéricas recebidas por webhook.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (recentMetrics.isEmpty)
+          const _EmptyState(
+            icon: Icons.insights_outlined,
+            message: 'Nenhuma métrica de webhook encontrada para esta pessoa.',
+          )
+        else
+          for (final metric in recentMetrics)
+            _DeliveryMetricTile(metric: metric),
       ],
     );
   }
+}
+
+class _DeliveryMetricTile extends StatelessWidget {
+  const _DeliveryMetricTile({required this.metric});
+
+  final PersonDeliveryMetric metric;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return _Surface(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.analytics_outlined, color: theme.colorScheme.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _deliveryMetricLabel(metric.metricType),
+                  style: theme.textTheme.titleSmall,
+                ),
+                if (metric.sourceRef != null)
+                  Text(
+                    metric.sourceRef!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Text(
+            '${metric.metricValue} ${metric.unit ?? ''}'.trim(),
+            style: theme.textTheme.labelLarge,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _deliveryMetricLabel(String type) {
+  return switch (type) {
+    'code_quality_score' => 'Qualidade do código',
+    'delivery_points' => 'Pontos entregues',
+    'pull_request_count' => 'Pull requests',
+    'review_comments_count' => 'Comentários de review',
+    'ci_failures_count' => 'Falhas de CI',
+    'rework_count' => 'Retrabalho',
+    'changed_files_count' => 'Arquivos alterados',
+    'annual_pull_request_count' => 'PRs no ano',
+    'annual_quality_average' => 'Qualidade média anual',
+    'annual_review_comment_average' => 'Review / PR',
+    'annual_ci_failure_average' => 'CI falhando / PR',
+    'annual_rework_average' => 'Retrabalho / PR',
+    'annual_delivery_points_total' => 'Pontos entregues no ano',
+    _ => type,
+  };
 }
 
 class _SessionTile extends StatelessWidget {
@@ -2761,6 +2900,64 @@ List<String> _lines(String text) {
 String? _nullable(String text) {
   final value = text.trim();
   return value.isEmpty ? null : value;
+}
+
+num? _metricAverage(List<PersonDeliveryMetric> metrics, String type) {
+  final values = metrics
+      .where((metric) => metric.metricType == type)
+      .map((metric) => metric.metricValue)
+      .toList(growable: false);
+
+  if (values.isEmpty) {
+    return null;
+  }
+
+  return values.reduce((sum, value) => sum + value) / values.length;
+}
+
+num? _metricSum(List<PersonDeliveryMetric> metrics, String type) {
+  final values = metrics
+      .where((metric) => metric.metricType == type)
+      .map((metric) => metric.metricValue)
+      .toList(growable: false);
+
+  if (values.isEmpty) {
+    return null;
+  }
+
+  return values.reduce((sum, value) => sum + value);
+}
+
+num? _metricLatestValue(List<PersonDeliveryMetric> metrics, String type) {
+  final values = metrics
+      .where((metric) => metric.metricType == type)
+      .toList(growable: false);
+
+  if (values.isEmpty) {
+    return null;
+  }
+
+  values.sort((a, b) {
+    final aDate = a.occurredAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    final bDate = b.occurredAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    return bDate.compareTo(aDate);
+  });
+
+  return values.first.metricValue;
+}
+
+String _compactMetric(num? value) {
+  if (value == null) {
+    return '-';
+  }
+
+  return value == value.roundToDouble()
+      ? value.toInt().toString()
+      : value.toStringAsFixed(1);
+}
+
+String _decimalMetric(num? value) {
+  return value == null ? '-' : value.toStringAsFixed(1);
 }
 
 String? _numberText(num? value) {
