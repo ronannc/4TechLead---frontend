@@ -46,4 +46,31 @@ void main() {
 
     expect(tapped, 'Grace Hopper');
   });
+
+  testWidgets('can remove internal horizontal padding when embedded', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 393,
+            height: 420,
+            child: AppDataTable<String>(
+              title: 'Dailies passadas',
+              contentPadding: EdgeInsets.zero,
+              items: const ['9 de ago. de 2026 11:25'],
+              columns: [
+                AppDataColumn(label: 'Data', cellBuilder: (date) => date),
+              ],
+              onSearchChanged: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getTopLeft(find.text('Dailies passadas')).dx, 0);
+  });
 }

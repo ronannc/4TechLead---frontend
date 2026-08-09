@@ -21,6 +21,7 @@ class AppSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(

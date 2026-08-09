@@ -37,20 +37,23 @@ class TeamDetailBody extends StatelessWidget {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.sm,
+            Row(
               children: [
-                AppPrimaryButton(
-                  label: 'Iniciar daily',
-                  onPressed: () => context.go(
-                    RoutePaths.dailySessionPath(initialTeamId: '${team.id}'),
+                Expanded(
+                  child: AppPrimaryButton(
+                    label: 'Iniciar daily',
+                    onPressed: () => context.go(
+                      RoutePaths.dailySessionPath(initialTeamId: '${team.id}'),
+                    ),
                   ),
                 ),
-                AppSecondaryButton(
-                  label: 'Ver histórico',
-                  onPressed: () =>
-                      context.push(RoutePaths.dailyHistoryPath('${team.id}')),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppSecondaryButton(
+                    label: 'Ver histórico',
+                    onPressed: () =>
+                        context.push(RoutePaths.dailyHistoryPath('${team.id}')),
+                  ),
                 ),
               ],
             ),

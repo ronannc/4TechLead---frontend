@@ -30,7 +30,7 @@ class DailyReviewBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Revisão da daily', style: theme.textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: ListView(
               children: [
@@ -38,13 +38,15 @@ class DailyReviewBody extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 if (spokenTurns.isEmpty)
                   const Card(
+                    margin: EdgeInsets.zero,
                     child: Padding(
-                      padding: EdgeInsets.all(AppSpacing.lg),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: Center(child: Text('Ninguém falou nesta daily.')),
                     ),
                   )
                 else
                   Card(
+                    margin: EdgeInsets.zero,
                     child: Column(
                       children: [
                         for (final turn in spokenTurns)
@@ -65,14 +67,14 @@ class DailyReviewBody extends StatelessWidget {
                       ],
                     ),
                   ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _TopicsReview(topics: viewModel.topics),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _BlockersReview(blockers: viewModel.blockers),
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Selector<DailySessionViewModel, bool>(
             selector: (_, vm) => vm.isSaving,
             builder: (context, isSaving, _) {
@@ -121,9 +123,10 @@ class _TopicsReview extends StatelessWidget {
         Text('Tópicos levantados', style: theme.textTheme.titleMedium),
         const SizedBox(height: AppSpacing.sm),
         Card(
+          margin: EdgeInsets.zero,
           child: topics.isEmpty
               ? const Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   child: Text('Nenhum tópico registrado.'),
                 )
               : Column(
@@ -158,9 +161,10 @@ class _BlockersReview extends StatelessWidget {
         Text('Bloqueios', style: theme.textTheme.titleMedium),
         const SizedBox(height: AppSpacing.sm),
         Card(
+          margin: EdgeInsets.zero,
           child: blockers.isEmpty
               ? const Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   child: Text('Nenhum bloqueio registrado.'),
                 )
               : Column(

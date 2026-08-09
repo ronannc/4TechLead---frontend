@@ -37,6 +37,7 @@ class AppDataTable<T> extends StatefulWidget {
     this.searchHint = 'Buscar...',
     this.emptyMessage = 'Nenhum item encontrado.',
     this.itemCountLabel,
+    this.contentPadding = const EdgeInsets.all(AppSpacing.md),
   });
 
   final List<T> items;
@@ -49,6 +50,7 @@ class AppDataTable<T> extends StatefulWidget {
   final String searchHint;
   final String emptyMessage;
   final String Function(int count)? itemCountLabel;
+  final EdgeInsets contentPadding;
 
   @override
   State<AppDataTable<T>> createState() => _AppDataTableState<T>();
@@ -81,15 +83,16 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     final countLabel =
         widget.itemCountLabel?.call(widget.items.length) ??
         '${widget.items.length} itens';
+    final contentPadding = widget.contentPadding;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.md,
+          padding: EdgeInsets.fromLTRB(
+            contentPadding.left,
+            contentPadding.top,
+            contentPadding.right,
             AppSpacing.sm,
           ),
           child: Column(
@@ -124,7 +127,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                     _CountPill(label: countLabel),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
               ],
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -143,7 +146,10 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
         ),
         Expanded(
           child: widget.items.isEmpty
-              ? _ListSurface(child: EmptyView(message: widget.emptyMessage))
+              ? _ListSurface(
+                  contentPadding: contentPadding,
+                  child: EmptyView(message: widget.emptyMessage),
+                )
               : Breakpoints.isDesktop(context)
               ? _buildTable(context)
               : _buildList(context),
@@ -156,6 +162,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     final theme = Theme.of(context);
 
     return _ListSurface(
+      contentPadding: widget.contentPadding,
       child: SingleChildScrollView(
         child: SizedBox(
           width: double.infinity,
@@ -197,6 +204,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
 
   Widget _buildList(BuildContext context) {
     return _ListSurface(
+      contentPadding: widget.contentPadding,
       child: ListView.separated(
         itemCount: widget.items.length,
         separatorBuilder: (_, _) => const Divider(height: 1),
@@ -223,8 +231,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
 }
 
 class _ListSurface extends StatelessWidget {
-  const _ListSurface({required this.child});
+  const _ListSurface({required this.contentPadding, required this.child});
 
+  final EdgeInsets contentPadding;
   final Widget child;
 
   @override
@@ -233,11 +242,11 @@ class _ListSurface extends StatelessWidget {
     final border = theme.extension<AppThemeExtension>()!.border;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
+      padding: EdgeInsets.fromLTRB(
+        contentPadding.left,
         0,
-        AppSpacing.md,
-        AppSpacing.md,
+        contentPadding.right,
+        contentPadding.bottom,
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(

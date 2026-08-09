@@ -25,6 +25,7 @@ class DailyHistoryBody extends StatefulWidget {
 class _DailyHistoryBodyState extends State<DailyHistoryBody> {
   String _query = '';
   static final _dateFormat = DateFormat.yMMMd('pt_BR').add_Hm();
+  static const _summaryCardSize = Size(168, 152);
 
   @override
   Widget build(BuildContext context) {
@@ -50,25 +51,25 @@ class _DailyHistoryBodyState extends State<DailyHistoryBody> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              AppSummaryCard(
+              _HistorySummaryCard(
                 icon: Icons.event_repeat,
                 value: '${viewModel.meetings.length}',
                 label: 'Dailies realizadas',
               ),
-              const SizedBox(width: AppSpacing.md),
-              AppSummaryCard(
+              const SizedBox(width: AppSpacing.sm),
+              _HistorySummaryCard(
                 icon: Icons.check_circle_outline,
                 value: '${stats.onTimePercentage.round()}%',
                 label: 'No tempo',
               ),
-              const SizedBox(width: AppSpacing.md),
-              AppSummaryCard(
+              const SizedBox(width: AppSpacing.sm),
+              _HistorySummaryCard(
                 icon: Icons.local_fire_department_outlined,
                 value: '${stats.burnedPercentage.round()}%',
                 label: 'Queimaram o tempo',
               ),
-              const SizedBox(width: AppSpacing.md),
-              AppSummaryCard(
+              const SizedBox(width: AppSpacing.sm),
+              _HistorySummaryCard(
                 icon: Icons.record_voice_over_outlined,
                 value: '${stats.spokeTooLittlePercentage.round()}%',
                 label: 'Falaram pouco',
@@ -76,7 +77,7 @@ class _DailyHistoryBodyState extends State<DailyHistoryBody> {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         if (viewModel.rankingsByBurned.isNotEmpty) ...[
           Text(
             'Quem mais queima o tempo: '
@@ -88,13 +89,14 @@ class _DailyHistoryBodyState extends State<DailyHistoryBody> {
             '${viewModel.personName(viewModel.rankingsBySpokeTooLittle.first.personId)}',
             style: theme.textTheme.bodyMedium,
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
         ],
         Expanded(
           child: AppDataTable<DailyMeeting>(
             items: meetings,
             title: 'Dailies passadas',
             subtitle: 'Histórico pesquisável das reuniões registradas.',
+            contentPadding: EdgeInsets.zero,
             itemIcon: Icons.timer_outlined,
             itemCountLabel: (count) =>
                 count == 1 ? '1 daily' : '$count dailies',
@@ -118,6 +120,26 @@ class _DailyHistoryBodyState extends State<DailyHistoryBody> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HistorySummaryCard extends StatelessWidget {
+  const _HistorySummaryCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.fromSize(
+      size: _DailyHistoryBodyState._summaryCardSize,
+      child: AppSummaryCard(icon: icon, value: value, label: label),
     );
   }
 }

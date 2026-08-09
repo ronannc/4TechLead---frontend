@@ -10,6 +10,9 @@ import '../../teams/models/team.dart';
 import '../utils/daily_time_limit.dart';
 import '../viewmodels/daily_session_view_model.dart';
 
+const _dailyConfigOuterGap = AppSpacing.md;
+const _dailyConfigInnerGap = AppSpacing.sm;
+
 class DailyConfigBody extends StatefulWidget {
   const DailyConfigBody({super.key});
 
@@ -38,21 +41,21 @@ class _DailyConfigBodyState extends State<DailyConfigBody> {
         final people = _filteredPeople(viewModel.people);
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(_dailyConfigOuterGap),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _ConfigHeader(selectedCount: members.length),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: _dailyConfigInnerGap),
               _TimeLimitControl(),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: _dailyConfigInnerGap),
               Text(
                 'Selecionar participantes',
                 style: theme.textTheme.titleMedium,
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: _dailyConfigInnerGap),
               _TeamSelector(teams: viewModel.teams),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: _dailyConfigInnerGap),
               Row(
                 children: [
                   Expanded(
@@ -62,7 +65,7 @@ class _DailyConfigBodyState extends State<DailyConfigBody> {
                       label: const Text('Todos'),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: _dailyConfigInnerGap),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: viewModel.clearSelection,
@@ -72,24 +75,24 @@ class _DailyConfigBodyState extends State<DailyConfigBody> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: _dailyConfigInnerGap),
               AppSearchField(
                 controller: _searchController,
                 hintText: 'Buscar pessoa cadastrada...',
                 onChanged: (value) => setState(() => _query = value),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: _dailyConfigInnerGap),
               if (viewModel.people.isEmpty)
                 const _EmptySelection(
                   message: 'Nenhuma pessoa cadastrada ainda.',
                 )
               else
                 _PeoplePicker(people: people),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: _dailyConfigInnerGap),
               Text('Ordem de fala', style: theme.textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: _dailyConfigInnerGap),
               _SpeakingQueue(members: members),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: _dailyConfigInnerGap),
               AppPrimaryButton(
                 label: 'Iniciar daily',
                 onPressed: members.isEmpty ? null : viewModel.start,
@@ -127,6 +130,7 @@ class _ConfigHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
@@ -181,6 +185,7 @@ class _TimeLimitControl extends StatelessWidget {
     final viewModel = context.read<DailySessionViewModel>();
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Selector<DailySessionViewModel, int>(
@@ -235,8 +240,8 @@ class _TeamSelector extends StatelessWidget {
     final viewModel = context.read<DailySessionViewModel>();
 
     return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
+      spacing: _dailyConfigInnerGap,
+      runSpacing: _dailyConfigInnerGap,
       children: [
         for (final team in teams)
           FilterChip(
@@ -267,16 +272,16 @@ class _PeoplePicker extends StatelessWidget {
 
     return Column(
       children: [
-        for (final person in people)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: _PersonOption(
-              person: person,
-              teamName: viewModel.teamNameFor(person.teamId),
-              selected: viewModel.isPersonSelected(person),
-              onTap: () => viewModel.togglePerson(person),
-            ),
+        for (final (index, person) in people.indexed) ...[
+          _PersonOption(
+            person: person,
+            teamName: viewModel.teamNameFor(person.teamId),
+            selected: viewModel.isPersonSelected(person),
+            onTap: () => viewModel.togglePerson(person),
           ),
+          if (index < people.length - 1)
+            const SizedBox(height: _dailyConfigInnerGap),
+        ],
       ],
     );
   }
@@ -372,7 +377,7 @@ class _SpeakingQueue extends StatelessWidget {
 
           return Padding(
             key: ValueKey(member.id),
-            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            padding: const EdgeInsets.only(right: _dailyConfigInnerGap),
             child: ReorderableDragStartListener(
               index: index,
               child: Column(

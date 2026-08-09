@@ -88,6 +88,7 @@ void main() {
 
       expect(viewModel.state, ViewState.loaded);
       expect(viewModel.teamsCount, 1);
+      expect(viewModel.peopleCount, 2);
       expect(viewModel.firstTeamId, 1);
       expect(viewModel.teamToday.map((p) => p.name), ['Later', 'Soon']);
       expect(viewModel.upcomingBirthdays.map((p) => p.name), ['Soon', 'Later']);

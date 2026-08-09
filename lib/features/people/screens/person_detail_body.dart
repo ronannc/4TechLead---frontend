@@ -7,6 +7,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/buttons/app_dialog_actions.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
+import '../../../core/widgets/cards/app_summary_card.dart';
 import '../../../core/widgets/data/app_key_value_row.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
@@ -1083,7 +1084,7 @@ class _OneOnOneTab extends StatelessWidget {
           iconOf: (view) => view.icon,
           onChanged: onViewChanged,
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         switch (selectedView) {
           _OneOnOneView.register ||
           _OneOnOneView.history => _OneOnOneHistoryView(
@@ -1307,32 +1308,17 @@ class _OneOnOneHistoryView extends StatelessWidget {
           subtitle: 'Paginado e pesquisável por título/notas.',
         ),
         const SizedBox(height: AppSpacing.sm),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final searchWidth =
-                _availableWidth(constraints, context) - (48 + AppSpacing.sm);
-
-            return Row(
-              children: [
-                SizedBox(
-                  width: searchWidth > 0 ? searchWidth : 0,
-                  child: TextField(
-                    controller: searchController,
-                    decoration: const InputDecoration(
-                      labelText: 'Buscar histórico',
-                    ),
-                    onSubmitted: growth.searchSessions,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                IconButton(
-                  tooltip: 'Buscar',
-                  onPressed: () => growth.searchSessions(searchController.text),
-                  icon: const Icon(Icons.search),
-                ),
-              ],
-            );
-          },
+        TextField(
+          controller: searchController,
+          decoration: InputDecoration(
+            labelText: 'Buscar histórico',
+            suffixIcon: IconButton(
+              tooltip: 'Buscar',
+              onPressed: () => growth.searchSessions(searchController.text),
+              icon: const Icon(Icons.search),
+            ),
+          ),
+          onSubmitted: growth.searchSessions,
         ),
         const SizedBox(height: AppSpacing.sm),
         if (growth.sessions.isEmpty)
@@ -1881,28 +1867,32 @@ class _AnalysisTab extends StatelessWidget {
               children: [
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.forum_outlined,
                     label: '1:1 registrados',
                     value: '${growth.sessions.length}',
                   ),
                 ),
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.trending_up,
                     label: 'PDIs ativos',
                     value: '${growth.plans.length}',
                   ),
                 ),
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.commit_outlined,
                     label: 'PRs no ano',
                     value: _compactMetric(pullRequests),
                   ),
                 ),
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.verified_outlined,
                     label: 'Qualidade média',
                     value: qualityAverage == null
                         ? '-'
@@ -1911,28 +1901,32 @@ class _AnalysisTab extends StatelessWidget {
                 ),
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.error_outline,
                     label: 'CI falhando / PR',
                     value: _decimalMetric(ciFailureAverage),
                   ),
                 ),
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.rate_review_outlined,
                     label: 'Review / PR',
                     value: _decimalMetric(reviewAverage),
                   ),
                 ),
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.build_outlined,
                     label: 'Retrabalho / PR',
                     value: _decimalMetric(reworkAverage),
                   ),
                 ),
                 SizedBox(
                   width: itemWidth,
-                  child: _MetricCard(
+                  child: AppSummaryCard(
+                    icon: Icons.task_alt_outlined,
                     label: 'Pontos entregues',
                     value: _compactMetric(deliveryPoints),
                   ),
@@ -1953,8 +1947,10 @@ class _AnalysisTab extends StatelessWidget {
             message: 'Nenhuma métrica de webhook encontrada para esta pessoa.',
           )
         else
-          for (final metric in recentMetrics)
-            _DeliveryMetricTile(metric: metric),
+          for (var index = 0; index < recentMetrics.length; index++) ...[
+            if (index > 0) const SizedBox(height: AppSpacing.sm),
+            _DeliveryMetricTile(metric: recentMetrics[index]),
+          ],
       ],
     );
   }
@@ -2542,27 +2538,6 @@ class _PersonDetailScrollView extends StatelessWidget {
   }
 }
 
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Surface(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.sm),
-          Text(label),
-        ],
-      ),
-    );
-  }
-}
-
 class _FormColumn extends StatelessWidget {
   const _FormColumn({required this.children});
 
@@ -2860,6 +2835,7 @@ class _Surface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),

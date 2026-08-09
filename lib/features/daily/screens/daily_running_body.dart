@@ -55,16 +55,16 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
                 total: viewModel.turns.length,
                 turn: turn,
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               Center(
                 child: DailyTimerRing(
                   allowedSeconds: turn.allowedSeconds,
                   elapsedSeconds: viewModel.elapsedSeconds,
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               _ParticipantsStrip(turns: viewModel.turns, currentIndex: index),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   Expanded(
@@ -86,7 +86,7 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
               ),
               const SizedBox(height: AppSpacing.sm),
               AppPrimaryButton(label: 'Próximo', onPressed: viewModel.nextTurn),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
               _QuickCapture(
                 title: 'Tópicos levantados',
                 hint: 'Ex.: Finalizou integração do webhook',
@@ -102,7 +102,7 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
                 selector: (_, vm) => vm.topics,
                 builder: (context, topics, _) => _TopicList(topics: topics),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.sm),
               _QuickCapture(
                 title: 'Bloqueios',
                 hint: 'Ex.: Aguardando credencial de staging',
@@ -119,7 +119,7 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
                 builder: (context, blockers, _) =>
                     _BlockerList(blockers: blockers),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'Use tópicos para alinhar avanços e bloqueios para marcar riscos que precisam sair da daily com dono.',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -150,6 +150,7 @@ class _LiveHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
@@ -310,6 +311,7 @@ class _TopicList extends StatelessWidget {
     }
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Column(
         children: [
           for (final topic in topics)
@@ -338,6 +340,7 @@ class _BlockerList extends StatelessWidget {
     final viewModel = context.read<DailySessionViewModel>();
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Column(
         children: [
           for (var i = 0; i < blockers.length; i++)

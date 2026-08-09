@@ -132,6 +132,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Histórico de 1:1'), findsOneWidget);
         expect(find.text('Novo 1:1'), findsOneWidget);
+        _expectOneOnOneHistorySpacing(tester);
         expect(tester.takeException(), isNull);
 
         for (final view in ['Templates', 'Sugestões', 'Histórico']) {
@@ -158,6 +159,7 @@ void main() {
             expect(find.text('PRs no ano'), findsOneWidget);
             expect(find.text('CI falhando / PR'), findsOneWidget);
             expect(find.text('Qualidade do código'), findsOneWidget);
+            _expectAnalysisSpacing(tester);
           }
 
           if (tab == 'PDI') {
@@ -295,6 +297,49 @@ Future<void> _pumpLoadedBody(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+void _expectOneOnOneHistorySpacing(WidgetTester tester) {
+  final sectionTitle = tester.getTopLeft(find.text('Histórico de 1:1'));
+  final sectionSubtitle = tester.getRect(
+    find.text('Paginado e pesquisável por título/notas.'),
+  );
+  final searchField = tester.getRect(find.byType(TextField).first);
+
+  expect(searchField.left, sectionTitle.dx);
+  expect(searchField.top - sectionSubtitle.bottom, closeTo(8, 0.1));
+}
+
+void _expectAnalysisSpacing(WidgetTester tester) {
+  final summaryTitle = tester.getRect(find.text('Resumo do colaborador'));
+  final firstMetricCard = tester.getRect(
+    find.ancestor(
+      of: find.text('1:1 registrados'),
+      matching: find.byType(Card),
+    ),
+  );
+  final secondMetricCard = tester.getRect(
+    find.ancestor(of: find.text('PDIs ativos'), matching: find.byType(Card)),
+  );
+  final firstMetricLabel = tester.getRect(find.text('1:1 registrados'));
+  final firstEvidenceCard = tester.getRect(
+    find.ancestor(
+      of: find.text('Qualidade do código'),
+      matching: find.byType(Card),
+    ),
+  );
+  final secondEvidenceCard = tester.getRect(
+    find.ancestor(of: find.text('8 points'), matching: find.byType(Card)),
+  );
+
+  expect(firstMetricCard.top - summaryTitle.bottom, closeTo(8, 0.1));
+  if (secondMetricCard.top == firstMetricCard.top) {
+    expect(secondMetricCard.left - firstMetricCard.right, closeTo(8, 0.1));
+  } else {
+    expect(secondMetricCard.top - firstMetricCard.bottom, closeTo(8, 0.1));
+  }
+  expect(firstMetricLabel.left - firstMetricCard.left, closeTo(16, 0.1));
+  expect(secondEvidenceCard.top - firstEvidenceCard.bottom, closeTo(8, 0.1));
 }
 
 void _stubRepositories({

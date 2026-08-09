@@ -5,9 +5,13 @@ import 'package:provider/provider.dart';
 
 import '../../../core/routing/route_paths.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/widgets/cards/app_summary_card.dart';
 import '../../people/models/person.dart';
 import '../../people/utils/birthday_util.dart';
 import '../viewmodels/home_view_model.dart';
+
+const _homeOuterGap = AppSpacing.md;
+const _homeInnerGap = AppSpacing.sm;
 
 class HomeBody extends StatelessWidget {
   const HomeBody({super.key});
@@ -16,51 +20,58 @@ class HomeBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.lg,
+        _homeOuterGap,
+        _homeOuterGap,
+        _homeOuterGap,
+        _homeOuterGap,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _DailyCallout(),
-          const SizedBox(height: AppSpacing.md),
-          Selector<HomeViewModel, int>(
-            selector: (_, vm) => vm.teamsCount,
-            builder: (context, teamsCount, _) => GridView.count(
-              crossAxisCount: 2,
-              childAspectRatio: 1.58,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: AppSpacing.sm,
-              mainAxisSpacing: AppSpacing.sm,
-              children: [
-                _MetricCard(
-                  label: 'Ritual',
-                  value: 'Daily',
-                  sub: 'disponível',
-                  icon: Icons.timer_outlined,
-                ),
-                _MetricCard(
-                  label: 'Times',
-                  value: '$teamsCount',
-                  sub: 'ativos',
-                  icon: Icons.groups_outlined,
-                ),
-              ],
+          const SizedBox(height: _homeInnerGap),
+          Selector<HomeViewModel, ({int peopleCount, int teamsCount})>(
+            selector: (_, vm) =>
+                (peopleCount: vm.peopleCount, teamsCount: vm.teamsCount),
+            builder: (context, metrics, _) => LayoutBuilder(
+              builder: (context, constraints) {
+                const cardHeight = 180.0;
+
+                return GridView(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisExtent: cardHeight,
+                    crossAxisSpacing: _homeInnerGap,
+                    mainAxisSpacing: _homeInnerGap,
+                  ),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    AppSummaryCard(
+                      icon: Icons.person_outline,
+                      value: '${metrics.peopleCount}',
+                      label: 'Pessoas cadastradas',
+                    ),
+                    AppSummaryCard(
+                      icon: Icons.groups_outlined,
+                      value: '${metrics.teamsCount}',
+                      label: 'Times ativos',
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: _homeInnerGap),
           _SectionTitle('Time hoje'),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: _homeInnerGap),
           Selector<HomeViewModel, List<Person>>(
             selector: (_, vm) => vm.teamToday,
             builder: (context, people, _) => _PeopleSnapshot(people: people),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: _homeInnerGap),
           _SectionTitle('Próximos aniversários'),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: _homeInnerGap),
           Selector<HomeViewModel, List<Person>>(
             selector: (_, vm) => vm.upcomingBirthdays,
             builder: (context, people, _) => _BirthdayCard(people: people),
@@ -79,6 +90,7 @@ class _DailyCallout extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
@@ -123,51 +135,6 @@ class _DailyCallout extends StatelessWidget {
   }
 }
 
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({
-    required this.label,
-    required this.value,
-    required this.sub,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final String sub;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 20),
-            const Spacer(),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Text(value, style: theme.textTheme.titleLarge),
-            Text(
-              sub,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
 
@@ -196,8 +163,9 @@ class _PeopleSnapshot extends StatelessWidget {
 
     if (people.isEmpty) {
       return Card(
+        margin: EdgeInsets.zero,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Text(
             'Nenhuma pessoa cadastrada ainda.',
             style: theme.textTheme.bodyMedium,
@@ -207,14 +175,55 @@ class _PeopleSnapshot extends StatelessWidget {
     }
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Column(
         children: [
-          for (final person in people)
-            ListTile(
-              leading: CircleAvatar(child: Text(_initials(person.name))),
-              title: Text(person.name),
-              subtitle: Text(person.position),
+          for (final (index, person) in people.indexed) ...[
+            _PersonSnapshotRow(person: person),
+            if (index < people.length - 1)
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outline.withValues(alpha: 0.6),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PersonSnapshotRow extends StatelessWidget {
+  const _PersonSnapshotRow({required this.person});
+
+  final Person person;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          CircleAvatar(child: Text(_initials(person.name))),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(person.name, style: theme.textTheme.titleSmall),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  person.position,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -232,8 +241,9 @@ class _BirthdayCard extends StatelessWidget {
 
     if (people.isEmpty) {
       return Card(
+        margin: EdgeInsets.zero,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Center(
             child: Text(
               'Nenhum aniversário cadastrado ainda.',
@@ -249,6 +259,7 @@ class _BirthdayCard extends StatelessWidget {
     final dateFormat = DateFormat("d 'de' MMMM", 'pt_BR');
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Column(
         children: [
           for (final person in people)

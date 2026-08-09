@@ -21,6 +21,9 @@ class HomeViewModel extends BaseViewModel {
   int _teamsCount = 0;
   int get teamsCount => _teamsCount;
 
+  int _peopleCount = 0;
+  int get peopleCount => _peopleCount;
+
   List<Team> _teams = [];
   List<Team> get teams => List.unmodifiable(_teams);
 
@@ -40,6 +43,7 @@ class HomeViewModel extends BaseViewModel {
     // enough for the birthday widget at the team sizes this app targets;
     // revisit if a real org ever needs more than that across all teams.
     final people = await _personRepository.getPeople(perPage: 100);
+    _peopleCount = people.length;
     _teamToday = people.take(4).toList();
     final sorted = people.where((person) => person.birthDate != null).toList()
       ..sort(
