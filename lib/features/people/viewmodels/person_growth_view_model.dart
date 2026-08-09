@@ -13,7 +13,6 @@ class PersonGrowthViewModel extends BaseViewModel {
   List<OneOnOneTemplate> templates = [];
   List<OneOnOneSession> sessions = [];
   List<DevelopmentPlan> plans = [];
-  List<PersonOkr> okrs = [];
   List<PersonDeliveryMetric> deliveryMetrics = [];
   GrowthSuggestions? suggestions;
 
@@ -137,121 +136,6 @@ class PersonGrowthViewModel extends BaseViewModel {
     plans = await _repository.getDevelopmentPlans(personId);
   });
 
-  Future<void> createOkr({
-    required String objective,
-    String? cycle,
-    String? focusArea,
-    String? diagnosis,
-    String? evidenceSource,
-    String? baseline,
-    String? target,
-  }) => _runMutation(() async {
-    await _repository.createOkr(
-      personId: personId,
-      objective: objective,
-      cycle: cycle,
-      focusArea: focusArea,
-      diagnosis: diagnosis,
-      evidenceSource: evidenceSource,
-      baseline: baseline,
-      target: target,
-    );
-    okrs = await _repository.getOkrs(personId);
-  });
-
-  Future<void> updateOkr({
-    required int id,
-    String? objective,
-    String? cycle,
-    String? status,
-    String? focusArea,
-    String? diagnosis,
-    String? evidenceSource,
-    String? baseline,
-    String? target,
-    int? confidence,
-    int? progress,
-  }) => _runMutation(() async {
-    await _repository.updateOkr(
-      id: id,
-      objective: objective,
-      cycle: cycle,
-      status: status,
-      focusArea: focusArea,
-      diagnosis: diagnosis,
-      evidenceSource: evidenceSource,
-      baseline: baseline,
-      target: target,
-      confidence: confidence,
-      progress: progress,
-    );
-    okrs = await _repository.getOkrs(personId);
-  });
-
-  Future<void> createKeyResult({
-    required int okrId,
-    required String title,
-    String? metricName,
-    String? dataSource,
-    num? initialValue,
-    num? currentValue,
-    num? targetValue,
-    String? unit,
-    String? evidence,
-    int? confidence,
-    int? progress,
-    DateTime? dueDate,
-  }) => _runMutation(() async {
-    await _repository.createKeyResult(
-      okrId: okrId,
-      title: title,
-      metricName: metricName,
-      dataSource: dataSource,
-      initialValue: initialValue,
-      currentValue: currentValue,
-      targetValue: targetValue,
-      unit: unit,
-      evidence: evidence,
-      confidence: confidence,
-      progress: progress,
-      dueDate: dueDate,
-    );
-    okrs = await _repository.getOkrs(personId);
-  });
-
-  Future<void> updateKeyResult({
-    required int id,
-    String? title,
-    String? metricName,
-    String? dataSource,
-    num? initialValue,
-    num? currentValue,
-    num? targetValue,
-    String? unit,
-    String? status,
-    String? evidence,
-    int? confidence,
-    int? progress,
-    DateTime? dueDate,
-  }) => _runMutation(() async {
-    await _repository.updateKeyResult(
-      id: id,
-      title: title,
-      metricName: metricName,
-      dataSource: dataSource,
-      initialValue: initialValue,
-      currentValue: currentValue,
-      targetValue: targetValue,
-      unit: unit,
-      status: status,
-      evidence: evidence,
-      confidence: confidence,
-      progress: progress,
-      dueDate: dueDate,
-    );
-    okrs = await _repository.getOkrs(personId);
-  });
-
   Future<void> generateSuggestions({String? focusArea, String? context}) =>
       _runMutation(() async {
         suggestions = await _repository.getSuggestions(
@@ -288,7 +172,6 @@ class PersonGrowthViewModel extends BaseViewModel {
       _repository.getTemplates(),
       _repository.getSessions(personId: personId),
       _repository.getDevelopmentPlans(personId),
-      _repository.getOkrs(personId),
       _repository.getSuggestions(personId: personId),
       _repository.getDeliveryMetrics(personId),
     ]);
@@ -296,8 +179,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     templates = results[0] as List<OneOnOneTemplate>;
     sessions = results[1] as List<OneOnOneSession>;
     plans = results[2] as List<DevelopmentPlan>;
-    okrs = results[3] as List<PersonOkr>;
-    suggestions = results[4] as GrowthSuggestions;
-    deliveryMetrics = results[5] as List<PersonDeliveryMetric>;
+    suggestions = results[3] as GrowthSuggestions;
+    deliveryMetrics = results[4] as List<PersonDeliveryMetric>;
   }
 }

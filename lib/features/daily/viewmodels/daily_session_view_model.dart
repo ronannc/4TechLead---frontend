@@ -10,7 +10,6 @@ import '../../teams/models/team.dart';
 import '../../teams/repositories/team_repository.dart';
 import '../models/daily_blocker_draft.dart';
 import '../models/daily_cue.dart';
-import '../models/daily_note_category.dart';
 import '../models/daily_session_phase.dart';
 import '../models/daily_turn_draft.dart';
 import '../repositories/daily_meeting_repository.dart';
@@ -303,17 +302,6 @@ class DailySessionViewModel extends BaseViewModel {
     }
   }
 
-  void setCurrentNote({DailyNoteCategory? category, String? text}) {
-    final turn = currentTurn;
-    if (turn == null) {
-      return;
-    }
-
-    turn.noteCategory = category;
-    turn.noteText = text;
-    notifyListeners();
-  }
-
   void addTopic(String text) {
     final normalized = text.trim();
     if (normalized.isEmpty) {
@@ -390,13 +378,15 @@ class DailySessionViewModel extends BaseViewModel {
         endedAt: _now(),
         entries: [
           for (final turn in spokenTurns)
+            {'person_id': turn.person.id, 'actual_seconds': turn.actualSeconds},
+        ],
+        annotations: [
+          for (final topic in _topics) {'type': 'topico', 'text': topic},
+          for (final blocker in _blockers)
             {
-              'person_id': turn.person.id,
-              'actual_seconds': turn.actualSeconds,
-              if (turn.noteCategory != null)
-                'note_type': turn.noteCategory!.apiValue,
-              if (turn.noteText != null && turn.noteText!.isNotEmpty)
-                'note': turn.noteText,
+              'type': 'bloqueio',
+              'text': blocker.text,
+              'resolved': blocker.resolved,
             },
         ],
       );

@@ -1,5 +1,4 @@
 import '../../people/models/person.dart';
-import 'daily_note_category.dart';
 
 /// Local, mutable working state for one person's turn during a live
 /// [DailySessionScreen] session — NOT the same as [DailyMeetingEntry], which
@@ -14,9 +13,6 @@ class DailyTurnDraft {
   /// Set once the turn ends (via "Próximo"/"Finalizar"); `null` while the
   /// person hasn't spoken yet.
   int? actualSeconds;
-
-  DailyNoteCategory? noteCategory;
-  String? noteText;
 
   bool get hasSpoken => actualSeconds != null;
 }

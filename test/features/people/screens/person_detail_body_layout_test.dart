@@ -149,15 +149,17 @@ void main() {
         await tester.tap(find.byIcon(Icons.arrow_back));
         await tester.pumpAndSettle();
 
-        for (final tab in ['PDI', 'OKRs', 'Análises']) {
+        for (final tab in ['PDI', 'KPIs']) {
           await _tapTab(tester, tab);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
 
-          if (tab == 'Análises') {
+          if (tab == 'KPIs') {
             expect(find.text('Evidências recentes'), findsOneWidget);
             expect(find.text('PRs no ano'), findsOneWidget);
             expect(find.text('CI falhando / PR'), findsOneWidget);
+            expect(find.text('Tempo merge / PR'), findsOneWidget);
+            expect(find.text('Aceite em review'), findsOneWidget);
             expect(find.text('Qualidade do código'), findsOneWidget);
             _expectAnalysisSpacing(tester);
           }
@@ -178,27 +180,6 @@ void main() {
 
             await _tapVisible(tester, find.text('Adicionar ação'));
             expect(find.text('Nova ação do PDI'), findsOneWidget);
-            expect(tester.takeException(), isNull);
-            await tester.tap(find.text('Cancelar'));
-            await tester.pumpAndSettle();
-          }
-
-          if (tab == 'OKRs') {
-            for (final view in ['Sugestões', 'OKRs']) {
-              await _tapContextualTab(tester, view);
-              await tester.pumpAndSettle();
-              expect(tester.takeException(), isNull);
-            }
-
-            await tester.tap(find.text('Novo OKR'));
-            await tester.pumpAndSettle();
-            expect(find.text('Novo OKR'), findsOneWidget);
-            expect(tester.takeException(), isNull);
-            await tester.tap(find.byIcon(Icons.arrow_back));
-            await tester.pumpAndSettle();
-
-            await _tapVisible(tester, find.text('Adicionar métrica'));
-            expect(find.text('Nova métrica'), findsOneWidget);
             expect(tester.takeException(), isNull);
             await tester.tap(find.text('Cancelar'));
             await tester.pumpAndSettle();
@@ -311,7 +292,9 @@ void _expectOneOnOneHistorySpacing(WidgetTester tester) {
 }
 
 void _expectAnalysisSpacing(WidgetTester tester) {
-  final summaryTitle = tester.getRect(find.text('Resumo do colaborador'));
+  final summarySubtitle = tester.getRect(
+    find.text('Indicadores calculados a partir das integrações.'),
+  );
   final firstMetricCard = tester.getRect(
     find.ancestor(
       of: find.text('1:1 registrados'),
@@ -332,7 +315,7 @@ void _expectAnalysisSpacing(WidgetTester tester) {
     find.ancestor(of: find.text('8 points'), matching: find.byType(Card)),
   );
 
-  expect(firstMetricCard.top - summaryTitle.bottom, closeTo(8, 0.1));
+  expect(firstMetricCard.top - summarySubtitle.bottom, closeTo(8, 0.1));
   if (secondMetricCard.top == firstMetricCard.top) {
     expect(secondMetricCard.left - firstMetricCard.right, closeTo(8, 0.1));
   } else {
@@ -374,7 +357,6 @@ void _stubRepositories({
   when(
     () => growthRepository.getDevelopmentPlans(1),
   ).thenAnswer((_) async => [_plan()]);
-  when(() => growthRepository.getOkrs(1)).thenAnswer((_) async => [_okr()]);
   when(
     () => growthRepository.getSuggestions(
       personId: 1,
@@ -387,8 +369,8 @@ void _stubRepositories({
       pdiSuggestions: [
         {'title': 'Conduzir entrega', 'evidence': 'PR entregue'},
       ],
-      okrSuggestions: [
-        {'objective': 'Aumentar autonomia', 'diagnosis': 'Precisa evoluir'},
+      kpiSuggestions: [
+        {'title': 'Acompanhar qualidade', 'diagnosis': 'Precisa evoluir'},
       ],
     ),
   );
@@ -426,6 +408,24 @@ List<PersonDeliveryMetric> _deliveryMetrics() {
       metricType: 'annual_ci_failure_average',
       metricValue: 1,
       unit: 'failures/pr',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 18,
+      personId: 1,
+      metricType: 'annual_pr_merge_time_average',
+      metricValue: 32,
+      unit: 'hours/pr',
+      sourceRef: 'year:2026',
+      occurredAt: DateTime(2026, 8, 8),
+    ),
+    PersonDeliveryMetric(
+      id: 19,
+      personId: 1,
+      metricType: 'annual_review_acceptance_rate',
+      metricValue: 100,
+      unit: 'percent',
       sourceRef: 'year:2026',
       occurredAt: DateTime(2026, 8, 8),
     ),
@@ -526,28 +526,6 @@ DevelopmentPlan _plan() {
         status: 'todo',
         progress: 0,
         competency: 'Arquitetura',
-      ),
-    ],
-  );
-}
-
-PersonOkr _okr() {
-  return const PersonOkr(
-    id: 1,
-    personId: 1,
-    objective: 'Aumentar autonomia técnica',
-    status: 'active',
-    confidence: 50,
-    progress: 20,
-    diagnosis: 'Precisa decidir com menos apoio.',
-    keyResults: [
-      OkrKeyResult(
-        id: 1,
-        okrId: 1,
-        title: 'Concluir ações do PDI',
-        status: 'doing',
-        progress: 25,
-        metricName: 'Ações',
       ),
     ],
   );

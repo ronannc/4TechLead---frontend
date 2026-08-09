@@ -1,6 +1,5 @@
 import '../models/daily_meeting.dart';
 import '../models/daily_meeting_entry.dart';
-import '../models/daily_note_category.dart';
 import '../services/daily_meeting_service.dart';
 
 /// Safety cap on how many pages [getAllEntries] will follow. The API's
@@ -46,12 +45,14 @@ class DailyMeetingRepository {
     required DateTime startedAt,
     required DateTime endedAt,
     required List<Map<String, dynamic>> entries,
+    required List<Map<String, dynamic>> annotations,
   }) async {
     final json = await _service.store(
       timeLimitSeconds: timeLimitSeconds,
       startedAt: startedAt,
       endedAt: endedAt,
       entries: entries,
+      annotations: annotations,
     );
 
     return DailyMeeting.fromJson(json['data'] as Map<String, dynamic>);
@@ -64,7 +65,6 @@ class DailyMeetingRepository {
     int? teamId,
     int? personId,
     int? dailyMeetingId,
-    DailyNoteCategory? noteType,
   }) async {
     final entries = <DailyMeetingEntry>[];
     var page = 1;
@@ -75,7 +75,6 @@ class DailyMeetingRepository {
         teamId: teamId,
         personId: personId,
         dailyMeetingId: dailyMeetingId,
-        noteType: noteType,
         page: page,
         perPage: 100,
       );

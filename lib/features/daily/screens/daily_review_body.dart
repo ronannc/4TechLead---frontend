@@ -54,8 +54,7 @@ class DailyReviewBody extends StatelessWidget {
                             title: Text(turn.person.name),
                             subtitle: Text(
                               '${formatDailyDuration(turn.actualSeconds!)} de '
-                              '${formatDailyDuration(turn.allowedSeconds)}'
-                              '${turn.noteCategory != null ? ' · ${turn.noteCategory!.label}' : ''}',
+                              '${formatDailyDuration(turn.allowedSeconds)}',
                             ),
                             trailing: Text(
                               computeDraftStatus(
