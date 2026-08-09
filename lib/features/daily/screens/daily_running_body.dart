@@ -63,10 +63,29 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
+              const _PauseBanner(),
+              const SizedBox(height: AppSpacing.sm),
               _ParticipantsStrip(turns: viewModel.turns, currentIndex: index),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
+                  Expanded(
+                    child: Selector<DailySessionViewModel, bool>(
+                      selector: (_, vm) => vm.isPaused,
+                      builder: (context, isPaused, _) => OutlinedButton.icon(
+                        onPressed: viewModel.togglePause,
+                        icon: Icon(
+                          isPaused
+                              ? Icons.play_arrow_outlined
+                              : Icons.pause_outlined,
+                        ),
+                        label: Text(
+                          isPaused ? 'Retomar timer' : 'Pausar timer',
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => showDailyNoteSheet(context, viewModel),
@@ -74,7 +93,11 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
                       label: const Text('Nota'),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: viewModel.finishNow,
@@ -128,6 +151,61 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+class _PauseBanner extends StatelessWidget {
+  const _PauseBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Selector<DailySessionViewModel, bool>(
+      selector: (_, vm) => vm.isPaused,
+      builder: (context, isPaused, _) {
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: isPaused
+              ? Container(
+                  key: const ValueKey('daily-paused-banner'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.pause_circle_filled,
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Timer pausado. Retome quando quiser continuar este turno.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Text(
+                  'Pause o timer se a conversa sair da daily ou precisar interromper o turno atual.',
+                  key: const ValueKey('daily-running-hint'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
         );
       },
     );

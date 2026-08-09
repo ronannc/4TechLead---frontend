@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../../features/daily/models/daily_cue.dart';
+import 'daily_cue_sound_theme.dart';
 
 /// Plays the sound + haptic feedback for a [DailyCue] during a live Daily
 /// session. Cross-cutting infrastructure (same tier as `AuthSession`/
@@ -20,14 +21,6 @@ class DailyCuePlayer {
   final AudioPlayer _cuePlayer;
   final AudioPlayer _tickPlayer;
   bool _isTicking = false;
-
-  static const _assetByCue = {
-    DailyCue.turnStarted: 'sounds/start_bell.wav',
-    DailyCue.turnAdvanced: 'sounds/start_bell.wav',
-    DailyCue.aboutToBurn: 'sounds/attention_warning.wav',
-    DailyCue.burned: 'sounds/time_limit.wav',
-    DailyCue.sessionFinished: 'sounds/final_whistle.wav',
-  };
 
   static const _hapticByCue = {
     DailyCue.turnStarted: HapticFeedback.lightImpact,
@@ -47,8 +40,8 @@ class DailyCuePlayer {
     try {
       await _tickPlayer.setReleaseMode(ReleaseMode.loop);
       await _tickPlayer.play(
-        AssetSource('sounds/ticking_clock.wav'),
-        volume: 0.12,
+        AssetSource(DailyCueSoundTheme.ticking.assetPath),
+        volume: DailyCueSoundTheme.ticking.volume,
       );
     } catch (error) {
       _isTicking = false;
@@ -75,6 +68,11 @@ class DailyCuePlayer {
   }
 
   Future<void> play(DailyCue cue) async {
+    final sound = DailyCueSoundTheme.byCue[cue];
+    if (sound == null) {
+      return;
+    }
+
     try {
       await _hapticByCue[cue]?.call();
     } catch (error) {
@@ -87,11 +85,11 @@ class DailyCuePlayer {
     }
 
     try {
-      await _cuePlayer.play(AssetSource(_assetByCue[cue]!));
+      await _cuePlayer.play(AssetSource(sound.assetPath), volume: sound.volume);
     } catch (error) {
       if (kDebugMode) {
         debugPrint(
-          '[DailyCuePlayer] Falha no áudio para $cue (${_assetByCue[cue]}): $error',
+          '[DailyCuePlayer] Falha no áudio para $cue (${sound.assetPath}): $error',
         );
       }
       // Audio backend unavailable (e.g. missing GStreamer on Linux, no

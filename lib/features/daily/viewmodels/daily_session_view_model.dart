@@ -76,9 +76,12 @@ class DailySessionViewModel extends BaseViewModel {
       _currentTurnIndex < _turns.length ? _turns[_currentTurnIndex] : null;
 
   DateTime? _turnStartedAt;
+  DateTime? _pausedAt;
   DateTime? _meetingStartedAt;
   Timer? _ticker;
   _CueLevel _lastCueLevel = _CueLevel.normal;
+  bool _isPaused = false;
+  bool get isPaused => _isPaused;
 
   final ValueNotifier<int> elapsedSeconds = ValueNotifier(0);
   final ValueNotifier<DailyCue?> cue = ValueNotifier(null);
@@ -200,6 +203,15 @@ class DailySessionViewModel extends BaseViewModel {
     notifyListeners();
   }
 
+  void reorderMemberByPersonId(int personId, int targetPersonId) {
+    final oldIndex = _members.indexWhere((person) => person.id == personId);
+    final newIndex = _members.indexWhere(
+      (person) => person.id == targetPersonId,
+    );
+
+    reorderMembers(oldIndex, newIndex);
+  }
+
   void start() {
     if (_members.isEmpty) return;
 
@@ -220,6 +232,8 @@ class DailySessionViewModel extends BaseViewModel {
 
   void _beginCurrentTurn({DailyCue? initialCue}) {
     _turnStartedAt = _now();
+    _pausedAt = null;
+    _isPaused = false;
     elapsedSeconds.value = 0;
     _lastCueLevel = _CueLevel.normal;
     if (initialCue != null) {
@@ -230,6 +244,34 @@ class DailySessionViewModel extends BaseViewModel {
     _ticker = Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
   }
 
+  void togglePause() {
+    if (_phase != DailySessionPhase.running || currentTurn == null) {
+      return;
+    }
+
+    if (_isPaused) {
+      final pausedAt = _pausedAt;
+      final startedAt = _turnStartedAt;
+      if (pausedAt != null && startedAt != null) {
+        _turnStartedAt = startedAt.add(_now().difference(pausedAt));
+      }
+      _pausedAt = null;
+      _isPaused = false;
+      _ticker?.cancel();
+      _ticker = Timer.periodic(
+        const Duration(milliseconds: 250),
+        (_) => _tick(),
+      );
+    } else {
+      _tick();
+      _pausedAt = _now();
+      _isPaused = true;
+      _ticker?.cancel();
+    }
+
+    notifyListeners();
+  }
+
   /// Clears the currently emitted cue after the Screen consumes it.
   void clearCue() {
     cue.value = null;
@@ -237,7 +279,7 @@ class DailySessionViewModel extends BaseViewModel {
 
   void _tick() {
     final turn = currentTurn;
-    if (_disposed || _turnStartedAt == null || turn == null) {
+    if (_disposed || _isPaused || _turnStartedAt == null || turn == null) {
       return;
     }
 
@@ -317,6 +359,8 @@ class DailySessionViewModel extends BaseViewModel {
 
     turn.actualSeconds = elapsedSeconds.value;
     _ticker?.cancel();
+    _pausedAt = null;
+    _isPaused = false;
 
     if (advance && _currentTurnIndex < _turns.length - 1) {
       _currentTurnIndex++;

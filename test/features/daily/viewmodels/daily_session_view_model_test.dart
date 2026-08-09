@@ -115,6 +115,51 @@ void main() {
     });
   });
 
+  test('togglePause freezes elapsed time until the timer is resumed', () {
+    fakeAsync((async) {
+      final start = DateTime(2026);
+      final viewModel = DailySessionViewModel(
+        personRepository,
+        meetingRepository,
+        teamRepository,
+        initialTeamId: 1,
+        now: () => start.add(async.elapsed),
+      );
+      final cues = <DailyCue>[];
+      viewModel.cue.addListener(() {
+        final cue = viewModel.cue.value;
+        if (cue != null) {
+          cues.add(cue);
+        }
+      });
+
+      viewModel.loadParticipants();
+      async.flushMicrotasks();
+      viewModel.start();
+
+      async.elapse(const Duration(seconds: 15));
+      viewModel.togglePause();
+
+      expect(viewModel.isPaused, isTrue);
+      expect(viewModel.elapsedSeconds.value, 15);
+
+      async.elapse(const Duration(seconds: 40));
+
+      expect(viewModel.elapsedSeconds.value, 15);
+      expect(cues, [DailyCue.turnStarted]);
+
+      viewModel.togglePause();
+      expect(viewModel.isPaused, isFalse);
+
+      async.elapse(const Duration(seconds: 35));
+
+      expect(viewModel.elapsedSeconds.value, 50);
+      expect(cues, [DailyCue.turnStarted, DailyCue.aboutToBurn]);
+
+      viewModel.dispose();
+    });
+  });
+
   test('nextTurn records actualSeconds and advances to the next person', () {
     fakeAsync((async) {
       final start = DateTime(2026);
@@ -174,6 +219,31 @@ void main() {
       viewModel.start();
       expect(viewModel.turns.first.person.name, 'Grace Hopper');
       expect(viewModel.turns.last.person.name, 'Ada Lovelace');
+
+      viewModel.dispose();
+    });
+  });
+
+  test('reorderMemberByPersonId updates order from the unified list', () {
+    fakeAsync((async) {
+      final start = DateTime(2026);
+      final viewModel = DailySessionViewModel(
+        personRepository,
+        meetingRepository,
+        teamRepository,
+        initialTeamId: 1,
+        now: () => start.add(async.elapsed),
+      );
+
+      viewModel.loadParticipants();
+      async.flushMicrotasks();
+
+      viewModel.reorderMemberByPersonId(1, 2);
+
+      expect(viewModel.members.map((person) => person.name), [
+        'Grace Hopper',
+        'Ada Lovelace',
+      ]);
 
       viewModel.dispose();
     });

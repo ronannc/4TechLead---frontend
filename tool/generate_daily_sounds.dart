@@ -16,20 +16,10 @@ void main() {
   _writeWav(
     '${outDir.path}/start_bell.wav',
     _normalize(
-      _mix([
-        _decayTone(frequencyHz: 740, durationSeconds: 0.78, decay: 4.2),
-        _decayTone(
-          frequencyHz: 1110,
-          durationSeconds: 0.78,
-          decay: 5.4,
-          gain: 0.58,
-        ),
-        _decayTone(
-          frequencyHz: 1480,
-          durationSeconds: 0.52,
-          decay: 7.0,
-          gain: 0.34,
-        ),
+      _concat([
+        _ceramicChime(frequencyHz: 660, durationSeconds: 0.42, gain: 0.82),
+        _silence(0.035),
+        _ceramicChime(frequencyHz: 990, durationSeconds: 0.56, gain: 0.58),
       ]),
     ),
   );
@@ -37,31 +27,44 @@ void main() {
   _writeWav(
     '${outDir.path}/ticking_clock.wav',
     _concat([
-      _tick(frequencyHz: 1900, durationSeconds: 0.035),
-      _silence(0.465),
-      _tick(frequencyHz: 1320, durationSeconds: 0.042, gain: 0.78),
-      _silence(0.458),
+      _tick(frequencyHz: 1480, durationSeconds: 0.02, gain: 0.28),
+      _silence(0.48),
+      _tick(frequencyHz: 1080, durationSeconds: 0.024, gain: 0.22),
+      _silence(0.476),
     ]),
   );
 
   _writeWav(
+    '${outDir.path}/turn_pass.wav',
+    _normalize(
+      _concat([
+        _woodTap(frequencyHz: 460, durationSeconds: 0.07, gain: 0.74),
+        _silence(0.055),
+        _woodTap(frequencyHz: 620, durationSeconds: 0.065, gain: 0.56),
+      ]),
+    ),
+  );
+
+  _writeWav(
     '${outDir.path}/attention_warning.wav',
-    _concat([
-      _beep(frequencyHz: 880, durationSeconds: 0.12),
-      _silence(0.06),
-      _beep(frequencyHz: 1040, durationSeconds: 0.12),
-      _silence(0.06),
-      _beep(frequencyHz: 880, durationSeconds: 0.12),
-    ]),
+    _normalize(
+      _concat([
+        _woodTap(frequencyHz: 700, durationSeconds: 0.05, gain: 0.5),
+        _silence(0.07),
+        _woodTap(frequencyHz: 860, durationSeconds: 0.05, gain: 0.58),
+        _silence(0.07),
+        _woodTap(frequencyHz: 1020, durationSeconds: 0.055, gain: 0.66),
+      ]),
+    ),
   );
 
   _writeWav(
     '${outDir.path}/time_limit.wav',
     _normalize(
       _concat([
-        _beep(frequencyHz: 360, durationSeconds: 0.16, gain: 0.82),
-        _silence(0.045),
-        _beep(frequencyHz: 300, durationSeconds: 0.22, gain: 0.96),
+        _bowlStrike(frequencyHz: 320, durationSeconds: 0.28, gain: 0.88),
+        _silence(0.06),
+        _bowlStrike(frequencyHz: 240, durationSeconds: 0.42, gain: 0.98),
       ]),
     ),
   );
@@ -70,28 +73,14 @@ void main() {
     '${outDir.path}/final_whistle.wav',
     _normalize(
       _concat([
-        _whistle(frequencyHz: 1680, durationSeconds: 0.28),
+        _ceramicChime(frequencyHz: 880, durationSeconds: 0.46, gain: 0.78),
         _silence(0.05),
-        _whistle(frequencyHz: 1480, durationSeconds: 0.38, gain: 0.86),
+        _ceramicChime(frequencyHz: 660, durationSeconds: 0.74, gain: 0.92),
       ]),
     ),
   );
 
   print('Generated Daily sound cues in ${outDir.path}');
-}
-
-Int16List _beep({
-  required double frequencyHz,
-  required double durationSeconds,
-  double gain = 0.72,
-}) {
-  return _tone(
-    frequencyHz: frequencyHz,
-    durationSeconds: durationSeconds,
-    gain: gain,
-    attackSeconds: 0.006,
-    releaseSeconds: 0.025,
-  );
 }
 
 Int16List _tick({
@@ -111,31 +100,75 @@ Int16List _tick({
   return _mix([tone, click]);
 }
 
-Int16List _whistle({
+Int16List _woodTap({
+  required double frequencyHz,
+  required double durationSeconds,
+  double gain = 0.7,
+}) {
+  final body = _decayTone(
+    frequencyHz: frequencyHz,
+    durationSeconds: durationSeconds,
+    decay: 34,
+    gain: gain,
+  );
+  final overtone = _decayTone(
+    frequencyHz: frequencyHz * 1.8,
+    durationSeconds: durationSeconds * 0.72,
+    decay: 42,
+    gain: gain * 0.34,
+  );
+  final transient = _noise(durationSeconds: 0.008, gain: gain * 0.18);
+
+  return _mix([body, overtone, transient]);
+}
+
+Int16List _ceramicChime({
   required double frequencyHz,
   required double durationSeconds,
   double gain = 0.78,
 }) {
-  final base = _tone(
+  return _mix([
+    _decayTone(
+      frequencyHz: frequencyHz,
+      durationSeconds: durationSeconds,
+      decay: 5.0,
+      gain: gain,
+    ),
+    _decayTone(
+      frequencyHz: frequencyHz * 1.5,
+      durationSeconds: durationSeconds * 0.88,
+      decay: 6.4,
+      gain: gain * 0.42,
+    ),
+    _decayTone(
+      frequencyHz: frequencyHz * 2.08,
+      durationSeconds: durationSeconds * 0.68,
+      decay: 8.2,
+      gain: gain * 0.22,
+    ),
+  ]);
+}
+
+Int16List _bowlStrike({
+  required double frequencyHz,
+  required double durationSeconds,
+  double gain = 0.86,
+}) {
+  final fundamental = _decayTone(
     frequencyHz: frequencyHz,
     durationSeconds: durationSeconds,
+    decay: 4.8,
     gain: gain,
-    attackSeconds: 0.018,
-    releaseSeconds: 0.08,
-    vibratoHz: 7.0,
-    vibratoDepthHz: 16.0,
   );
-  final harmonic = _tone(
-    frequencyHz: frequencyHz * 2.0,
-    durationSeconds: durationSeconds,
-    gain: gain * 0.18,
-    attackSeconds: 0.018,
-    releaseSeconds: 0.08,
-    vibratoHz: 7.0,
-    vibratoDepthHz: 20.0,
+  final harmonic = _decayTone(
+    frequencyHz: frequencyHz * 2.4,
+    durationSeconds: durationSeconds * 0.78,
+    decay: 6.0,
+    gain: gain * 0.22,
   );
+  final breath = _noise(durationSeconds: 0.012, gain: gain * 0.08);
 
-  return _mix([base, harmonic]);
+  return _mix([fundamental, harmonic, breath]);
 }
 
 Int16List _decayTone({

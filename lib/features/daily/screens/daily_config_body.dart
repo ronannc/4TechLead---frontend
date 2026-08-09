@@ -38,7 +38,8 @@ class _DailyConfigBodyState extends State<DailyConfigBody> {
       selector: (_, vm) => vm.members,
       builder: (context, members, _) {
         final viewModel = context.read<DailySessionViewModel>();
-        final people = _filteredPeople(viewModel.people);
+        final people = _orderedFilteredPeople(viewModel);
+        final canReorder = _query.trim().isEmpty;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(_dailyConfigOuterGap),
@@ -49,10 +50,7 @@ class _DailyConfigBodyState extends State<DailyConfigBody> {
               const SizedBox(height: _dailyConfigInnerGap),
               _TimeLimitControl(),
               const SizedBox(height: _dailyConfigInnerGap),
-              Text(
-                'Selecionar participantes',
-                style: theme.textTheme.titleMedium,
-              ),
+              Text('Participantes', style: theme.textTheme.titleMedium),
               const SizedBox(height: _dailyConfigInnerGap),
               _TeamSelector(teams: viewModel.teams),
               const SizedBox(height: _dailyConfigInnerGap),
@@ -87,11 +85,11 @@ class _DailyConfigBodyState extends State<DailyConfigBody> {
                   message: 'Nenhuma pessoa cadastrada ainda.',
                 )
               else
-                _PeoplePicker(people: people),
-              const SizedBox(height: _dailyConfigInnerGap),
-              Text('Ordem de fala', style: theme.textTheme.titleMedium),
-              const SizedBox(height: _dailyConfigInnerGap),
-              _SpeakingQueue(members: members),
+                _PeoplePicker(
+                  people: people,
+                  selectedCount: members.length,
+                  canReorder: canReorder,
+                ),
               const SizedBox(height: _dailyConfigInnerGap),
               AppPrimaryButton(
                 label: 'Iniciar daily',
@@ -104,13 +102,18 @@ class _DailyConfigBodyState extends State<DailyConfigBody> {
     );
   }
 
-  List<Person> _filteredPeople(List<Person> people) {
+  List<Person> _orderedFilteredPeople(DailySessionViewModel viewModel) {
+    final selectedIds = viewModel.members.map((person) => person.id).toSet();
+    final orderedPeople = [
+      ...viewModel.members,
+      ...viewModel.people.where((person) => !selectedIds.contains(person.id)),
+    ];
     final query = _query.trim().toLowerCase();
     if (query.isEmpty) {
-      return people;
+      return orderedPeople;
     }
 
-    return people
+    return orderedPeople
         .where(
           (person) =>
               person.name.toLowerCase().contains(query) ||
@@ -258,9 +261,15 @@ class _TeamSelector extends StatelessWidget {
 }
 
 class _PeoplePicker extends StatelessWidget {
-  const _PeoplePicker({required this.people});
+  const _PeoplePicker({
+    required this.people,
+    required this.selectedCount,
+    required this.canReorder,
+  });
 
   final List<Person> people;
+  final int selectedCount;
+  final bool canReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -269,19 +278,71 @@ class _PeoplePicker extends StatelessWidget {
     }
 
     final viewModel = context.read<DailySessionViewModel>();
+    final theme = Theme.of(context);
+    final selectedVisibleCount = people
+        .where(viewModel.isPersonSelected)
+        .length;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final (index, person) in people.indexed) ...[
-          _PersonOption(
-            person: person,
-            teamName: viewModel.teamNameFor(person.teamId),
-            selected: viewModel.isPersonSelected(person),
-            onTap: () => viewModel.togglePerson(person),
+        Text(
+          canReorder
+              ? 'Toque para selecionar. Arraste os participantes marcados para definir a ordem de fala.'
+              : 'Toque para selecionar. Limpe a busca para reordenar a ordem de fala.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          if (index < people.length - 1)
-            const SizedBox(height: _dailyConfigInnerGap),
-        ],
+        ),
+        const SizedBox(height: _dailyConfigInnerGap),
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          itemCount: people.length,
+          onReorderItem: (oldIndex, newIndex) {
+            if (!canReorder ||
+                oldIndex >= selectedVisibleCount ||
+                selectedVisibleCount < 2) {
+              return;
+            }
+
+            if (newIndex < 0 || newIndex >= selectedVisibleCount) {
+              return;
+            }
+
+            viewModel.reorderMemberByPersonId(
+              people[oldIndex].id,
+              people[newIndex].id,
+            );
+          },
+          itemBuilder: (context, index) {
+            final person = people[index];
+            final selected = viewModel.isPersonSelected(person);
+            final order = selected
+                ? viewModel.members.indexWhere(
+                        (member) => member.id == person.id,
+                      ) +
+                      1
+                : null;
+
+            return Padding(
+              key: ValueKey(person.id),
+              padding: EdgeInsets.only(
+                bottom: index == people.length - 1 ? 0 : _dailyConfigInnerGap,
+              ),
+              child: _PersonOption(
+                person: person,
+                index: index,
+                teamName: viewModel.teamNameFor(person.teamId),
+                selected: selected,
+                selectedOrder: order,
+                canDrag: canReorder && selected && selectedCount > 1,
+                onTap: () => viewModel.togglePerson(person),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -290,14 +351,20 @@ class _PeoplePicker extends StatelessWidget {
 class _PersonOption extends StatelessWidget {
   const _PersonOption({
     required this.person,
+    required this.index,
     required this.teamName,
     required this.selected,
+    required this.selectedOrder,
+    required this.canDrag,
     required this.onTap,
   });
 
   final Person person;
+  final int index;
   final String teamName;
   final bool selected;
+  final int? selectedOrder;
+  final bool canDrag;
   final VoidCallback onTap;
 
   @override
@@ -306,6 +373,7 @@ class _PersonOption extends StatelessWidget {
     final border = Theme.of(context).extension<AppThemeExtension>()!.border;
 
     return InkWell(
+      key: ValueKey('daily-config-person-${person.id}'),
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -321,7 +389,9 @@ class _PersonOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            CircleAvatar(child: Text(_initials(person.name))),
+            CircleAvatar(
+              child: Text(selectedOrder?.toString() ?? _initials(person.name)),
+            ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -343,61 +413,18 @@ class _PersonOption extends StatelessWidget {
                   ? theme.colorScheme.primary
                   : theme.colorScheme.onSurfaceVariant,
             ),
+            if (canDrag) ...[
+              const SizedBox(width: AppSpacing.sm),
+              ReorderableDragStartListener(
+                index: index,
+                child: Icon(
+                  Icons.drag_handle,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SpeakingQueue extends StatelessWidget {
-  const _SpeakingQueue({required this.members});
-
-  final List<Person> members;
-
-  @override
-  Widget build(BuildContext context) {
-    if (members.isEmpty) {
-      return const _EmptySelection(
-        message: 'Escolha participantes para montar a ordem de fala.',
-      );
-    }
-
-    final viewModel = context.read<DailySessionViewModel>();
-
-    return SizedBox(
-      height: 92,
-      child: ReorderableListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: members.length,
-        onReorderItem: viewModel.reorderMembers,
-        buildDefaultDragHandles: false,
-        itemBuilder: (context, index) {
-          final member = members[index];
-
-          return Padding(
-            key: ValueKey(member.id),
-            padding: const EdgeInsets.only(right: _dailyConfigInnerGap),
-            child: ReorderableDragStartListener(
-              index: index,
-              child: Column(
-                children: [
-                  CircleAvatar(radius: 24, child: Text('${index + 1}')),
-                  const SizedBox(height: AppSpacing.xs),
-                  SizedBox(
-                    width: 72,
-                    child: Text(
-                      member.name.split(' ').first,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }
