@@ -11,11 +11,9 @@ import '../../teams/repositories/team_repository.dart';
 import '../viewmodels/home_view_model.dart';
 import 'home_body.dart';
 
-/// Dashboard landing screen: summary cards (above the fold, per the
-/// tech-lead-first design — quick-glance numbers over a chart) followed by
-/// upcoming birthdays and a trend placeholder. Screen only ever depends on
-/// [HomeViewModel], [TeamRepository] and [PersonRepository] (the single DI
-/// wiring point below).
+/// Dashboard landing screen with implemented shortcuts and repository-backed
+/// summaries. Screen only ever depends on [HomeViewModel], [TeamRepository]
+/// and [PersonRepository] (the single DI wiring point below).
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
