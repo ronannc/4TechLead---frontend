@@ -24,7 +24,11 @@ class HomeScreen extends StatelessWidget {
           HomeViewModel(getIt<TeamRepository>(), getIt<PersonRepository>())
             ..load(),
       child: Scaffold(
-        appBar: const AppPageHeader(subtitle: 'Painel', title: '4TechLead'),
+        appBar: const AppPageHeader(
+          subtitle: 'Painel',
+          title: '4TechLead',
+          showBrandMark: true,
+        ),
         body: Selector<HomeViewModel, ViewState>(
           selector: (_, vm) => vm.state,
           builder: (context, state, _) {
