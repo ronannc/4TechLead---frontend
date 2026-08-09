@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/routing/route_paths.dart';
@@ -11,6 +12,8 @@ import '../viewmodels/teams_list_view_model.dart';
 /// so only this subtree rebuilds when the team list changes.
 class TeamsListBody extends StatelessWidget {
   const TeamsListBody({super.key});
+
+  static final _createdAtFormat = DateFormat.yMMMd('pt_BR').add_Hm();
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +32,8 @@ class TeamsListBody extends StatelessWidget {
             AppDataColumn(label: 'Nome', cellBuilder: (team) => team.name),
             AppDataColumn(
               label: 'Criado em',
-              cellBuilder: (team) => team.createdAt.toLocal().toString(),
+              cellBuilder: (team) =>
+                  _createdAtFormat.format(team.createdAt.toLocal()),
             ),
           ],
           onRowTap: (team) =>
