@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/routing/route_paths.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
+import '../../../core/widgets/branding/app_logo.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../viewmodels/login_view_model.dart';
@@ -37,6 +38,11 @@ class _LoginFormState extends State<LoginForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: AppLogo(markSize: 52),
+        ),
+        const SizedBox(height: AppSpacing.lg),
         Text('Entrar', style: theme.textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.lg),
         AppTextField(
