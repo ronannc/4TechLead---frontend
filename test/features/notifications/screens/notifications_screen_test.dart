@@ -44,7 +44,7 @@ void main() {
     expect(find.text('Deploy finalizado'), findsOneWidget);
     expect(find.text('2 notificações recebidas'), findsOneWidget);
 
-    await tester.tap(find.text('Próxima'));
+    await tester.tap(find.text('→'));
     await tester.pumpAndSettle();
 
     expect(find.text('CI falhou'), findsOneWidget);

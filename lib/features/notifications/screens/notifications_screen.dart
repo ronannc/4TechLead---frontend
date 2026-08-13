@@ -309,11 +309,8 @@ class _InlinePagination extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 132,
-              child: AppSecondaryButton(
-                label: 'Anterior',
-                onPressed: onPrevious,
-              ),
+              width: 64,
+              child: AppSecondaryButton(label: '←', onPressed: onPrevious),
             ),
             const SizedBox(width: AppSpacing.sm),
             SizedBox(
@@ -333,8 +330,8 @@ class _InlinePagination extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             SizedBox(
-              width: 132,
-              child: AppSecondaryButton(label: 'Próxima', onPressed: onNext),
+              width: 64,
+              child: AppSecondaryButton(label: '→', onPressed: onNext),
             ),
           ],
         ),
