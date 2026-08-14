@@ -20,9 +20,26 @@ class PersonGrowthViewModel extends BaseViewModel {
   String sessionSearch = '';
   String? actionErrorMessage;
   bool isMutating = false;
+  bool templatesLoaded = false;
+  bool sessionsLoaded = false;
+  bool plansLoaded = false;
+  bool metricsLoaded = false;
+  bool suggestionsLoaded = false;
 
-  Future<void> load() => runCatching(() async {
-    await _loadAll();
+  Future<void> loadOneOnOne() => runCatching(() async {
+    await Future.wait([
+      _ensureTemplates(),
+      _ensureSessions(),
+      _ensureSuggestions(),
+    ]);
+  });
+
+  Future<void> loadPdi() => runCatching(() async {
+    await Future.wait([_ensurePlans(), _ensureSuggestions()]);
+  });
+
+  Future<void> loadAnalysis() => runCatching(() async {
+    await Future.wait([_ensureMetrics(), _ensureSuggestions()]);
   });
 
   Future<void> searchSessions(String value) => runCatching(() async {
@@ -33,6 +50,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       page: sessionPage,
       search: sessionSearch,
     );
+    sessionsLoaded = true;
   });
 
   Future<void> nextSessionPage() => runCatching(() async {
@@ -42,6 +60,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       page: sessionPage,
       search: sessionSearch,
     );
+    sessionsLoaded = true;
   });
 
   Future<void> previousSessionPage() => runCatching(() async {
@@ -54,6 +73,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       page: sessionPage,
       search: sessionSearch,
     );
+    sessionsLoaded = true;
   });
 
   Future<void> createTemplate({
@@ -67,6 +87,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       description: description,
     );
     templates = await _repository.getTemplates();
+    templatesLoaded = true;
   });
 
   Future<void> createSession({
@@ -88,6 +109,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       page: sessionPage,
       search: sessionSearch,
     );
+    sessionsLoaded = true;
   });
 
   Future<void> createPlan({
@@ -102,6 +124,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       targetRole: targetRole,
     );
     plans = await _repository.getDevelopmentPlans(personId);
+    plansLoaded = true;
   });
 
   Future<void> updatePlan({
@@ -119,6 +142,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       progress: progress,
     );
     plans = await _repository.getDevelopmentPlans(personId);
+    plansLoaded = true;
   });
 
   Future<void> createPlanItem({
@@ -134,6 +158,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       evidence: evidence,
     );
     plans = await _repository.getDevelopmentPlans(personId);
+    plansLoaded = true;
   });
 
   Future<void> generateSuggestions({String? focusArea, String? context}) =>
@@ -143,6 +168,7 @@ class PersonGrowthViewModel extends BaseViewModel {
           focusArea: focusArea,
           context: context,
         );
+        suggestionsLoaded = true;
       });
 
   void clearActionError() {
@@ -167,19 +193,43 @@ class PersonGrowthViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> _loadAll() async {
-    final results = await Future.wait([
-      _repository.getTemplates(),
-      _repository.getSessions(personId: personId),
-      _repository.getDevelopmentPlans(personId),
-      _repository.getSuggestions(personId: personId),
-      _repository.getDeliveryMetrics(personId),
-    ]);
+  Future<void> _ensureTemplates() async {
+    if (templatesLoaded) {
+      return;
+    }
+    templates = await _repository.getTemplates();
+    templatesLoaded = true;
+  }
 
-    templates = results[0] as List<OneOnOneTemplate>;
-    sessions = results[1] as List<OneOnOneSession>;
-    plans = results[2] as List<DevelopmentPlan>;
-    suggestions = results[3] as GrowthSuggestions;
-    deliveryMetrics = results[4] as List<PersonDeliveryMetric>;
+  Future<void> _ensureSessions() async {
+    if (sessionsLoaded) {
+      return;
+    }
+    sessions = await _repository.getSessions(personId: personId);
+    sessionsLoaded = true;
+  }
+
+  Future<void> _ensurePlans() async {
+    if (plansLoaded) {
+      return;
+    }
+    plans = await _repository.getDevelopmentPlans(personId);
+    plansLoaded = true;
+  }
+
+  Future<void> _ensureMetrics() async {
+    if (metricsLoaded) {
+      return;
+    }
+    deliveryMetrics = await _repository.getDeliveryMetrics(personId);
+    metricsLoaded = true;
+  }
+
+  Future<void> _ensureSuggestions() async {
+    if (suggestionsLoaded) {
+      return;
+    }
+    suggestions = await _repository.getSuggestions(personId: personId);
+    suggestionsLoaded = true;
   }
 }

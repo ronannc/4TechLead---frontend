@@ -148,7 +148,22 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
                   const SizedBox(height: AppSpacing.md),
                   _PersonTabSelector(
                     selected: _tab,
-                    onChanged: (value) => setState(() => _tab = value),
+                    onChanged: (value) {
+                      setState(() => _tab = value);
+                      switch (value) {
+                        case _PersonTab.info:
+                          break;
+                        case _PersonTab.oneOnOne:
+                          growth.loadOneOnOne();
+                          break;
+                        case _PersonTab.pdi:
+                          growth.loadPdi();
+                          break;
+                        case _PersonTab.analysis:
+                          growth.loadAnalysis();
+                          break;
+                      }
+                    },
                   ),
                   const SizedBox(height: AppSpacing.md),
                   if (growth.actionErrorMessage != null) ...[
@@ -158,16 +173,38 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                   ],
-                  if (growth.state == ViewState.loading &&
+                  if (_tab != _PersonTab.info &&
+                      growth.state == ViewState.loading &&
                       growth.templates.isEmpty &&
-                      growth.sessions.isEmpty)
+                      growth.sessions.isEmpty &&
+                      growth.plans.isEmpty &&
+                      growth.deliveryMetrics.isEmpty &&
+                      growth.suggestions == null)
                     const LoadingView()
-                  else if (growth.state == ViewState.error &&
+                  else if (_tab != _PersonTab.info &&
+                      growth.state == ViewState.error &&
                       growth.templates.isEmpty &&
-                      growth.sessions.isEmpty)
+                      growth.sessions.isEmpty &&
+                      growth.plans.isEmpty &&
+                      growth.deliveryMetrics.isEmpty &&
+                      growth.suggestions == null)
                     ErrorView(
                       message: growth.errorMessage ?? 'Algo deu errado.',
-                      onRetry: growth.load,
+                      onRetry: () {
+                        switch (_tab) {
+                          case _PersonTab.info:
+                            break;
+                          case _PersonTab.oneOnOne:
+                            growth.loadOneOnOne();
+                            break;
+                          case _PersonTab.pdi:
+                            growth.loadPdi();
+                            break;
+                          case _PersonTab.analysis:
+                            growth.loadAnalysis();
+                            break;
+                        }
+                      },
                     )
                   else
                     _tabBody(context, person, growth),
@@ -562,7 +599,10 @@ class _PersonInfoTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        PersonDailySection(teamId: person.teamId),
+        PersonDailySection(
+          teamId: person.teamId,
+          stats: person.dailyStatsSummary,
+        ),
       ],
     );
   }

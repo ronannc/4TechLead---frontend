@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:for_tech_lead/bootstrap.dart';
 import 'package:for_tech_lead/core/responsive/adaptive_scaffold.dart';
-import 'package:for_tech_lead/features/daily/repositories/daily_meeting_repository.dart';
-import 'package:for_tech_lead/features/daily/viewmodels/person_daily_stats_view_model.dart';
 import 'package:for_tech_lead/features/integrations/models/integration_models.dart';
 import 'package:for_tech_lead/features/people/models/contract_type.dart';
 import 'package:for_tech_lead/features/people/models/person.dart';
@@ -24,9 +22,6 @@ class _MockPersonRepository extends Mock implements PersonRepository {}
 class _MockPersonGrowthRepository extends Mock
     implements PersonGrowthRepository {}
 
-class _MockDailyMeetingRepository extends Mock
-    implements DailyMeetingRepository {}
-
 void main() {
   testWidgets(
     'renders the complete person detail screen without layout errors',
@@ -40,16 +35,13 @@ void main() {
 
       final personRepository = _MockPersonRepository();
       final growthRepository = _MockPersonGrowthRepository();
-      final dailyRepository = _MockDailyMeetingRepository();
       _stubRepositories(
         personRepository: personRepository,
         growthRepository: growthRepository,
-        dailyRepository: dailyRepository,
       );
 
       getIt.registerSingleton<PersonRepository>(personRepository);
       getIt.registerSingleton<PersonGrowthRepository>(growthRepository);
-      getIt.registerSingleton<DailyMeetingRepository>(dailyRepository);
 
       await tester.pumpWidget(
         const MaterialApp(home: PersonDetailScreen(personId: '1')),
@@ -72,16 +64,13 @@ void main() {
 
     final personRepository = _MockPersonRepository();
     final growthRepository = _MockPersonGrowthRepository();
-    final dailyRepository = _MockDailyMeetingRepository();
     _stubRepositories(
       personRepository: personRepository,
       growthRepository: growthRepository,
-      dailyRepository: dailyRepository,
     );
 
     getIt.registerSingleton<PersonRepository>(personRepository);
     getIt.registerSingleton<PersonGrowthRepository>(growthRepository);
-    getIt.registerSingleton<DailyMeetingRepository>(dailyRepository);
 
     for (final size in [const Size(390, 900), const Size(1280, 900)]) {
       tester.view.physicalSize = size;
@@ -234,21 +223,16 @@ Future<void> _pumpLoadedBody(
 
   final personRepository = _MockPersonRepository();
   final growthRepository = _MockPersonGrowthRepository();
-  final dailyRepository = _MockDailyMeetingRepository();
 
   _stubRepositories(
     personRepository: personRepository,
     growthRepository: growthRepository,
-    dailyRepository: dailyRepository,
   );
 
   final personViewModel = PersonDetailViewModel(personRepository, 1);
   final growthViewModel = PersonGrowthViewModel(growthRepository, 1);
-  final dailyViewModel = PersonDailyStatsViewModel(dailyRepository, 1);
 
   await personViewModel.load();
-  await growthViewModel.load();
-  await dailyViewModel.load();
 
   await tester.pumpWidget(
     MultiProvider(
@@ -258,9 +242,6 @@ Future<void> _pumpLoadedBody(
         ),
         ChangeNotifierProvider<PersonGrowthViewModel>.value(
           value: growthViewModel,
-        ),
-        ChangeNotifierProvider<PersonDailyStatsViewModel>.value(
-          value: dailyViewModel,
         ),
       ],
       child: MaterialApp(
@@ -328,7 +309,6 @@ void _expectAnalysisSpacing(WidgetTester tester) {
 void _stubRepositories({
   required PersonRepository personRepository,
   required PersonGrowthRepository growthRepository,
-  required DailyMeetingRepository dailyRepository,
 }) {
   when(() => personRepository.getPerson(1)).thenAnswer((_) async => _person());
   when(growthRepository.getTemplates).thenAnswer(
@@ -377,9 +357,6 @@ void _stubRepositories({
   when(
     () => growthRepository.getDeliveryMetrics(1),
   ).thenAnswer((_) async => _deliveryMetrics());
-  when(
-    () => dailyRepository.getAllEntries(personId: 1),
-  ).thenAnswer((_) async => []);
 }
 
 List<PersonDeliveryMetric> _deliveryMetrics() {
@@ -505,6 +482,13 @@ Person _person() {
     position: 'Software Engineer',
     contractType: ContractType.clt,
     seniority: SeniorityLevel.senior,
+    dailyStatsSummary: const PersonDailyStatsSummary(
+      entryCount: 4,
+      averageActualSeconds: 95,
+      onTimePercentage: 75,
+      burnedPercentage: 25,
+      spokeTooLittlePercentage: 0,
+    ),
     createdAt: DateTime(2026, 8, 2),
     updatedAt: DateTime(2026, 8, 2),
   );

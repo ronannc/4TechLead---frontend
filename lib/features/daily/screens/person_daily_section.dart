@@ -1,65 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import '../../../core/routing/route_paths.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/data/app_key_value_row.dart';
-import '../viewmodels/person_daily_stats_view_model.dart';
+import '../../people/models/person.dart';
 
 /// "Dailies" section appended to the end of `PersonDetailBody` — this
 /// person's own aggregated stats, with a link into the team's daily
-/// history. Uses its own [ViewState] (via [PersonDailyStatsViewModel]) so a
-/// stats-fetch failure never takes down the rest of the person's page.
+/// history. The summary comes pre-aggregated from `/people/{id}` so this
+/// section does not trigger an extra request on screen load.
 class PersonDailySection extends StatelessWidget {
-  const PersonDailySection({super.key, required this.teamId});
+  const PersonDailySection({
+    super.key,
+    required this.teamId,
+    required this.stats,
+  });
 
   final int teamId;
+  final PersonDailyStatsSummary? stats;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return Selector<PersonDailyStatsViewModel, ViewState>(
-      selector: (_, vm) => vm.state,
-      builder: (context, state, _) {
-        final viewModel = context.read<PersonDailyStatsViewModel>();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Dailies', style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            switch (state) {
-              ViewState.idle || ViewState.loading => const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              ViewState.error => Text(
-                viewModel.errorMessage ??
-                    'Não foi possível carregar as estatísticas.',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-              ViewState.loaded => _DailyStatsContent(teamId: teamId),
-            },
-          ],
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Dailies', style: theme.textTheme.titleMedium),
+        const SizedBox(height: AppSpacing.sm),
+        _DailyStatsContent(teamId: teamId, stats: stats),
+      ],
     );
   }
 }
 
 class _DailyStatsContent extends StatelessWidget {
-  const _DailyStatsContent({required this.teamId});
+  const _DailyStatsContent({required this.teamId, required this.stats});
 
   final int teamId;
+  final PersonDailyStatsSummary? stats;
 
   @override
   Widget build(BuildContext context) {
-    final stats = context.read<PersonDailyStatsViewModel>().stats;
-
-    if (stats.entryCount == 0) {
+    if (stats == null || stats!.entryCount == 0) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -75,19 +58,19 @@ class _DailyStatsContent extends StatelessWidget {
       children: [
         AppKeyValueRow(
           label: 'Tempo médio de fala',
-          value: '${stats.averageActualSeconds.round()}s',
+          value: '${stats!.averageActualSeconds.round()}s',
         ),
         AppKeyValueRow(
           label: 'No tempo',
-          value: '${stats.onTimePercentage.round()}%',
+          value: '${stats!.onTimePercentage.round()}%',
         ),
         AppKeyValueRow(
           label: 'Queimou o tempo',
-          value: '${stats.burnedPercentage.round()}%',
+          value: '${stats!.burnedPercentage.round()}%',
         ),
         AppKeyValueRow(
           label: 'Falou pouco',
-          value: '${stats.spokeTooLittlePercentage.round()}%',
+          value: '${stats!.spokeTooLittlePercentage.round()}%',
         ),
         const SizedBox(height: AppSpacing.sm),
         _historyLink(context),
