@@ -3,6 +3,43 @@ import 'package:equatable/equatable.dart';
 import 'contract_type.dart';
 import 'seniority_level.dart';
 
+class PersonDailyStatsSummary extends Equatable {
+  const PersonDailyStatsSummary({
+    required this.entryCount,
+    required this.averageActualSeconds,
+    required this.onTimePercentage,
+    required this.burnedPercentage,
+    required this.spokeTooLittlePercentage,
+  });
+
+  factory PersonDailyStatsSummary.fromJson(Map<String, dynamic> json) {
+    return PersonDailyStatsSummary(
+      entryCount: json['entry_count'] as int? ?? 0,
+      averageActualSeconds:
+          (json['average_actual_seconds'] as num?)?.toDouble() ?? 0,
+      onTimePercentage: (json['on_time_percentage'] as num?)?.toDouble() ?? 0,
+      burnedPercentage: (json['burned_percentage'] as num?)?.toDouble() ?? 0,
+      spokeTooLittlePercentage:
+          (json['spoke_too_little_percentage'] as num?)?.toDouble() ?? 0,
+    );
+  }
+
+  final int entryCount;
+  final double averageActualSeconds;
+  final double onTimePercentage;
+  final double burnedPercentage;
+  final double spokeTooLittlePercentage;
+
+  @override
+  List<Object?> get props => [
+    entryCount,
+    averageActualSeconds,
+    onTimePercentage,
+    burnedPercentage,
+    spokeTooLittlePercentage,
+  ];
+}
+
 /// Mirrors the backend's `PersonResource`. `age` is always server-computed
 /// from `birthDate` — never recomputed client-side, so there's a single
 /// source of truth for "today" in that calculation.
@@ -21,6 +58,7 @@ class Person extends Equatable {
     required this.updatedAt,
     this.email,
     this.phone,
+    this.dailyStatsSummary,
   });
 
   final int id;
@@ -34,6 +72,7 @@ class Person extends Equatable {
   final String? phone;
   final DateTime? admissionDate;
   final SeniorityLevel seniority;
+  final PersonDailyStatsSummary? dailyStatsSummary;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -54,6 +93,11 @@ class Person extends Equatable {
           ? null
           : DateTime.parse(json['admission_date'] as String),
       seniority: SeniorityLevel.fromApiValue(json['seniority'] as String),
+      dailyStatsSummary: json['daily_stats_summary'] == null
+          ? null
+          : PersonDailyStatsSummary.fromJson(
+              json['daily_stats_summary'] as Map<String, dynamic>,
+            ),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -72,6 +116,7 @@ class Person extends Equatable {
     phone,
     admissionDate,
     seniority,
+    dailyStatsSummary,
     createdAt,
     updatedAt,
   ];

@@ -7,8 +7,6 @@ import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
-import '../../daily/repositories/daily_meeting_repository.dart';
-import '../../daily/viewmodels/person_daily_stats_view_model.dart';
 import '../repositories/person_growth_repository.dart';
 import '../repositories/person_repository.dart';
 import '../viewmodels/person_detail_view_model.dart';
@@ -16,11 +14,9 @@ import '../viewmodels/person_growth_view_model.dart';
 import 'person_detail_body.dart';
 
 /// Screen depends on [PersonDetailViewModel]/[PersonRepository] for the
-/// person itself and [PersonDailyStatsViewModel]/[DailyMeetingRepository]
-/// for its "Dailies" section (the single DI wiring points below) — never on
-/// `PersonService`/`DailyMeetingService` directly. The stats ViewModel has
-/// its own independent [ViewState] so a stats-fetch failure never takes
-/// down the rest of the person's page.
+/// person itself. Growth sections are lazy-loaded by [PersonGrowthViewModel]
+/// only when the user navigates into those tabs, while the daily summary
+/// comes pre-aggregated from `/people/{id}`.
 class PersonDetailScreen extends StatelessWidget {
   const PersonDetailScreen({super.key, required this.personId});
 
@@ -37,16 +33,10 @@ class PersonDetailScreen extends StatelessWidget {
           )..load(),
         ),
         ChangeNotifierProvider(
-          create: (_) => PersonDailyStatsViewModel(
-            getIt<DailyMeetingRepository>(),
-            int.parse(personId),
-          )..load(),
-        ),
-        ChangeNotifierProvider(
           create: (_) => PersonGrowthViewModel(
             getIt<PersonGrowthRepository>(),
             int.parse(personId),
-          )..load(),
+          ),
         ),
       ],
       child: Scaffold(
