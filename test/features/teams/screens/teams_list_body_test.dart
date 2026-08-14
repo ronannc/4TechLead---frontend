@@ -21,7 +21,7 @@ void main() {
       (_) async => [
         Team(
           id: 1,
-          name: 'Frontend',
+          name: '4TechLead',
           createdAt: DateTime(2026, 1, 1, 10),
           updatedAt: DateTime(2026, 1, 1, 10),
         ),
@@ -44,7 +44,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Frontend'), findsOneWidget);
+    expect(find.text('4TechLead'), findsOneWidget);
     expect(find.text('1 de jan. de 2026 10:00'), findsOneWidget);
     expect(find.textContaining('2026-01-01'), findsNothing);
   });

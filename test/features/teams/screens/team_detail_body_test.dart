@@ -25,7 +25,7 @@ void main() {
     when(() => repository.getTeam(1)).thenAnswer(
       (_) async => Team(
         id: 1,
-        name: 'Frontend',
+        name: '4TechLead',
         createdAt: DateTime(2026),
         updatedAt: DateTime(2026),
       ),
