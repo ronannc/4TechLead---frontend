@@ -26,16 +26,24 @@ class PersonGrowthViewModel extends BaseViewModel {
   bool metricsLoaded = false;
   bool suggestionsLoaded = false;
 
-  Future<void> loadOneOnOne() => runCatching(() async {
-    await Future.wait([
-      _ensureTemplates(),
-      _ensureSessions(),
-      _ensureSuggestions(),
-    ]);
+  Future<void> loadOneOnOneHistory() => runCatching(() async {
+    await _ensureSessions();
   });
 
-  Future<void> loadPdi() => runCatching(() async {
-    await Future.wait([_ensurePlans(), _ensureSuggestions()]);
+  Future<void> loadOneOnOneTemplates() => runCatching(() async {
+    await _ensureTemplates();
+  });
+
+  Future<void> loadOneOnOneSuggestions() => runCatching(() async {
+    await _ensureSuggestions();
+  });
+
+  Future<void> loadPdiTracking() => runCatching(() async {
+    await _ensurePlans();
+  });
+
+  Future<void> loadPdiSuggestions() => runCatching(() async {
+    await _ensureSuggestions();
   });
 
   Future<void> loadAnalysis() => runCatching(() async {

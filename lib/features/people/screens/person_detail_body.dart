@@ -154,10 +154,10 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
                         case _PersonTab.info:
                           break;
                         case _PersonTab.oneOnOne:
-                          growth.loadOneOnOne();
+                          growth.loadOneOnOneHistory();
                           break;
                         case _PersonTab.pdi:
-                          growth.loadPdi();
+                          growth.loadPdiTracking();
                           break;
                         case _PersonTab.analysis:
                           growth.loadAnalysis();
@@ -195,10 +195,10 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
                           case _PersonTab.info:
                             break;
                           case _PersonTab.oneOnOne:
-                            growth.loadOneOnOne();
+                            growth.loadOneOnOneHistory();
                             break;
                           case _PersonTab.pdi:
-                            growth.loadPdi();
+                            growth.loadPdiTracking();
                             break;
                           case _PersonTab.analysis:
                             growth.loadAnalysis();
@@ -227,7 +227,21 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
       _PersonTab.oneOnOne => _OneOnOneTab(
         growth: growth,
         selectedView: _oneOnOneView,
-        onViewChanged: (value) => setState(() => _oneOnOneView = value),
+        onViewChanged: (value) {
+          setState(() => _oneOnOneView = value);
+          switch (value) {
+            case _OneOnOneView.register:
+            case _OneOnOneView.history:
+              growth.loadOneOnOneHistory();
+              break;
+            case _OneOnOneView.templates:
+              growth.loadOneOnOneTemplates();
+              break;
+            case _OneOnOneView.suggestions:
+              growth.loadOneOnOneSuggestions();
+              break;
+          }
+        },
         sessionSearchController: _sessionSearchController,
         templateTitleController: _templateTitleController,
         templateQuestionsController: _templateQuestionsController,
@@ -237,7 +251,18 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
       _PersonTab.pdi => _PdiTab(
         growth: growth,
         selectedView: _pdiView,
-        onViewChanged: (value) => setState(() => _pdiView = value),
+        onViewChanged: (value) {
+          setState(() => _pdiView = value);
+          switch (value) {
+            case _PdiView.create:
+            case _PdiView.tracking:
+              growth.loadPdiTracking();
+              break;
+            case _PdiView.suggestions:
+              growth.loadPdiSuggestions();
+              break;
+          }
+        },
         onCreateItem: (plan) => _showPlanItemDialog(context, growth, plan),
         onEditPlan: (plan) => _showEditPlanDialog(context, growth, plan),
         onCreatePlan: () => _openFocusedFlow(_FocusedFlow.pdi),
@@ -281,6 +306,9 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
   }
 
   void _openFocusedFlow(_FocusedFlow flow) {
+    if (flow == _FocusedFlow.oneOnOne) {
+      context.read<PersonGrowthViewModel>().loadOneOnOneTemplates();
+    }
     setState(() => _focusedFlow = flow);
   }
 

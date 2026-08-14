@@ -17,8 +17,18 @@ class TeamRepository {
     ];
   }
 
-  Future<Team> getTeam(int id) async {
-    final json = await _service.show(id);
+  Future<Team> getTeam(
+    int id, {
+    int peoplePage = 1,
+    int? peoplePerPage,
+    String? peopleSearch,
+  }) async {
+    final json = await _service.show(
+      id,
+      peoplePage: peoplePage,
+      peoplePerPage: peoplePerPage,
+      peopleSearch: peopleSearch,
+    );
 
     return Team.fromJson(json['data'] as Map<String, dynamic>);
   }

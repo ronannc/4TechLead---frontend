@@ -103,6 +103,34 @@ class Person extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'team_id': teamId,
+      'birth_date': birthDate?.toIso8601String(),
+      'age': age,
+      'position': position,
+      'contract_type': contractType.apiValue,
+      'email': email,
+      'phone': phone,
+      'admission_date': admissionDate?.toIso8601String(),
+      'seniority': seniority.apiValue,
+      'daily_stats_summary': dailyStatsSummary == null
+          ? null
+          : {
+              'entry_count': dailyStatsSummary!.entryCount,
+              'average_actual_seconds': dailyStatsSummary!.averageActualSeconds,
+              'on_time_percentage': dailyStatsSummary!.onTimePercentage,
+              'burned_percentage': dailyStatsSummary!.burnedPercentage,
+              'spoke_too_little_percentage':
+                  dailyStatsSummary!.spokeTooLittlePercentage,
+            },
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
   @override
   List<Object?> get props => [
     id,

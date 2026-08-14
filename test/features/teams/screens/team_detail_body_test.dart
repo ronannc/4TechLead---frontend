@@ -22,7 +22,14 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     final repository = _MockTeamRepository();
-    when(() => repository.getTeam(1)).thenAnswer(
+    when(
+      () => repository.getTeam(
+        1,
+        peoplePage: 1,
+        peoplePerPage: 10,
+        peopleSearch: null,
+      ),
+    ).thenAnswer(
       (_) async => Team(
         id: 1,
         name: '4TechLead',

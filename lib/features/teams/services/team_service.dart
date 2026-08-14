@@ -23,10 +23,21 @@ class TeamService {
     }
   }
 
-  Future<Map<String, dynamic>> show(int id) async {
+  Future<Map<String, dynamic>> show(
+    int id, {
+    int peoplePage = 1,
+    int? peoplePerPage,
+    String? peopleSearch,
+  }) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/teams/$id',
+        queryParameters: {
+          'people_page': peoplePage,
+          'people_per_page': ?peoplePerPage,
+          if (peopleSearch != null && peopleSearch.isNotEmpty)
+            'people_search': peopleSearch,
+        },
       );
 
       return response.data!;

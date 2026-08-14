@@ -9,17 +9,14 @@ import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/navigation/app_page_header.dart';
 import '../../../core/widgets/states/error_view.dart';
 import '../../../core/widgets/states/loading_view.dart';
-import '../../people/repositories/person_repository.dart';
-import '../../people/viewmodels/people_list_view_model.dart';
 import '../repositories/team_repository.dart';
 import '../viewmodels/team_detail_view_model.dart';
 import 'team_detail_body.dart';
 import 'team_members_section.dart';
 
-/// Screen depends on [TeamDetailViewModel]/[TeamRepository] for the team
-/// itself and [PeopleListViewModel]/[PersonRepository] for its "Membros"
-/// section (the single DI wiring points below) — never on
-/// `TeamService`/`PersonService` directly.
+/// Screen depends only on [TeamDetailViewModel]/[TeamRepository]. The team
+/// header and paginated "Membros" section come from the same `/teams/{id}`
+/// payload, so the screen no longer needs a second request for people.
 class TeamDetailScreen extends StatelessWidget {
   const TeamDetailScreen({super.key, required this.teamId});
 
@@ -34,15 +31,10 @@ class TeamDetailScreen extends StatelessWidget {
               TeamDetailViewModel(getIt<TeamRepository>(), int.parse(teamId))
                 ..load(),
         ),
-        ChangeNotifierProvider(
-          create: (_) =>
-              PeopleListViewModel(getIt<PersonRepository>(), int.parse(teamId))
-                ..load(),
-        ),
       ],
-      // Builder gives us a context BELOW the providers above — the FAB's
-      // onPressed needs a descendant context to read PeopleListViewModel
-      // (see TeamsListScreen for the same pattern/rationale).
+      // Builder gives us a context BELOW the providers above so the FAB can
+      // refresh the already-provided TeamDetailViewModel after creating a
+      // new team member.
       child: Builder(
         builder: (context) => Scaffold(
           appBar: const AppPageHeader(
@@ -81,7 +73,7 @@ class TeamDetailScreen extends StatelessWidget {
               await context.push(RoutePaths.personCreatePath(teamId));
 
               if (context.mounted) {
-                await context.read<PeopleListViewModel>().load();
+                await context.read<TeamDetailViewModel>().load();
               }
             },
             tooltip: 'Adicionar pessoa',

@@ -199,6 +199,64 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('loads one on one data on demand for each subtab', (
+    tester,
+  ) async {
+    await initializeDateFormatting('pt_BR');
+    final personRepository = _MockPersonRepository();
+    final growthRepository = _MockPersonGrowthRepository();
+
+    _stubRepositories(
+      personRepository: personRepository,
+      growthRepository: growthRepository,
+    );
+
+    await _pumpLoadedBody(
+      tester,
+      const Size(390, 900),
+      personRepository: personRepository,
+      growthRepository: growthRepository,
+    );
+
+    verifyNever(growthRepository.getTemplates);
+    verifyNever(
+      () => growthRepository.getSuggestions(
+        personId: 1,
+        focusArea: null,
+        context: null,
+      ),
+    );
+
+    await _tapTab(tester, '1:1');
+    await tester.pumpAndSettle();
+
+    verify(
+      () => growthRepository.getSessions(personId: 1, page: 1, search: null),
+    ).called(1);
+    verifyNever(growthRepository.getTemplates);
+    verifyNever(
+      () => growthRepository.getSuggestions(
+        personId: 1,
+        focusArea: null,
+        context: null,
+      ),
+    );
+
+    await _tapContextualTab(tester, 'Templates');
+    await tester.pumpAndSettle();
+    verify(growthRepository.getTemplates).called(1);
+
+    await _tapContextualTab(tester, 'Sugestões');
+    await tester.pumpAndSettle();
+    verify(
+      () => growthRepository.getSuggestions(
+        personId: 1,
+        focusArea: null,
+        context: null,
+      ),
+    ).called(1);
+  });
+
   testWidgets('renders when its parent has an unbounded height', (
     tester,
   ) async {
@@ -215,22 +273,27 @@ Future<void> _pumpLoadedBody(
   WidgetTester tester,
   Size size, {
   bool unboundedHeight = false,
+  PersonRepository? personRepository,
+  PersonGrowthRepository? growthRepository,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  final personRepository = _MockPersonRepository();
-  final growthRepository = _MockPersonGrowthRepository();
+  final resolvedPersonRepository = personRepository ?? _MockPersonRepository();
+  final resolvedGrowthRepository =
+      growthRepository ?? _MockPersonGrowthRepository();
 
-  _stubRepositories(
-    personRepository: personRepository,
-    growthRepository: growthRepository,
-  );
+  if (personRepository == null || growthRepository == null) {
+    _stubRepositories(
+      personRepository: resolvedPersonRepository,
+      growthRepository: resolvedGrowthRepository,
+    );
+  }
 
-  final personViewModel = PersonDetailViewModel(personRepository, 1);
-  final growthViewModel = PersonGrowthViewModel(growthRepository, 1);
+  final personViewModel = PersonDetailViewModel(resolvedPersonRepository, 1);
+  final growthViewModel = PersonGrowthViewModel(resolvedGrowthRepository, 1);
 
   await personViewModel.load();
 
