@@ -1,0 +1,318 @@
+[
+  {
+    "chunk_num": 1,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_01.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/CLAUDE.md",
+      "/Users/ronan/Developments/ForTechLead/frontend/README.md",
+      "/Users/ronan/Developments/ForTechLead/frontend/analysis_options.yaml",
+      "/Users/ronan/Developments/ForTechLead/frontend/pubspec.yaml",
+      "/Users/ronan/Developments/ForTechLead/frontend/.github/workflows/for-tech-lead.yml",
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+      "/Users/ronan/Developments/ForTechLead/frontend/linux/CMakeLists.txt",
+      "/Users/ronan/Developments/ForTechLead/frontend/linux/flutter/CMakeLists.txt",
+      "/Users/ronan/Developments/ForTechLead/frontend/linux/runner/CMakeLists.txt",
+      "/Users/ronan/Developments/ForTechLead/frontend/web/index.html",
+      "/Users/ronan/Developments/ForTechLead/frontend/windows/CMakeLists.txt",
+      "/Users/ronan/Developments/ForTechLead/frontend/windows/flutter/CMakeLists.txt",
+      "/Users/ronan/Developments/ForTechLead/frontend/windows/runner/CMakeLists.txt"
+    ]
+  },
+  {
+    "chunk_num": 2,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_02.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/android/app/src/main/res/mipmap-hdpi/ic_launcher.png"
+    ]
+  },
+  {
+    "chunk_num": 3,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_03.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/android/app/src/main/res/mipmap-mdpi/ic_launcher.png"
+    ]
+  },
+  {
+    "chunk_num": 4,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_04.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png"
+    ]
+  },
+  {
+    "chunk_num": 5,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_05.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png"
+    ]
+  },
+  {
+    "chunk_num": 6,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_06.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+    ]
+  },
+  {
+    "chunk_num": 7,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_07.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/assets/brand/4techlead_app_icon.svg"
+    ]
+  },
+  {
+    "chunk_num": 8,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_08.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/assets/brand/4techlead_logo.svg"
+    ]
+  },
+  {
+    "chunk_num": 9,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_09.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png"
+    ]
+  },
+  {
+    "chunk_num": 10,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_10.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png"
+    ]
+  },
+  {
+    "chunk_num": 11,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_11.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png"
+    ]
+  },
+  {
+    "chunk_num": 12,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_12.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png"
+    ]
+  },
+  {
+    "chunk_num": 13,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_13.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png"
+    ]
+  },
+  {
+    "chunk_num": 14,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_14.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png"
+    ]
+  },
+  {
+    "chunk_num": 15,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_15.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png"
+    ]
+  },
+  {
+    "chunk_num": 16,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_16.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png"
+    ]
+  },
+  {
+    "chunk_num": 17,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_17.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png"
+    ]
+  },
+  {
+    "chunk_num": 18,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_18.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png"
+    ]
+  },
+  {
+    "chunk_num": 19,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_19.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png"
+    ]
+  },
+  {
+    "chunk_num": 20,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_20.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png"
+    ]
+  },
+  {
+    "chunk_num": 21,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_21.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png"
+    ]
+  },
+  {
+    "chunk_num": 22,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_22.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png"
+    ]
+  },
+  {
+    "chunk_num": 23,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_23.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png"
+    ]
+  },
+  {
+    "chunk_num": 24,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_24.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png"
+    ]
+  },
+  {
+    "chunk_num": 25,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_25.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png"
+    ]
+  },
+  {
+    "chunk_num": 26,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_26.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png"
+    ]
+  },
+  {
+    "chunk_num": 27,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_27.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png"
+    ]
+  },
+  {
+    "chunk_num": 28,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_28.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png"
+    ]
+  },
+  {
+    "chunk_num": 29,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_29.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png"
+    ]
+  },
+  {
+    "chunk_num": 30,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_30.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png"
+    ]
+  },
+  {
+    "chunk_num": 31,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_31.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png"
+    ]
+  },
+  {
+    "chunk_num": 32,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_32.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png"
+    ]
+  },
+  {
+    "chunk_num": 33,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_33.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png"
+    ]
+  },
+  {
+    "chunk_num": 34,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_34.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/web/favicon.png"
+    ]
+  },
+  {
+    "chunk_num": 35,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_35.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/web/icons/Icon-192.png"
+    ]
+  },
+  {
+    "chunk_num": 36,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_36.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/web/icons/Icon-512.png"
+    ]
+  },
+  {
+    "chunk_num": 37,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_37.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/web/icons/Icon-maskable-192.png"
+    ]
+  },
+  {
+    "chunk_num": 38,
+    "total_chunks": 38,
+    "chunk_path": "/Users/ronan/Developments/ForTechLead/frontend/graphify-out/.graphify_chunk_38.json",
+    "files": [
+      "/Users/ronan/Developments/ForTechLead/frontend/web/icons/Icon-maskable-512.png"
+    ]
+  }
+]

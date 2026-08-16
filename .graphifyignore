@@ -1,0 +1,48 @@
+# Secrets and local environment state
+.env*
+
+# Dart, Flutter and package-manager caches
+.dart_tool/
+.pub-cache/
+.pub/
+.flutter-plugins-dependencies
+.packages
+
+# Build, test and generated output
+build/
+.build/
+coverage/
+ios/Pods/
+android/.gradle/
+android/app/build/
+ios/Flutter/
+macos/Flutter/
+linux/flutter/
+windows/flutter/
+
+# External or non-structural media
+assets/
+web/icons/
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.ico
+**/*.bmp
+**/*.tiff
+**/*.mp3
+**/*.wav
+**/*.m4a
+**/*.aac
+**/*.mp4
+**/*.mov
+**/*.avi
+
+# IDE and transient files
+.idea/
+.atom/
+.history/
+.swiftpm/
+*.log
+*.swp
