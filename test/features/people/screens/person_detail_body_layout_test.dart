@@ -178,6 +178,31 @@ void main() {
     },
   );
 
+  testWidgets(
+    'hides access token action when the user cannot generate access',
+    (tester) async {
+      await initializeDateFormatting('pt_BR');
+
+      await _pumpLoadedBody(
+        tester,
+        const Size(390, 900),
+        canGenerateAccessToken: false,
+      );
+
+      expect(find.text('Editar dados'), findsOneWidget);
+      expect(find.text('Gerar token'), findsNothing);
+      expect(find.text('1:1'), findsNothing);
+      expect(find.text('Novo 1:1'), findsNothing);
+      expect(find.text('Templates'), findsNothing);
+
+      await _tapTab(tester, 'PDI');
+      expect(find.text('Novo PDI'), findsNothing);
+      expect(find.text('PDI autonomia'), findsOneWidget);
+      expect(find.text('Editar'), findsNothing);
+      expect(find.text('Adicionar ação'), findsNothing);
+    },
+  );
+
   testWidgets('fills one on one notes when selecting a template', (
     tester,
   ) async {
@@ -196,6 +221,41 @@ void main() {
 
     expect(find.textContaining('Como foi o ciclo?'), findsOneWidget);
     expect(find.textContaining('Resposta:'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keeps the generated access token visible after closing dialog', (
+    tester,
+  ) async {
+    await initializeDateFormatting('pt_BR');
+    final personRepository = _MockPersonRepository();
+    final growthRepository = _MockPersonGrowthRepository();
+
+    _stubRepositories(
+      personRepository: personRepository,
+      growthRepository: growthRepository,
+    );
+    when(
+      () => personRepository.createInvitationToken(1),
+    ).thenAnswer((_) async => 'ABC234');
+
+    await _pumpLoadedBody(
+      tester,
+      const Size(390, 900),
+      personRepository: personRepository,
+      growthRepository: growthRepository,
+    );
+
+    await tester.tap(find.text('Gerar token'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ABC234'), findsAtLeastNWidgets(1));
+    await tester.tap(find.text('Fechar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Token de acesso'), findsOneWidget);
+    expect(find.text('ABC234'), findsOneWidget);
+    expect(find.text('Copiar'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -275,6 +335,7 @@ Future<void> _pumpLoadedBody(
   bool unboundedHeight = false,
   PersonRepository? personRepository,
   PersonGrowthRepository? growthRepository,
+  bool canGenerateAccessToken = true,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -313,9 +374,15 @@ Future<void> _pumpLoadedBody(
             padding: const EdgeInsets.all(16),
             child: unboundedHeight
                 ? SingleChildScrollView(
-                    child: PersonDetailBody(key: UniqueKey()),
+                    child: PersonDetailBody(
+                      key: UniqueKey(),
+                      canGenerateAccessToken: canGenerateAccessToken,
+                    ),
                   )
-                : PersonDetailBody(key: UniqueKey()),
+                : PersonDetailBody(
+                    key: UniqueKey(),
+                    canGenerateAccessToken: canGenerateAccessToken,
+                  ),
           ),
         ),
       ),
@@ -399,6 +466,9 @@ void _stubRepositories({
   );
   when(
     () => growthRepository.getDevelopmentPlans(1),
+  ).thenAnswer((_) async => [_plan()]);
+  when(
+    growthRepository.getMyDevelopmentPlans,
   ).thenAnswer((_) async => [_plan()]);
   when(
     () => growthRepository.getSuggestions(
@@ -520,6 +590,7 @@ Future<void> _tapTab(WidgetTester tester, String label) async {
   await tester.ensureVisible(tab);
   await tester.pumpAndSettle();
   await tester.tap(tab);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _tapContextualTab(WidgetTester tester, String label) async {

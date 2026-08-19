@@ -96,6 +96,17 @@ void main() {
       expect(person.age, isNull);
       expect(person.admissionDate, isNull);
     });
+
+    test('maps the authenticated person profile', () async {
+      when(
+        () => service.showMe(),
+      ).thenAnswer((_) async => {'data': _personJson()});
+
+      final person = await repository.getMyPerson();
+
+      expect(person.email, 'ada@example.com');
+      verify(() => service.showMe()).called(1);
+    });
   });
 
   group('createPerson', () {
@@ -153,6 +164,48 @@ void main() {
 
       expect(person.birthDate, isNull);
       expect(person.admissionDate, isNull);
+    });
+  });
+
+  group('updatePerson', () {
+    test('maps the updated {data} envelope into a Person', () async {
+      when(
+        () => service.update(
+          id: 1,
+          name: 'Ada Byron',
+          teamId: 1,
+          birthDate: DateTime(1990, 5, 10),
+          position: 'Staff Engineer',
+          contractType: ContractType.pj,
+          admissionDate: DateTime(2020, 1, 15),
+          seniority: SeniorityLevel.specialist,
+          email: null,
+          phone: null,
+        ),
+      ).thenAnswer(
+        (_) async => {
+          'data': _personJson(name: 'Ada Byron')
+            ..['position'] = 'Staff Engineer'
+            ..['contract_type'] = 'pj'
+            ..['seniority'] = 'especialista',
+        },
+      );
+
+      final person = await repository.updatePerson(
+        id: 1,
+        name: 'Ada Byron',
+        teamId: 1,
+        birthDate: DateTime(1990, 5, 10),
+        position: 'Staff Engineer',
+        contractType: ContractType.pj,
+        admissionDate: DateTime(2020, 1, 15),
+        seniority: SeniorityLevel.specialist,
+      );
+
+      expect(person.name, 'Ada Byron');
+      expect(person.position, 'Staff Engineer');
+      expect(person.contractType, ContractType.pj);
+      expect(person.seniority, SeniorityLevel.specialist);
     });
   });
 }

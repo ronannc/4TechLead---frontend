@@ -30,6 +30,7 @@ void main() {
         id: 1,
         name: 'Ada Lovelace',
         email: 'ada@example.com',
+        role: 'tech_lead',
         createdAt: DateTime.utc(2026),
       ),
     );

@@ -91,6 +91,19 @@ void main() {
     expect(plans.single.items.single.competency, 'Arquitetura');
   });
 
+  test('maps my development plans for member access', () async {
+    when(() => service.getMyDevelopmentPlans()).thenAnswer(
+      (_) async => {
+        'data': [_planJson()],
+      },
+    );
+
+    final plans = await repository.getMyDevelopmentPlans();
+
+    expect(plans.single.title, 'PDI autonomia');
+    verify(() => service.getMyDevelopmentPlans()).called(1);
+  });
+
   test('maps growth suggestions', () async {
     when(
       () =>
