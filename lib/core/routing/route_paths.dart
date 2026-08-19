@@ -5,15 +5,18 @@ class RoutePaths {
 
   static const login = '/login';
   static const register = '/register';
+  static const acceptInvitation = '/accept-invitation';
 
   static const home = '/home';
   static const teams = '/teams';
   static const teamDetail = '/teams/:id';
   static const personCreate = '/teams/:teamId/people/new';
   static const personDetail = '/teams/:teamId/people/:personId';
+  static const personEdit = '/teams/:teamId/people/:personId/edit';
   static const notifications = '/notifications';
   static const integrations = '/integrations';
   static const profile = '/profile';
+  static const myPerson = '/me/person';
 
   // Live focus-mode flow: deliberately top-level (outside the ShellRoute),
   // same as /login and /register — the nav bar/rail must NOT stay reachable
@@ -30,6 +33,18 @@ class RoutePaths {
 
   static String personDetailPath(String teamId, String personId) =>
       '/teams/$teamId/people/$personId';
+
+  static String personEditPath(
+    String teamId,
+    String personId, {
+    bool fromProfile = false,
+  }) {
+    final path = '/teams/$teamId/people/$personId/edit';
+
+    return fromProfile ? '$path?source=profile' : path;
+  }
+
+  static String myPersonPath() => myPerson;
 
   static String dailySessionPath({String? initialTeamId}) =>
       initialTeamId == null

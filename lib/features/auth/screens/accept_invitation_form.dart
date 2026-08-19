@@ -5,28 +5,29 @@ import 'package:provider/provider.dart';
 import '../../../core/routing/route_paths.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
-import '../../../core/widgets/branding/app_logo.dart';
 import '../../../core/widgets/buttons/app_primary_button.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
-import '../viewmodels/login_view_model.dart';
+import '../viewmodels/accept_invitation_view_model.dart';
 
-/// The interactive body of [LoginScreen], split into its own file/class so
-/// only this subtree rebuilds while typing/submitting.
-class LoginForm extends StatefulWidget {
-  const LoginForm({super.key});
+class AcceptInvitationForm extends StatefulWidget {
+  const AcceptInvitationForm({super.key});
 
   @override
-  State<LoginForm> createState() => _LoginFormState();
+  State<AcceptInvitationForm> createState() => _AcceptInvitationFormState();
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _AcceptInvitationFormState extends State<AcceptInvitationForm> {
   final _emailController = TextEditingController();
+  final _tokenController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordConfirmationController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
+    _tokenController.dispose();
     _passwordController.dispose();
+    _passwordConfirmationController.dispose();
     super.dispose();
   }
 
@@ -38,29 +39,37 @@ class _LoginFormState extends State<LoginForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: AppLogo(markSize: 52),
+        Text('Validar convite', style: theme.textTheme.headlineMedium),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Use o código recebido. Se você já tem login, informe sua senha atual para vincular o acesso.',
+          style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.lg),
-        Text('Entrar', style: theme.textTheme.headlineMedium),
-        const SizedBox(height: AppSpacing.lg),
         AppTextField(
-          label: 'E-mail',
+          label: 'E-mail cadastrado',
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: AppSpacing.md),
+        AppTextField(label: 'Token', controller: _tokenController),
+        const SizedBox(height: AppSpacing.md),
         AppTextField(
-          label: 'Senha',
+          label: 'Senha atual ou nova senha',
           controller: _passwordController,
           obscureText: true,
         ),
         const SizedBox(height: AppSpacing.md),
-        Selector<LoginViewModel, ViewState>(
+        AppTextField(
+          label: 'Confirmar senha',
+          controller: _passwordConfirmationController,
+          obscureText: true,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Selector<AcceptInvitationViewModel, ViewState>(
           selector: (_, vm) => vm.state,
           builder: (context, state, _) {
-            final viewModel = context.read<LoginViewModel>();
+            final viewModel = context.read<AcceptInvitationViewModel>();
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,11 +83,13 @@ class _LoginFormState extends State<LoginForm> {
                     ),
                   ),
                 AppPrimaryButton(
-                  label: 'Entrar',
+                  label: 'Criar acesso',
                   loading: state == ViewState.loading,
-                  onPressed: () => viewModel.login(
+                  onPressed: () => viewModel.accept(
                     email: _emailController.text,
+                    token: _tokenController.text,
                     password: _passwordController.text,
+                    passwordConfirmation: _passwordConfirmationController.text,
                   ),
                 ),
               ],
@@ -87,12 +98,8 @@ class _LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: AppSpacing.md),
         TextButton(
-          onPressed: () => context.push(RoutePaths.register),
-          child: const Text('Não tem uma conta? Cadastre-se'),
-        ),
-        TextButton(
-          onPressed: () => context.push(RoutePaths.acceptInvitation),
-          child: const Text('Recebi um token de acesso'),
+          onPressed: () => context.go(RoutePaths.login),
+          child: const Text('Voltar para login'),
         ),
       ],
     );

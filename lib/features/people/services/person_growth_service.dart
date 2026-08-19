@@ -76,6 +76,10 @@ class PersonGrowthService {
     );
   }
 
+  Future<Map<String, dynamic>> getMyDevelopmentPlans() {
+    return _get('/me/development-plans');
+  }
+
   Future<Map<String, dynamic>> createDevelopmentPlan({
     required int personId,
     required String title,

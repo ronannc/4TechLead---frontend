@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/routing/route_paths.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
@@ -85,7 +88,9 @@ extension on _PersonTab {
 }
 
 class PersonDetailBody extends StatefulWidget {
-  const PersonDetailBody({super.key});
+  const PersonDetailBody({super.key, required this.canGenerateAccessToken});
+
+  final bool canGenerateAccessToken;
 
   @override
   State<PersonDetailBody> createState() => _PersonDetailBodyState();
@@ -144,11 +149,36 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
 
               return _PersonDetailScrollView(
                 children: [
-                  _PersonHeader(person: person),
+                  _PersonHeader(
+                    person: person,
+                    canGenerateAccessToken: widget.canGenerateAccessToken,
+                  ),
+                  Selector<PersonDetailViewModel, String?>(
+                    selector: (_, vm) => vm.invitationToken,
+                    builder: (context, token, _) {
+                      if (token == null) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: AppSpacing.md),
+                          _InvitationTokenBanner(token: token),
+                        ],
+                      );
+                    },
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   _PersonTabSelector(
                     selected: _tab,
+                    canShowOneOnOne: widget.canGenerateAccessToken,
                     onChanged: (value) {
+                      if (!widget.canGenerateAccessToken &&
+                          value == _PersonTab.oneOnOne) {
+                        return;
+                      }
+
                       setState(() => _tab = value);
                       switch (value) {
                         case _PersonTab.info:
@@ -227,7 +257,13 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
       _PersonTab.oneOnOne => _OneOnOneTab(
         growth: growth,
         selectedView: _oneOnOneView,
+        canManageGrowth: widget.canGenerateAccessToken,
         onViewChanged: (value) {
+          if (!widget.canGenerateAccessToken &&
+              value == _OneOnOneView.templates) {
+            return;
+          }
+
           setState(() => _oneOnOneView = value);
           switch (value) {
             case _OneOnOneView.register:
@@ -251,6 +287,7 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
       _PersonTab.pdi => _PdiTab(
         growth: growth,
         selectedView: _pdiView,
+        canManageGrowth: widget.canGenerateAccessToken,
         onViewChanged: (value) {
           setState(() => _pdiView = value);
           switch (value) {
@@ -533,18 +570,25 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
 }
 
 class _PersonHeader extends StatelessWidget {
-  const _PersonHeader({required this.person});
+  const _PersonHeader({
+    required this.person,
+    required this.canGenerateAccessToken,
+  });
 
   final Person person;
+  final bool canGenerateAccessToken;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final viewModel = context.read<PersonDetailViewModel>();
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final actionsWidth = canGenerateAccessToken ? 296.0 : 140.0;
         final detailsWidth =
-            _availableWidth(constraints, context) - (56 + AppSpacing.md);
+            _availableWidth(constraints, context) -
+            (56 + AppSpacing.md + actionsWidth + AppSpacing.sm);
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -554,19 +598,56 @@ class _PersonHeader extends StatelessWidget {
               children: [
                 CircleAvatar(radius: 28, child: Text(_initials(person.name))),
                 const SizedBox(width: AppSpacing.md),
-                SizedBox(
-                  width: detailsWidth > 0 ? detailsWidth : 0,
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(person.name, style: theme.textTheme.headlineMedium),
+                      Text(
+                        person.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineMedium,
+                      ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         'Perfil do colaborador',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                SizedBox(
+                  width: detailsWidth > 360
+                      ? actionsWidth
+                      : canGenerateAccessToken
+                      ? 128
+                      : 140,
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      SizedBox(
+                        width: detailsWidth > 360 ? 140 : 128,
+                        child: AppSecondaryButton(
+                          label: 'Editar dados',
+                          onPressed: () => _editPerson(context, viewModel),
+                        ),
+                      ),
+                      if (canGenerateAccessToken)
+                        SizedBox(
+                          width: detailsWidth > 360 ? 140 : 128,
+                          child: AppSecondaryButton(
+                            label: 'Gerar token',
+                            onPressed: () =>
+                                _showInvitationTokenDialog(context, viewModel),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -576,6 +657,172 @@ class _PersonHeader extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _editPerson(
+    BuildContext context,
+    PersonDetailViewModel viewModel,
+  ) async {
+    final saved = await context.push<bool>(
+      RoutePaths.personEditPath('${person.teamId}', '${person.id}'),
+    );
+
+    if (saved == true) {
+      await viewModel.load();
+    }
+  }
+
+  Future<void> _showInvitationTokenDialog(
+    BuildContext context,
+    PersonDetailViewModel viewModel,
+  ) async {
+    await viewModel.createInvitationToken();
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final token = viewModel.invitationToken;
+    final error = viewModel.invitationErrorMessage;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+
+        return AlertDialog(
+          title: const Text('Token de acesso'),
+          content: token == null
+              ? Text(
+                  error ?? 'Não foi possível gerar o token.',
+                  style: TextStyle(color: theme.colorScheme.error),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SelectableText(
+                      token,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        letterSpacing: 4,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Este código também ficará visível no perfil enquanto a tela estiver aberta.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+          actions: [
+            if (token != null)
+              TextButton(
+                onPressed: () => _copyToken(dialogContext, token),
+                child: const Text('Copiar'),
+              ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Fechar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _copyToken(BuildContext context, String token) async {
+    await Clipboard.setData(ClipboardData(text: token));
+
+    if (!context.mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Token copiado.')));
+  }
+}
+
+class _InvitationTokenBanner extends StatelessWidget {
+  const _InvitationTokenBanner({required this.token});
+
+  final String token;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return _Surface(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = _availableWidth(constraints, context) < 520;
+
+          final tokenBlock = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Token de acesso',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              SelectableText(
+                token,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  letterSpacing: 4,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Dite este código para a pessoa finalizar o cadastro.',
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          );
+
+          final copyButton = AppSecondaryButton(
+            label: 'Copiar',
+            onPressed: () => _copyToken(context),
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                tokenBlock,
+                const SizedBox(height: AppSpacing.sm),
+                copyButton,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: tokenBlock),
+              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: 120, child: copyButton),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _copyToken(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: token));
+
+    if (!context.mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Token copiado.')));
   }
 }
 
@@ -637,16 +884,26 @@ class _PersonInfoTab extends StatelessWidget {
 }
 
 class _PersonTabSelector extends StatelessWidget {
-  const _PersonTabSelector({required this.selected, required this.onChanged});
+  const _PersonTabSelector({
+    required this.selected,
+    required this.canShowOneOnOne,
+    required this.onChanged,
+  });
 
   final _PersonTab selected;
+  final bool canShowOneOnOne;
   final ValueChanged<_PersonTab> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return _ContextualTabBar<_PersonTab>(
       selected: selected,
-      values: _PersonTab.values,
+      values: [
+        _PersonTab.info,
+        if (canShowOneOnOne) _PersonTab.oneOnOne,
+        _PersonTab.pdi,
+        _PersonTab.analysis,
+      ],
       labelOf: (tab) => tab.label,
       iconOf: (tab) => tab.icon,
       onChanged: onChanged,
@@ -662,6 +919,7 @@ class _OneOnOneTab extends StatelessWidget {
     required this.sessionSearchController,
     required this.templateTitleController,
     required this.templateQuestionsController,
+    required this.canManageGrowth,
     required this.onCreateSession,
     required this.onCreateTemplate,
   });
@@ -672,6 +930,7 @@ class _OneOnOneTab extends StatelessWidget {
   final TextEditingController sessionSearchController;
   final TextEditingController templateTitleController;
   final TextEditingController templateQuestionsController;
+  final bool canManageGrowth;
   final VoidCallback onCreateSession;
   final VoidCallback onCreateTemplate;
 
@@ -687,14 +946,14 @@ class _OneOnOneTab extends StatelessWidget {
           helpMessage:
               'Prepare 2 ou 3 perguntas, anote respostas importantes, decisões, combinados e sinais de evolução ou bloqueio.',
           primaryLabel: 'Novo 1:1',
-          onPrimaryPressed: onCreateSession,
+          onPrimaryPressed: canManageGrowth ? onCreateSession : null,
         ),
         const SizedBox(height: AppSpacing.sm),
         _ContextualTabBar<_OneOnOneView>(
           selected: selectedView,
-          values: const [
+          values: [
             _OneOnOneView.history,
-            _OneOnOneView.templates,
+            if (canManageGrowth) _OneOnOneView.templates,
             _OneOnOneView.suggestions,
           ],
           labelOf: (view) => view.label,
@@ -963,6 +1222,7 @@ class _PdiTab extends StatelessWidget {
     required this.growth,
     required this.selectedView,
     required this.onViewChanged,
+    required this.canManageGrowth,
     required this.onCreatePlan,
     required this.onCreateItem,
     required this.onEditPlan,
@@ -971,6 +1231,7 @@ class _PdiTab extends StatelessWidget {
   final PersonGrowthViewModel growth;
   final _PdiView selectedView;
   final ValueChanged<_PdiView> onViewChanged;
+  final bool canManageGrowth;
   final VoidCallback onCreatePlan;
   final ValueChanged<DevelopmentPlan> onCreateItem;
   final ValueChanged<DevelopmentPlan> onEditPlan;
@@ -987,7 +1248,7 @@ class _PdiTab extends StatelessWidget {
           helpMessage:
               'Descreva uma evolução esperada, conecte com uma competência e acompanhe por ações concretas e evidências observáveis.',
           primaryLabel: 'Novo PDI',
-          onPrimaryPressed: onCreatePlan,
+          onPrimaryPressed: canManageGrowth ? onCreatePlan : null,
         ),
         const SizedBox(height: AppSpacing.sm),
         _ContextualTabBar<_PdiView>(
@@ -1001,6 +1262,7 @@ class _PdiTab extends StatelessWidget {
         switch (selectedView) {
           _PdiView.create || _PdiView.tracking => _PdiTrackingView(
             plans: growth.plans,
+            canManageGrowth: canManageGrowth,
             onCreateItem: onCreateItem,
             onEditPlan: onEditPlan,
           ),
@@ -1125,11 +1387,13 @@ class _PdiSuggestionsView extends StatelessWidget {
 class _PdiTrackingView extends StatelessWidget {
   const _PdiTrackingView({
     required this.plans,
+    required this.canManageGrowth,
     required this.onCreateItem,
     required this.onEditPlan,
   });
 
   final List<DevelopmentPlan> plans;
+  final bool canManageGrowth;
   final ValueChanged<DevelopmentPlan> onCreateItem;
   final ValueChanged<DevelopmentPlan> onEditPlan;
 
@@ -1141,8 +1405,9 @@ class _PdiTrackingView extends StatelessWidget {
       children: [
         _SectionTitle(
           title: 'Acompanhar PDIs',
-          subtitle:
-              'Atualize progresso e cadastre ações do plano em andamento.',
+          subtitle: canManageGrowth
+              ? 'Atualize progresso e cadastre ações do plano em andamento.'
+              : 'Visualize progresso, ações e evidências do plano em andamento.',
         ),
         const SizedBox(height: AppSpacing.sm),
         if (plans.isEmpty)
@@ -1154,6 +1419,7 @@ class _PdiTrackingView extends StatelessWidget {
           for (final plan in plans)
             _PlanTile(
               plan: plan,
+              canManageGrowth: canManageGrowth,
               onCreateItem: () => onCreateItem(plan),
               onEditPlan: () => onEditPlan(plan),
             ),
@@ -1454,11 +1720,13 @@ class _SessionTile extends StatelessWidget {
 class _PlanTile extends StatelessWidget {
   const _PlanTile({
     required this.plan,
+    required this.canManageGrowth,
     required this.onCreateItem,
     required this.onEditPlan,
   });
 
   final DevelopmentPlan plan;
+  final bool canManageGrowth;
   final VoidCallback onCreateItem;
   final VoidCallback onEditPlan;
 
@@ -1490,23 +1758,26 @@ class _PlanTile extends StatelessWidget {
               subtitle:
                   '${item.status} · ${item.competency ?? 'sem competência'}',
             ),
-          Row(
-            children: [
-              Expanded(
-                child: AppSecondaryButton(
-                  label: 'Editar',
-                  onPressed: onEditPlan,
+          if (canManageGrowth) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: AppSecondaryButton(
+                    label: 'Editar',
+                    onPressed: onEditPlan,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: AppPrimaryButton(
-                  label: 'Adicionar ação',
-                  onPressed: onCreateItem,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppPrimaryButton(
+                    label: 'Adicionar ação',
+                    onPressed: onCreateItem,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -1570,7 +1841,7 @@ class _ModuleHeader extends StatelessWidget {
   final String subtitle;
   final String helpMessage;
   final String primaryLabel;
-  final VoidCallback onPrimaryPressed;
+  final VoidCallback? onPrimaryPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -1582,14 +1853,18 @@ class _ModuleHeader extends StatelessWidget {
           subtitle: subtitle,
           helpMessage: helpMessage,
         );
-        final primaryAction = AppPrimaryButton(
-          label: primaryLabel,
-          onPressed: onPrimaryPressed,
-        );
+        final primaryAction = onPrimaryPressed == null
+            ? null
+            : AppPrimaryButton(
+                label: primaryLabel,
+                onPressed: onPrimaryPressed,
+              );
 
         return SizedBox(
           width: availableWidth,
-          child: availableWidth < 460
+          child: primaryAction == null
+              ? titleBlock
+              : availableWidth < 460
               ? Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,

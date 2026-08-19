@@ -36,6 +36,22 @@ class AuthRepository {
     return _signInFromResponse(json);
   }
 
+  Future<AppUser> acceptPersonInvitation({
+    required String email,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final json = await _service.acceptPersonInvitation(
+      email: email,
+      token: token,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+    );
+
+    return _signInFromResponse(json);
+  }
+
   Future<void> logout() async {
     await _service.logout();
     await _authSession.signOut();
@@ -44,12 +60,31 @@ class AuthRepository {
   Future<AppUser> me() async {
     final json = await _service.me();
 
-    return AppUser.fromJson(json['data'] as Map<String, dynamic>);
+    final user = AppUser.fromJson(json['data'] as Map<String, dynamic>);
+    await _authSession.updateAccess(role: user.role, personId: user.personId);
+
+    return user;
+  }
+
+  Future<void> resolveCurrentUserAccess() async {
+    if (!_authSession.isAuthenticated || _authSession.hasResolvedAccess) {
+      return;
+    }
+
+    try {
+      await me();
+    } catch (_) {
+      await _authSession.signOut();
+    }
   }
 
   Future<AppUser> _signInFromResponse(Map<String, dynamic> json) async {
     final user = AppUser.fromJson(json['data'] as Map<String, dynamic>);
-    await _authSession.signIn(json['token'] as String);
+    await _authSession.signIn(
+      json['token'] as String,
+      role: user.role,
+      personId: user.personId,
+    );
 
     return user;
   }

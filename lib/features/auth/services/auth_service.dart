@@ -33,6 +33,29 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>> acceptPersonInvitation({
+    required String email,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/auth/accept-person-invitation',
+        data: {
+          'email': email,
+          'token': token,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        },
+      );
+
+      return response.data!;
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,

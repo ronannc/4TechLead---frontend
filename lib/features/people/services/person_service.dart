@@ -50,6 +50,18 @@ class PersonService {
     }
   }
 
+  Future<Map<String, dynamic>> showMe() async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/me/person',
+      );
+
+      return response.data!;
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
   Future<Map<String, dynamic>> store({
     required String name,
     required int teamId,
@@ -67,15 +79,68 @@ class PersonService {
         data: {
           'name': name,
           'team_id': teamId,
-          if (birthDate != null) 'birth_date': _dateFormat.format(birthDate),
+          'birth_date': birthDate == null
+              ? null
+              : _dateFormat.format(birthDate),
           'position': position,
           'contract_type': contractType.apiValue,
-          if (admissionDate != null)
-            'admission_date': _dateFormat.format(admissionDate),
+          'admission_date': admissionDate == null
+              ? null
+              : _dateFormat.format(admissionDate),
           'seniority': seniority.apiValue,
           'email': ?email,
           'phone': ?phone,
         },
+      );
+
+      return response.data!;
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> update({
+    required int id,
+    required String name,
+    required int teamId,
+    DateTime? birthDate,
+    required String position,
+    required ContractType contractType,
+    DateTime? admissionDate,
+    required SeniorityLevel seniority,
+    String? email,
+    String? phone,
+  }) async {
+    try {
+      final response = await _client.dio.put<Map<String, dynamic>>(
+        '/people/$id',
+        data: {
+          'name': name,
+          'team_id': teamId,
+          'birth_date': birthDate == null
+              ? null
+              : _dateFormat.format(birthDate),
+          'position': position,
+          'contract_type': contractType.apiValue,
+          'admission_date': admissionDate == null
+              ? null
+              : _dateFormat.format(admissionDate),
+          'seniority': seniority.apiValue,
+          'email': email,
+          'phone': phone,
+        },
+      );
+
+      return response.data!;
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> createInvitation(int personId) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/people/$personId/invitation',
       );
 
       return response.data!;

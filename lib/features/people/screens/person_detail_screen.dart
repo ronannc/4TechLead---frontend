@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../bootstrap.dart';
+import '../../../core/auth/auth_session.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/viewmodels/base_view_model.dart';
 import '../../../core/widgets/navigation/app_page_header.dart';
@@ -24,6 +25,9 @@ class PersonDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canGenerateAccessToken =
+        !getIt.isRegistered<AuthSession>() || getIt<AuthSession>().isTechLead;
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -36,6 +40,7 @@ class PersonDetailScreen extends StatelessWidget {
           create: (_) => PersonGrowthViewModel(
             getIt<PersonGrowthRepository>(),
             int.parse(personId),
+            canManageGrowth: canGenerateAccessToken,
           ),
         ),
       ],
@@ -58,7 +63,9 @@ class PersonDetailScreen extends StatelessWidget {
                   message: viewModel.errorMessage ?? 'Algo deu errado.',
                   onRetry: viewModel.load,
                 ),
-                ViewState.loaded => const PersonDetailBody(),
+                ViewState.loaded => PersonDetailBody(
+                  canGenerateAccessToken: canGenerateAccessToken,
+                ),
               };
             },
           ),

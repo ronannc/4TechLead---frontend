@@ -45,6 +45,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(getIt<AuthService>(), getIt<AuthSession>()),
   );
+  await getIt<AuthRepository>().resolveCurrentUserAccess();
 
   getIt.registerLazySingleton<TeamService>(
     () => TeamService(getIt<DioClient>()),

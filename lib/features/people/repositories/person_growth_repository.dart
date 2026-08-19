@@ -62,6 +62,11 @@ class PersonGrowthRepository {
     return _list(json, DevelopmentPlan.fromJson);
   }
 
+  Future<List<DevelopmentPlan>> getMyDevelopmentPlans() async {
+    final json = await _service.getMyDevelopmentPlans();
+    return _list(json, DevelopmentPlan.fromJson);
+  }
+
   Future<DevelopmentPlan> createDevelopmentPlan({
     required int personId,
     required String title,

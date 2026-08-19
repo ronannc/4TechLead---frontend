@@ -5,10 +5,15 @@ import '../models/person_growth_models.dart';
 import '../repositories/person_growth_repository.dart';
 
 class PersonGrowthViewModel extends BaseViewModel {
-  PersonGrowthViewModel(this._repository, this.personId);
+  PersonGrowthViewModel(
+    this._repository,
+    this.personId, {
+    this.canManageGrowth = true,
+  });
 
   final PersonGrowthRepository _repository;
   final int personId;
+  final bool canManageGrowth;
 
   List<OneOnOneTemplate> templates = [];
   List<OneOnOneSession> sessions = [];
@@ -131,7 +136,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       summary: summary,
       targetRole: targetRole,
     );
-    plans = await _repository.getDevelopmentPlans(personId);
+    plans = await _getReadableDevelopmentPlans();
     plansLoaded = true;
   });
 
@@ -149,7 +154,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       status: status,
       progress: progress,
     );
-    plans = await _repository.getDevelopmentPlans(personId);
+    plans = await _getReadableDevelopmentPlans();
     plansLoaded = true;
   });
 
@@ -165,7 +170,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       competency: competency,
       evidence: evidence,
     );
-    plans = await _repository.getDevelopmentPlans(personId);
+    plans = await _getReadableDevelopmentPlans();
     plansLoaded = true;
   });
 
@@ -221,8 +226,16 @@ class PersonGrowthViewModel extends BaseViewModel {
     if (plansLoaded) {
       return;
     }
-    plans = await _repository.getDevelopmentPlans(personId);
+    plans = await _getReadableDevelopmentPlans();
     plansLoaded = true;
+  }
+
+  Future<List<DevelopmentPlan>> _getReadableDevelopmentPlans() {
+    if (canManageGrowth) {
+      return _repository.getDevelopmentPlans(personId);
+    }
+
+    return _repository.getMyDevelopmentPlans();
   }
 
   Future<void> _ensureMetrics() async {

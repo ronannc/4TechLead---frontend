@@ -42,6 +42,7 @@ class _PersonFormState extends State<PersonForm> {
   String? _seniorityError;
   String? _emailError;
   String? _phoneError;
+  int? _filledPersonId;
 
   @override
   void dispose() {
@@ -164,7 +165,7 @@ class _PersonFormState extends State<PersonForm> {
     final phone = _phoneController.text.trim();
 
     final viewModel = context.read<PersonFormViewModel>();
-    await viewModel.createPerson(
+    await viewModel.savePerson(
       name: name,
       birthDate: birthDate,
       position: position,
@@ -176,13 +177,32 @@ class _PersonFormState extends State<PersonForm> {
     );
 
     if (viewModel.state == ViewState.loaded && mounted) {
-      context.pop();
+      context.pop(true);
     }
+  }
+
+  void _fillFromPerson(PersonFormViewModel viewModel) {
+    final person = viewModel.person;
+    if (person == null || _filledPersonId == person.id) {
+      return;
+    }
+
+    _filledPersonId = person.id;
+    _nameController.text = person.name;
+    _emailController.text = person.email ?? '';
+    _phoneController.text = person.phone ?? '';
+    _positionController.text = person.position;
+    _birthDate = person.birthDate;
+    _admissionDate = person.admissionDate;
+    _contractType = person.contractType;
+    _seniority = person.seniority;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final viewModel = context.watch<PersonFormViewModel>();
+    _fillFromPerson(viewModel);
 
     return SingleChildScrollView(
       child: Column(
@@ -282,30 +302,23 @@ class _PersonFormState extends State<PersonForm> {
             }),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Selector<PersonFormViewModel, ViewState>(
-            selector: (_, vm) => vm.state,
-            builder: (context, state, _) {
-              final viewModel = context.read<PersonFormViewModel>();
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (state == ViewState.error)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Text(
-                        viewModel.errorMessage ?? 'Algo deu errado.',
-                        style: TextStyle(color: theme.colorScheme.error),
-                      ),
-                    ),
-                  AppPrimaryButton(
-                    label: 'Adicionar',
-                    loading: state == ViewState.loading,
-                    onPressed: _submit,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (viewModel.state == ViewState.error)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Text(
+                    viewModel.errorMessage ?? 'Algo deu errado.',
+                    style: TextStyle(color: theme.colorScheme.error),
                   ),
-                ],
-              );
-            },
+                ),
+              AppPrimaryButton(
+                label: viewModel.isEditing ? 'Salvar alterações' : 'Adicionar',
+                loading: viewModel.state == ViewState.loading,
+                onPressed: _submit,
+              ),
+            ],
           ),
         ],
       ),
