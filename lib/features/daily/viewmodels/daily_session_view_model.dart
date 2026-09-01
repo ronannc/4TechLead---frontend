@@ -70,6 +70,8 @@ class DailySessionViewModel extends BaseViewModel {
 
   int _currentTurnIndex = 0;
   int get currentTurnIndex => _currentTurnIndex;
+  bool get canGoToPreviousTurn =>
+      _phase == DailySessionPhase.running && _currentTurnIndex > 0;
 
   DailyTurnDraft? get currentTurn =>
       _currentTurnIndex < _turns.length ? _turns[_currentTurnIndex] : null;
@@ -229,11 +231,14 @@ class DailySessionViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  void _beginCurrentTurn({DailyCue? initialCue}) {
-    _turnStartedAt = _now();
+  void _beginCurrentTurn({
+    DailyCue? initialCue,
+    int initialElapsedSeconds = 0,
+  }) {
+    _turnStartedAt = _now().subtract(Duration(seconds: initialElapsedSeconds));
     _pausedAt = null;
     _isPaused = false;
-    elapsedSeconds.value = 0;
+    elapsedSeconds.value = initialElapsedSeconds;
     _lastCueLevel = _CueLevel.normal;
     if (initialCue != null) {
       cue.value = initialCue;
@@ -334,6 +339,20 @@ class DailySessionViewModel extends BaseViewModel {
   /// Ends the current turn and advances to the next person, or moves to
   /// review if everyone has spoken.
   void nextTurn() => _endTurn(advance: true);
+
+  void previousTurn() {
+    if (!canGoToPreviousTurn) {
+      return;
+    }
+
+    _ticker?.cancel();
+    _currentTurnIndex--;
+    _beginCurrentTurn(
+      initialCue: DailyCue.turnAdvanced,
+      initialElapsedSeconds: currentTurn?.actualSeconds ?? 0,
+    );
+    notifyListeners();
+  }
 
   /// Ends the current turn and jumps straight to review — any people who
   /// haven't spoken yet are simply left out of the saved meeting.

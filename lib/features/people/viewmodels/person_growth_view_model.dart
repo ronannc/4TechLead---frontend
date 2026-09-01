@@ -108,6 +108,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     String? notes,
     int? templateId,
     List<String>? questions,
+    Map<String, dynamic>? answers,
   }) => _runMutation(() async {
     await _repository.createSession(
       personId: personId,
@@ -116,6 +117,7 @@ class PersonGrowthViewModel extends BaseViewModel {
       heldAt: DateTime.now(),
       templateId: templateId,
       questions: questions,
+      answers: answers,
     );
     sessions = await _repository.getSessions(
       personId: personId,

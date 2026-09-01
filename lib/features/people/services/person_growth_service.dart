@@ -31,19 +31,72 @@ class PersonGrowthService {
   }
 
   Future<Map<String, dynamic>> getSessions({
-    required int personId,
+    int? personId,
     int page = 1,
     String? search,
+    String? status,
+    int perPage = 10,
   }) {
     return _get(
       '/one-on-one-sessions',
       query: {
         'page': page,
-        'per_page': 10,
-        'filters[person_id]': personId,
-        'order[held_at]': 'desc',
+        'per_page': perPage,
+        'filters[person_id]': ?personId,
+        if (status != null && status.isNotEmpty) 'filters[status]': status,
+        if (status == 'planned') 'order[scheduled_for]': 'asc',
+        if (status != 'planned') 'order[held_at]': 'desc',
         if (search != null && search.isNotEmpty) 'search': search,
       },
+    );
+  }
+
+  Future<Map<String, dynamic>> getPersonOneOnOneNotes({
+    int? personId,
+    String? status,
+    int page = 1,
+    int perPage = 50,
+  }) {
+    return _get(
+      '/person-one-on-one-notes',
+      query: {
+        'page': page,
+        'per_page': perPage,
+        'filters[person_id]': ?personId,
+        if (status != null && status.isNotEmpty) 'filters[status]': status,
+        'order[occurred_at]': 'desc',
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> createPersonOneOnOneNote({
+    required int personId,
+    required String title,
+    String? body,
+    DateTime? occurredAt,
+  }) {
+    return _post(
+      '/person-one-on-one-notes',
+      data: {
+        'person_id': personId,
+        'title': title,
+        'body': ?body,
+        'status': 'open',
+        'occurred_at': occurredAt == null
+            ? null
+            : _dateFormat.format(occurredAt),
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> updatePersonOneOnOneNote({
+    required int id,
+    String? status,
+    int? sessionId,
+  }) {
+    return _put(
+      '/person-one-on-one-notes/$id',
+      data: {'status': ?status, 'one_on_one_session_id': ?sessionId},
     );
   }
 
@@ -52,18 +105,25 @@ class PersonGrowthService {
     required String title,
     String? notes,
     DateTime? heldAt,
+    DateTime? scheduledFor,
     int? templateId,
     List<String>? questions,
+    Map<String, dynamic>? answers,
+    String status = 'completed',
   }) {
     return _post(
       '/one-on-one-sessions',
       data: {
         'person_id': personId,
         'title': title,
-        'status': 'completed',
+        'status': status,
         'held_at': heldAt == null ? null : _dateFormat.format(heldAt),
+        'scheduled_for': scheduledFor == null
+            ? null
+            : _dateFormat.format(scheduledFor),
         'one_on_one_template_id': ?templateId,
         'questions': ?questions,
+        'answers': ?answers,
         'notes': ?notes,
       },
     );

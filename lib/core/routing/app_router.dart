@@ -10,6 +10,7 @@ import '../../features/daily/screens/daily_session_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/integrations/screens/integrations_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/one_on_ones/screens/one_on_ones_screen.dart';
 import '../../features/people/screens/person_detail_screen.dart';
 import '../../features/people/screens/person_form_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
@@ -23,6 +24,11 @@ import 'route_paths.dart';
 List<AppNavDestination> _navDestinationsFor(AuthSession authSession) {
   if (authSession.isMember) {
     return [
+      const AppNavDestination(
+        label: '1:1',
+        icon: Icons.forum_outlined,
+        path: RoutePaths.oneOnOnes,
+      ),
       const AppNavDestination(
         label: 'Perfil',
         icon: Icons.person_outline,
@@ -46,6 +52,11 @@ List<AppNavDestination> _navDestinationsFor(AuthSession authSession) {
       label: 'Notificações',
       icon: Icons.notifications_none,
       path: RoutePaths.notifications,
+    ),
+    const AppNavDestination(
+      label: '1:1',
+      icon: Icons.forum_outlined,
+      path: RoutePaths.oneOnOnes,
     ),
     const AppNavDestination(
       label: 'Integrações',
@@ -75,6 +86,7 @@ bool _canAccessRoute(AuthSession authSession, GoRouterState state) {
     myPersonPath: RoutePaths.myPerson,
     personDetailPath: RoutePaths.personDetail,
     personEditPath: RoutePaths.personEdit,
+    oneOnOnesPath: RoutePaths.oneOnOnes,
     personId: state.pathParameters['personId'],
   );
 }
@@ -195,6 +207,13 @@ GoRouter createAppRouter(AuthSession authSession) {
           GoRoute(
             path: RoutePaths.notifications,
             builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: RoutePaths.oneOnOnes,
+            builder: (context, state) => OneOnOnesScreen(
+              initialPersonId: state.uri.queryParameters['person'],
+              initialTab: state.uri.queryParameters['tab'],
+            ),
           ),
           GoRoute(
             path: RoutePaths.integrations,

@@ -193,6 +193,51 @@ void main() {
     });
   });
 
+  test(
+    'previousTurn returns to the previous person preserving elapsed time',
+    () {
+      fakeAsync((async) {
+        final start = DateTime(2026);
+        final viewModel = DailySessionViewModel(
+          personRepository,
+          meetingRepository,
+          teamRepository,
+          initialTeamId: 1,
+          now: () => start.add(async.elapsed),
+        );
+
+        viewModel.loadParticipants();
+        async.flushMicrotasks();
+        viewModel.start();
+
+        async.elapse(const Duration(seconds: 30));
+        viewModel.nextTurn();
+
+        expect(viewModel.currentTurnIndex, 1);
+        expect(viewModel.turns.first.actualSeconds, 30);
+        expect(viewModel.turns.last.actualSeconds, isNull);
+        expect(viewModel.canGoToPreviousTurn, isTrue);
+
+        async.elapse(const Duration(seconds: 8));
+        viewModel.previousTurn();
+
+        expect(viewModel.currentTurnIndex, 0);
+        expect(viewModel.currentTurn?.person.name, 'Ada Lovelace');
+        expect(viewModel.elapsedSeconds.value, 30);
+        expect(viewModel.turns.last.actualSeconds, isNull);
+        expect(viewModel.canGoToPreviousTurn, isFalse);
+
+        async.elapse(const Duration(seconds: 5));
+        viewModel.nextTurn();
+
+        expect(viewModel.turns.first.actualSeconds, 35);
+        expect(viewModel.currentTurnIndex, 1);
+
+        viewModel.dispose();
+      });
+    },
+  );
+
   test('reorderMembers updates speaking order used at start', () {
     fakeAsync((async) {
       final start = DateTime(2026);

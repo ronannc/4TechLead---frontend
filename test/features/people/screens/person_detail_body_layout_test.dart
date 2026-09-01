@@ -120,23 +120,16 @@ void main() {
         await _tapTab(tester, '1:1');
         await tester.pumpAndSettle();
         expect(find.text('Histórico de 1:1'), findsOneWidget);
-        expect(find.text('Novo 1:1'), findsOneWidget);
+        expect(find.text('Planejar 1:1'), findsOneWidget);
+        expect(find.text('Templates'), findsNothing);
         _expectOneOnOneHistorySpacing(tester);
         expect(tester.takeException(), isNull);
 
-        for (final view in ['Templates', 'Sugestões', 'Histórico']) {
+        for (final view in ['Sugestões', 'Histórico']) {
           await _tapContextualTab(tester, view);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
         }
-
-        await tester.tap(find.text('Novo 1:1'));
-        await tester.pumpAndSettle();
-        expect(find.text('Novo 1:1'), findsOneWidget);
-        expect(find.text('Histórico de 1:1'), findsNothing);
-        expect(tester.takeException(), isNull);
-        await tester.tap(find.byIcon(Icons.arrow_back));
-        await tester.pumpAndSettle();
 
         for (final tab in ['PDI', 'KPIs']) {
           await _tapTab(tester, tab);
@@ -203,7 +196,7 @@ void main() {
     },
   );
 
-  testWidgets('fills one on one notes when selecting a template', (
+  testWidgets('keeps one on one templates out of the person detail', (
     tester,
   ) async {
     await initializeDateFormatting('pt_BR');
@@ -211,16 +204,11 @@ void main() {
 
     await _tapTab(tester, '1:1');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Novo 1:1'));
-    await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(DropdownButtonFormField<int>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Template').last);
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Como foi o ciclo?'), findsOneWidget);
-    expect(find.textContaining('Resposta:'), findsOneWidget);
+    expect(find.text('Planejar 1:1'), findsOneWidget);
+    expect(find.text('Templates'), findsNothing);
+    expect(find.text('Configurar templates'), findsNothing);
+    expect(find.text('Criar template'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -291,7 +279,13 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(
-      () => growthRepository.getSessions(personId: 1, page: 1, search: null),
+      () => growthRepository.getSessions(
+        personId: 1,
+        page: 1,
+        search: null,
+        status: null,
+        perPage: 10,
+      ),
     ).called(1);
     verifyNever(growthRepository.getTemplates);
     verifyNever(
@@ -301,10 +295,6 @@ void main() {
         context: null,
       ),
     );
-
-    await _tapContextualTab(tester, 'Templates');
-    await tester.pumpAndSettle();
-    verify(growthRepository.getTemplates).called(1);
 
     await _tapContextualTab(tester, 'Sugestões');
     await tester.pumpAndSettle();
@@ -451,7 +441,13 @@ void _stubRepositories({
     ],
   );
   when(
-    () => growthRepository.getSessions(personId: 1, page: 1, search: null),
+    () => growthRepository.getSessions(
+      personId: 1,
+      page: 1,
+      search: null,
+      status: null,
+      perPage: 10,
+    ),
   ).thenAnswer(
     (_) async => [
       OneOnOneSession(

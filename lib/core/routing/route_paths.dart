@@ -14,6 +14,7 @@ class RoutePaths {
   static const personDetail = '/teams/:teamId/people/:personId';
   static const personEdit = '/teams/:teamId/people/:personId/edit';
   static const notifications = '/notifications';
+  static const oneOnOnes = '/one-on-ones';
   static const integrations = '/integrations';
   static const profile = '/profile';
   static const myPerson = '/me/person';
@@ -56,4 +57,13 @@ class RoutePaths {
 
   static String dailyMeetingDetailPath(String teamId, String meetingId) =>
       '/teams/$teamId/daily/history/$meetingId';
+
+  static String oneOnOnesPath({String? personId, String? tab}) {
+    final query = [
+      if (personId != null) 'person=$personId',
+      if (tab != null) 'tab=$tab',
+    ];
+
+    return query.isEmpty ? oneOnOnes : '$oneOnOnes?${query.join('&')}';
+  }
 }

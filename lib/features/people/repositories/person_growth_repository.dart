@@ -26,14 +26,18 @@ class PersonGrowthRepository {
   }
 
   Future<List<OneOnOneSession>> getSessions({
-    required int personId,
+    int? personId,
     int page = 1,
     String? search,
+    String? status,
+    int perPage = 10,
   }) async {
     final json = await _service.getSessions(
       personId: personId,
       page: page,
       search: search,
+      status: status,
+      perPage: perPage,
     );
     return _list(json, OneOnOneSession.fromJson);
   }
@@ -43,18 +47,63 @@ class PersonGrowthRepository {
     required String title,
     String? notes,
     DateTime? heldAt,
+    DateTime? scheduledFor,
     int? templateId,
     List<String>? questions,
+    Map<String, dynamic>? answers,
+    String status = 'completed',
   }) async {
     final json = await _service.createSession(
       personId: personId,
       title: title,
       notes: notes,
       heldAt: heldAt,
+      scheduledFor: scheduledFor,
       templateId: templateId,
       questions: questions,
+      answers: answers,
+      status: status,
     );
     return OneOnOneSession.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<List<PersonOneOnOneNote>> getPersonOneOnOneNotes({
+    int? personId,
+    String? status,
+  }) async {
+    final json = await _service.getPersonOneOnOneNotes(
+      personId: personId,
+      status: status,
+    );
+    return _list(json, PersonOneOnOneNote.fromJson);
+  }
+
+  Future<PersonOneOnOneNote> createPersonOneOnOneNote({
+    required int personId,
+    required String title,
+    String? body,
+    DateTime? occurredAt,
+  }) async {
+    final json = await _service.createPersonOneOnOneNote(
+      personId: personId,
+      title: title,
+      body: body,
+      occurredAt: occurredAt,
+    );
+    return PersonOneOnOneNote.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<PersonOneOnOneNote> updatePersonOneOnOneNote({
+    required int id,
+    String? status,
+    int? sessionId,
+  }) async {
+    final json = await _service.updatePersonOneOnOneNote(
+      id: id,
+      status: status,
+      sessionId: sessionId,
+    );
+    return PersonOneOnOneNote.fromJson(json['data'] as Map<String, dynamic>);
   }
 
   Future<List<DevelopmentPlan>> getDevelopmentPlans(int personId) async {

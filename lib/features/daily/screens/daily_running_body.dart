@@ -135,7 +135,31 @@ class _DailyRunningBodyState extends State<DailyRunningBody> {
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
-              AppPrimaryButton(label: 'Próximo', onPressed: viewModel.nextTurn),
+              Row(
+                children: [
+                  Expanded(
+                    child: Selector<DailySessionViewModel, bool>(
+                      selector: (_, vm) => vm.canGoToPreviousTurn,
+                      builder: (context, canGoToPreviousTurn, _) {
+                        return OutlinedButton.icon(
+                          onPressed: canGoToPreviousTurn
+                              ? viewModel.previousTurn
+                              : null,
+                          icon: const Icon(Icons.arrow_back_outlined),
+                          label: const Text('Voltar'),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: AppPrimaryButton(
+                      label: 'Próximo',
+                      onPressed: viewModel.nextTurn,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.sm),
               _AnnotationComposer(
                 kind: _annotationKind,

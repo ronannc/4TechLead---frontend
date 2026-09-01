@@ -10,6 +10,7 @@ class AccessPolicy {
   bool get canManageIntegrations => _authSession.isTechLead;
   bool get canReadNotifications => _authSession.isTechLead;
   bool get canRunDaily => _authSession.isTechLead;
+  bool get canReadOneOnOnes => _authSession.isTechLead || _authSession.isMember;
 
   String landingPath({
     required String homePath,
@@ -29,6 +30,7 @@ class AccessPolicy {
     required String myPersonPath,
     required String personDetailPath,
     required String personEditPath,
+    String? oneOnOnesPath,
     String? personId,
   }) {
     if (!_authSession.hasResolvedAccess) {
@@ -45,6 +47,10 @@ class AccessPolicy {
 
     if (matchedLocation == profilePath || matchedLocation == myPersonPath) {
       return true;
+    }
+
+    if (oneOnOnesPath != null && matchedLocation == oneOnOnesPath) {
+      return canReadOneOnOnes;
     }
 
     final currentPersonId = _authSession.personId?.toString();

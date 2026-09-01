@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:for_tech_lead/core/routing/route_paths.dart';
 import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
 import 'package:for_tech_lead/features/home/screens/home_body.dart';
 import 'package:for_tech_lead/features/home/viewmodels/home_view_model.dart';
@@ -9,6 +10,7 @@ import 'package:for_tech_lead/features/people/models/seniority_level.dart';
 import 'package:for_tech_lead/features/people/repositories/person_repository.dart';
 import 'package:for_tech_lead/features/teams/models/team.dart';
 import 'package:for_tech_lead/features/teams/repositories/team_repository.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
@@ -82,5 +84,59 @@ void main() {
     expect(393 - teamsCard.right, expectedOuterGap);
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('opens person details from the team today list', (tester) async {
+    final teamRepository = _MockTeamRepository();
+    final personRepository = _MockPersonRepository();
+    final ada = _person('Ada');
+    when(teamRepository.getTeams).thenAnswer(
+      (_) async => [
+        Team(
+          id: 1,
+          name: 'Engineering',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        ),
+      ],
+    );
+    when(
+      () => personRepository.getPeople(perPage: 100),
+    ).thenAnswer((_) async => [ada]);
+
+    final viewModel = HomeViewModel(teamRepository, personRepository);
+    await viewModel.load();
+    final router = GoRouter(
+      initialLocation: RoutePaths.home,
+      routes: [
+        GoRoute(
+          path: RoutePaths.home,
+          builder: (context, state) =>
+              ChangeNotifierProvider<HomeViewModel>.value(
+                value: viewModel,
+                child: const Scaffold(body: HomeBody()),
+              ),
+        ),
+        GoRoute(
+          path: RoutePaths.personDetail,
+          builder: (context, state) => Text(
+            'Pessoa ${state.pathParameters['personId']}',
+            textDirection: TextDirection.ltr,
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+
+    await tester.tap(find.text('Ada'));
+    await tester.pumpAndSettle();
+
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      RoutePaths.personDetailPath('1', '${ada.id}'),
+    );
+    expect(find.text('Pessoa ${ada.id}'), findsOneWidget);
   });
 }

@@ -34,10 +34,12 @@ class OneOnOneSession {
     required this.title,
     required this.status,
     this.templateId,
+    this.documentSnapshot,
     this.scheduledFor,
     this.heldAt,
     this.sentiment,
     this.questions = const [],
+    this.answers = const {},
     this.notes,
     this.actionItems = const [],
   });
@@ -45,12 +47,14 @@ class OneOnOneSession {
   final int id;
   final int personId;
   final int? templateId;
+  final Map<String, dynamic>? documentSnapshot;
   final DateTime? scheduledFor;
   final DateTime? heldAt;
   final String title;
   final String status;
   final String? sentiment;
   final List<String> questions;
+  final Map<String, dynamic> answers;
   final String? notes;
   final List<Map<String, dynamic>> actionItems;
 
@@ -59,14 +63,55 @@ class OneOnOneSession {
       id: json['id'] as int,
       personId: json['person_id'] as int,
       templateId: json['one_on_one_template_id'] as int?,
+      documentSnapshot: json['document_snapshot'] == null
+          ? null
+          : Map<String, dynamic>.from(json['document_snapshot'] as Map),
       scheduledFor: _date(json['scheduled_for'] as String?),
       heldAt: _date(json['held_at'] as String?),
       title: json['title'] as String,
       status: json['status'] as String,
       sentiment: json['sentiment'] as String?,
       questions: _stringList(json['questions']),
+      answers: json['answers'] == null
+          ? const {}
+          : Map<String, dynamic>.from(json['answers'] as Map),
       notes: json['notes'] as String?,
       actionItems: _mapList(json['action_items']),
+    );
+  }
+}
+
+class PersonOneOnOneNote {
+  const PersonOneOnOneNote({
+    required this.id,
+    required this.personId,
+    required this.title,
+    required this.status,
+    this.createdBy,
+    this.sessionId,
+    this.body,
+    this.occurredAt,
+  });
+
+  final int id;
+  final int personId;
+  final int? createdBy;
+  final int? sessionId;
+  final String title;
+  final String? body;
+  final String status;
+  final DateTime? occurredAt;
+
+  factory PersonOneOnOneNote.fromJson(Map<String, dynamic> json) {
+    return PersonOneOnOneNote(
+      id: json['id'] as int,
+      personId: json['person_id'] as int,
+      createdBy: json['created_by'] as int?,
+      sessionId: json['one_on_one_session_id'] as int?,
+      title: json['title'] as String,
+      body: json['body'] as String?,
+      status: json['status'] as String,
+      occurredAt: _date(json['occurred_at'] as String?),
     );
   }
 }

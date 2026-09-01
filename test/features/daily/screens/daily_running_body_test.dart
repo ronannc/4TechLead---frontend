@@ -85,6 +85,13 @@ void main() {
     );
 
     expect(find.text('Pausar timer'), findsOneWidget);
+    expect(find.text('Voltar'), findsOneWidget);
+    expect(
+      tester
+          .widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Voltar'))
+          .onPressed,
+      isNull,
+    );
     expect(find.byKey(const ValueKey('daily-running-hint')), findsOneWidget);
     expect(find.text('Anotações da daily'), findsOneWidget);
     expect(find.text('Tópico'), findsOneWidget);
@@ -173,16 +180,71 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('lets the user go back after advancing by mistake', (
+    tester,
+  ) async {
+    final viewModel = await _runningViewModel(
+      people: [_person(1, 'Ada Lovelace'), _person(2, 'Grace Hopper')],
+    );
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<DailySessionViewModel>.value(
+        value: viewModel,
+        child: MaterialApp(
+          theme: AppTheme.dark(),
+          home: const Scaffold(body: DailyRunningBody()),
+        ),
+      ),
+    );
+
+    expect(find.text('Ada Lovelace'), findsOneWidget);
+    expect(find.text('Grace Hopper'), findsNothing);
+    expect(
+      tester
+          .widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Voltar'))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.ensureVisible(find.text('Próximo'));
+    await tester.pump();
+    await tester.tap(find.text('Próximo'));
+    await tester.pump();
+
+    expect(find.text('Grace Hopper'), findsOneWidget);
+    expect(
+      tester
+          .widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Voltar'))
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.ensureVisible(find.text('Voltar'));
+    await tester.pump();
+    await tester.tap(find.text('Voltar'));
+    await tester.pump();
+
+    expect(find.text('Ada Lovelace'), findsOneWidget);
+    expect(viewModel.currentTurnIndex, 0);
+    expect(viewModel.turns.last.actualSeconds, isNull);
+
+    viewModel.dispose();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+  });
 }
 
-Future<DailySessionViewModel> _runningViewModel() async {
+Future<DailySessionViewModel> _runningViewModel({List<Person>? people}) async {
   final personRepository = _MockPersonRepository();
   final meetingRepository = _MockDailyMeetingRepository();
   final teamRepository = _MockTeamRepository();
 
   when(
     () => personRepository.getPeople(teamId: null, perPage: 100),
-  ).thenAnswer((_) async => [_person(1, 'Ada Lovelace')]);
+  ).thenAnswer((_) async => people ?? [_person(1, 'Ada Lovelace')]);
   when(
     () => teamRepository.getTeams(perPage: 100),
   ).thenAnswer((_) async => [_team(1, 'Engineering')]);

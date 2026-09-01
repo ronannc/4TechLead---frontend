@@ -37,6 +37,7 @@ void main() {
         myPersonPath: '/me/person',
         personDetailPath: '/teams/:teamId/people/:personId',
         personEditPath: '/teams/:teamId/people/:personId/edit',
+        oneOnOnesPath: '/one-on-ones',
       ),
       isTrue,
     );
@@ -63,8 +64,20 @@ void main() {
         myPersonPath: '/me/person',
         personDetailPath: '/teams/:teamId/people/:personId',
         personEditPath: '/teams/:teamId/people/:personId/edit',
+        oneOnOnesPath: '/one-on-ones',
       ),
       isFalse,
+    );
+    expect(
+      policy.canAccessRoute(
+        matchedLocation: '/one-on-ones',
+        profilePath: '/profile',
+        myPersonPath: '/me/person',
+        personDetailPath: '/teams/:teamId/people/:personId',
+        personEditPath: '/teams/:teamId/people/:personId/edit',
+        oneOnOnesPath: '/one-on-ones',
+      ),
+      isTrue,
     );
     expect(
       policy.canAccessRoute(
@@ -73,6 +86,7 @@ void main() {
         myPersonPath: '/me/person',
         personDetailPath: '/teams/:teamId/people/:personId',
         personEditPath: '/teams/:teamId/people/:personId/edit',
+        oneOnOnesPath: '/one-on-ones',
         personId: '10',
       ),
       isTrue,
@@ -84,6 +98,7 @@ void main() {
         myPersonPath: '/me/person',
         personDetailPath: '/teams/:teamId/people/:personId',
         personEditPath: '/teams/:teamId/people/:personId/edit',
+        oneOnOnesPath: '/one-on-ones',
         personId: '11',
       ),
       isFalse,

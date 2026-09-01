@@ -23,9 +23,9 @@ import '../viewmodels/person_growth_view_model.dart';
 
 enum _PersonTab { info, oneOnOne, pdi, analysis }
 
-enum _FocusedFlow { oneOnOne, pdi }
+enum _FocusedFlow { pdi }
 
-enum _OneOnOneView { register, templates, suggestions, history }
+enum _OneOnOneView { suggestions, history }
 
 enum _PdiView { create, suggestions, tracking }
 
@@ -50,8 +50,6 @@ extension on _PdiView {
 extension on _OneOnOneView {
   String get label {
     return switch (this) {
-      _OneOnOneView.register => 'Registro',
-      _OneOnOneView.templates => 'Templates',
       _OneOnOneView.suggestions => 'Sugestões',
       _OneOnOneView.history => 'Histórico',
     };
@@ -59,8 +57,6 @@ extension on _OneOnOneView {
 
   IconData get icon {
     return switch (this) {
-      _OneOnOneView.register => Icons.edit_note_outlined,
-      _OneOnOneView.templates => Icons.tune_outlined,
       _OneOnOneView.suggestions => Icons.auto_awesome_outlined,
       _OneOnOneView.history => Icons.history_outlined,
     };
@@ -98,10 +94,6 @@ class PersonDetailBody extends StatefulWidget {
 
 class _PersonDetailBodyState extends State<PersonDetailBody> {
   final _sessionSearchController = TextEditingController();
-  final _sessionTitleController = TextEditingController();
-  final _sessionNotesController = TextEditingController();
-  final _templateTitleController = TextEditingController();
-  final _templateQuestionsController = TextEditingController();
   final _planTitleController = TextEditingController();
   final _planSummaryController = TextEditingController();
   final _planTargetRoleController = TextEditingController();
@@ -110,15 +102,10 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
   var _oneOnOneView = _OneOnOneView.history;
   var _pdiView = _PdiView.tracking;
   _FocusedFlow? _focusedFlow;
-  int? _selectedTemplateId;
 
   @override
   void dispose() {
     _sessionSearchController.dispose();
-    _sessionTitleController.dispose();
-    _sessionNotesController.dispose();
-    _templateTitleController.dispose();
-    _templateQuestionsController.dispose();
     _planTitleController.dispose();
     _planSummaryController.dispose();
     _planTargetRoleController.dispose();
@@ -259,19 +246,10 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
         selectedView: _oneOnOneView,
         canManageGrowth: widget.canGenerateAccessToken,
         onViewChanged: (value) {
-          if (!widget.canGenerateAccessToken &&
-              value == _OneOnOneView.templates) {
-            return;
-          }
-
           setState(() => _oneOnOneView = value);
           switch (value) {
-            case _OneOnOneView.register:
             case _OneOnOneView.history:
               growth.loadOneOnOneHistory();
-              break;
-            case _OneOnOneView.templates:
-              growth.loadOneOnOneTemplates();
               break;
             case _OneOnOneView.suggestions:
               growth.loadOneOnOneSuggestions();
@@ -279,10 +257,9 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
           }
         },
         sessionSearchController: _sessionSearchController,
-        templateTitleController: _templateTitleController,
-        templateQuestionsController: _templateQuestionsController,
-        onCreateTemplate: () => _createTemplate(growth),
-        onCreateSession: () => _openFocusedFlow(_FocusedFlow.oneOnOne),
+        onPlanSession: () => context.go(
+          RoutePaths.oneOnOnesPath(personId: '${person.id}', tab: 'execute'),
+        ),
       ),
       _PersonTab.pdi => _PdiTab(
         growth: growth,
@@ -313,25 +290,15 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
 
     return _FocusedFlowView(
       title: switch (flow) {
-        _FocusedFlow.oneOnOne => 'Novo 1:1',
         _FocusedFlow.pdi => 'Novo PDI',
       },
       subtitle: switch (flow) {
-        _FocusedFlow.oneOnOne => 'Conduza e registre a conversa.',
         _FocusedFlow.pdi => 'Transforme uma evolução em plano de ação.',
       },
       onBack: _closeFocusedFlow,
       actionErrorMessage: growth.actionErrorMessage,
       onDismissActionError: growth.clearActionError,
       child: switch (flow) {
-        _FocusedFlow.oneOnOne => _OneOnOneRegisterView(
-          growth: growth,
-          selectedTemplateId: _selectedTemplateId,
-          onTemplateChanged: (value) => _selectSessionTemplate(value, growth),
-          titleController: _sessionTitleController,
-          notesController: _sessionNotesController,
-          onCreateSession: () => _createSession(growth),
-        ),
         _FocusedFlow.pdi => _PdiCreateView(
           titleController: _planTitleController,
           summaryController: _planSummaryController,
@@ -343,75 +310,11 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
   }
 
   void _openFocusedFlow(_FocusedFlow flow) {
-    if (flow == _FocusedFlow.oneOnOne) {
-      context.read<PersonGrowthViewModel>().loadOneOnOneTemplates();
-    }
     setState(() => _focusedFlow = flow);
   }
 
   void _closeFocusedFlow() {
     setState(() => _focusedFlow = null);
-  }
-
-  void _selectSessionTemplate(int? templateId, PersonGrowthViewModel growth) {
-    setState(() => _selectedTemplateId = templateId);
-
-    if (templateId == null) {
-      return;
-    }
-
-    final template = growth.templates
-        .where((item) => item.id == templateId)
-        .firstOrNull;
-    if (template == null || template.questions.isEmpty) {
-      return;
-    }
-
-    final draft = _templateDraft(template);
-    final currentNotes = _sessionNotesController.text.trim();
-    if (currentNotes.isEmpty || _looksLikeTemplateDraft(currentNotes)) {
-      _sessionNotesController.text = draft;
-    } else if (!currentNotes.contains(draft)) {
-      _sessionNotesController.text = '$currentNotes\n\n$draft';
-    }
-  }
-
-  Future<void> _createTemplate(PersonGrowthViewModel growth) async {
-    final title = _templateTitleController.text.trim();
-    final questions = _lines(_templateQuestionsController.text);
-    if (title.isEmpty || questions.isEmpty) {
-      return;
-    }
-
-    await growth.createTemplate(title: title, questions: questions);
-    _templateTitleController.clear();
-    _templateQuestionsController.clear();
-  }
-
-  Future<void> _createSession(PersonGrowthViewModel growth) async {
-    final title = _sessionTitleController.text.trim();
-    if (title.isEmpty) {
-      return;
-    }
-
-    final template = growth.templates
-        .where((item) => item.id == _selectedTemplateId)
-        .firstOrNull;
-
-    await growth.createSession(
-      title: title,
-      notes: _nullable(_sessionNotesController.text),
-      templateId: _selectedTemplateId,
-      questions: template?.questions,
-    );
-    _sessionTitleController.clear();
-    _sessionNotesController.clear();
-    if (mounted) {
-      setState(() {
-        _focusedFlow = null;
-        _oneOnOneView = _OneOnOneView.history;
-      });
-    }
   }
 
   Future<void> _createPlan(PersonGrowthViewModel growth) async {
@@ -917,22 +820,16 @@ class _OneOnOneTab extends StatelessWidget {
     required this.selectedView,
     required this.onViewChanged,
     required this.sessionSearchController,
-    required this.templateTitleController,
-    required this.templateQuestionsController,
     required this.canManageGrowth,
-    required this.onCreateSession,
-    required this.onCreateTemplate,
+    required this.onPlanSession,
   });
 
   final PersonGrowthViewModel growth;
   final _OneOnOneView selectedView;
   final ValueChanged<_OneOnOneView> onViewChanged;
   final TextEditingController sessionSearchController;
-  final TextEditingController templateTitleController;
-  final TextEditingController templateQuestionsController;
   final bool canManageGrowth;
-  final VoidCallback onCreateSession;
-  final VoidCallback onCreateTemplate;
+  final VoidCallback onPlanSession;
 
   @override
   Widget build(BuildContext context) {
@@ -942,191 +839,31 @@ class _OneOnOneTab extends StatelessWidget {
       children: [
         _ModuleHeader(
           title: '1:1',
-          subtitle: 'Consulte registros e prepare os próximos encontros.',
+          subtitle:
+              'Consulte registros desta pessoa e planeje encontros no menu 1:1.',
           helpMessage:
-              'Prepare 2 ou 3 perguntas, anote respostas importantes, decisões, combinados e sinais de evolução ou bloqueio.',
-          primaryLabel: 'Novo 1:1',
-          onPrimaryPressed: canManageGrowth ? onCreateSession : null,
+              'Documentos e execução ficam no módulo 1:1 para reutilizar roteiros com todos os liderados.',
+          primaryLabel: 'Planejar 1:1',
+          onPrimaryPressed: canManageGrowth ? onPlanSession : null,
         ),
         const SizedBox(height: AppSpacing.sm),
         _ContextualTabBar<_OneOnOneView>(
           selected: selectedView,
-          values: [
-            _OneOnOneView.history,
-            if (canManageGrowth) _OneOnOneView.templates,
-            _OneOnOneView.suggestions,
-          ],
+          values: [_OneOnOneView.history, _OneOnOneView.suggestions],
           labelOf: (view) => view.label,
           iconOf: (view) => view.icon,
           onChanged: onViewChanged,
         ),
         const SizedBox(height: AppSpacing.sm),
         switch (selectedView) {
-          _OneOnOneView.register ||
           _OneOnOneView.history => _OneOnOneHistoryView(
             growth: growth,
             searchController: sessionSearchController,
-          ),
-          _OneOnOneView.templates => _OneOnOneTemplateView(
-            titleController: templateTitleController,
-            questionsController: templateQuestionsController,
-            onCreateTemplate: onCreateTemplate,
           ),
           _OneOnOneView.suggestions => _OneOnOneSuggestionsView(
             suggestions: growth.suggestions,
           ),
         },
-      ],
-    );
-  }
-}
-
-class _OneOnOneRegisterView extends StatelessWidget {
-  const _OneOnOneRegisterView({
-    required this.growth,
-    required this.selectedTemplateId,
-    required this.onTemplateChanged,
-    required this.titleController,
-    required this.notesController,
-    required this.onCreateSession,
-  });
-
-  final PersonGrowthViewModel growth;
-  final int? selectedTemplateId;
-  final ValueChanged<int?> onTemplateChanged;
-  final TextEditingController titleController;
-  final TextEditingController notesController;
-  final VoidCallback onCreateSession;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionTitle(
-          title: 'Registrar conversa',
-          subtitle: 'Use template, título e notas para guiar o encontro.',
-          helpMessage:
-              'Prepare poucas perguntas, registre respostas relevantes, decisões, combinados e próximos passos.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _Surface(
-          child: _FormColumn(
-            children: [
-              DropdownButtonFormField<int>(
-                initialValue: selectedTemplateId,
-                items: [
-                  for (final template in growth.templates)
-                    DropdownMenuItem(
-                      value: template.id,
-                      child: Text(template.title),
-                    ),
-                ],
-                onChanged: onTemplateChanged,
-                decoration: const InputDecoration(
-                  labelText: 'Template',
-                  helperText:
-                      'Escolha um roteiro. As perguntas entram nas notas para guiar a conversa.',
-                ),
-              ),
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Título',
-                  helperText:
-                      'Use data ou tema central. Ex.: 1:1 sobre autonomia no ciclo atual.',
-                ),
-              ),
-              TextField(
-                controller: notesController,
-                minLines: 12,
-                maxLines: 24,
-                decoration: const InputDecoration(
-                  labelText: 'Notas da conversa',
-                  helperText:
-                      'Registre perguntas, respostas, fatos observados, acordos e próximos passos.',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppPrimaryButton(
-                      label: 'Cadastrar 1:1',
-                      onPressed: onCreateSession,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _OneOnOneTemplateView extends StatelessWidget {
-  const _OneOnOneTemplateView({
-    required this.titleController,
-    required this.questionsController,
-    required this.onCreateTemplate,
-  });
-
-  final TextEditingController titleController;
-  final TextEditingController questionsController;
-  final VoidCallback onCreateTemplate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionTitle(
-          title: 'Configurar templates',
-          subtitle:
-              'Cadastre roteiros reutilizáveis para conduzir os próximos 1:1s.',
-          helpMessage:
-              'Crie perguntas abertas que ajudem a entender contexto, motivação, bloqueios, feedback e próximos passos.',
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _Surface(
-          child: _FormColumn(
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do template',
-                  helperText:
-                      'Nome do roteiro. Ex.: Acompanhamento quinzenal, carreira, feedback.',
-                ),
-              ),
-              TextField(
-                controller: questionsController,
-                minLines: 3,
-                maxLines: 6,
-                decoration: const InputDecoration(
-                  labelText: 'Perguntas, uma por linha',
-                  helperText:
-                      'Uma pergunta por linha. Ex.: O que mais te bloqueou desde nosso último 1:1?',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppPrimaryButton(
-                      label: 'Criar template',
-                      onPressed: onCreateTemplate,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -2396,14 +2133,6 @@ double _availableWidth(BoxConstraints constraints, BuildContext context) {
 
 double _nonNegative(double value) => value > 0 ? value : 0;
 
-List<String> _lines(String text) {
-  return text
-      .split('\n')
-      .map((line) => line.trim())
-      .where((line) => line.isNotEmpty)
-      .toList();
-}
-
 String? _nullable(String text) {
   final value = text.trim();
   return value.isEmpty ? null : value;
@@ -2477,16 +2206,4 @@ String _unitMetric(num? value, String unit) {
   }
 
   return '${_compactMetric(value)} $unit';
-}
-
-String _templateDraft(OneOnOneTemplate template) {
-  final questions = template.questions
-      .map((question) => '- $question\n  Resposta:')
-      .join('\n\n');
-
-  return 'Perguntas do template: ${template.title}\n\n$questions';
-}
-
-bool _looksLikeTemplateDraft(String text) {
-  return text.startsWith('Perguntas do template: ') && text.contains('\n- ');
 }

@@ -201,27 +201,45 @@ class _PersonSnapshotRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
+    return InkWell(
+      onTap: () => context.go(
+        RoutePaths.personDetailPath('${person.teamId}', '${person.id}'),
+      ),
       child: Row(
         children: [
-          CircleAvatar(child: Text(_initials(person.name))),
-          const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(person.name, style: theme.textTheme.titleSmall),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  person.position,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                children: [
+                  CircleAvatar(child: Text(_initials(person.name))),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(person.name, style: theme.textTheme.titleSmall),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          person.position,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.md),
+            child: Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
