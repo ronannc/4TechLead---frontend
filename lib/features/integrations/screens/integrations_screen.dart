@@ -825,6 +825,7 @@ String _metricLabel(String type) {
   return switch (type) {
     'code_quality_score' => 'Qualidade do código',
     'delivery_points' => 'Pontos entregues',
+    'task_delivery_count' => 'Tarefas entregues',
     'pull_request_count' => 'Pull requests',
     'review_comments_count' => 'Comentários de review',
     'ci_failures_count' => 'Falhas de CI',
@@ -835,6 +836,7 @@ String _metricLabel(String type) {
     'review_acceptance_rate' => 'Aceite em review',
     'ci_success_rate' => 'CI com sucesso',
     'annual_pull_request_count' => 'PRs no ano',
+    'annual_task_delivery_count' => 'Tarefas no ano',
     'annual_quality_average' => 'Qualidade média anual',
     'annual_review_comment_average' => 'Review / PR',
     'annual_ci_failure_average' => 'CI falhando / PR',
