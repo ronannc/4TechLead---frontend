@@ -1186,39 +1186,63 @@ class _AnalysisTab extends StatelessWidget {
     final qualityAverage =
         _metricLatestValue(growth.deliveryMetrics, 'annual_quality_average') ??
         _metricAverage(growth.deliveryMetrics, 'code_quality_score');
-    final ciFailureAverage = _metricLatestValue(
-      growth.deliveryMetrics,
-      'annual_ci_failure_average',
-    );
-    final reviewAverage = _metricLatestValue(
-      growth.deliveryMetrics,
-      'annual_review_comment_average',
-    );
+    final ciFailureAverage =
+        _metricLatestValue(
+          growth.deliveryMetrics,
+          'annual_ci_failure_average',
+        ) ??
+        _metricRatio(
+          growth.deliveryMetrics,
+          'ci_failure_count',
+          'pull_request_merged_count',
+        );
+    final reviewAverage =
+        _metricLatestValue(
+          growth.deliveryMetrics,
+          'annual_review_comment_average',
+        ) ??
+        _metricRatio(
+          growth.deliveryMetrics,
+          'review_count',
+          'pull_request_count',
+        );
     final reworkAverage = _metricLatestValue(
       growth.deliveryMetrics,
       'annual_rework_average',
     );
-    final prSizeAverage = _metricLatestValue(
-      growth.deliveryMetrics,
-      'annual_pr_size_average',
-    );
-    final mergeTimeAverage = _metricLatestValue(
-      growth.deliveryMetrics,
-      'annual_pr_merge_time_average',
-    );
-    final reviewAcceptanceRate = _metricLatestValue(
-      growth.deliveryMetrics,
-      'annual_review_acceptance_rate',
-    );
-    final ciSuccessRate = _metricLatestValue(
-      growth.deliveryMetrics,
-      'annual_ci_success_rate',
-    );
+    final prSizeAverage =
+        _metricLatestValue(growth.deliveryMetrics, 'annual_pr_size_average') ??
+        _metricAverage(growth.deliveryMetrics, 'pull_request_changed_lines');
+    final mergeTimeAverage =
+        _metricLatestValue(
+          growth.deliveryMetrics,
+          'annual_pr_merge_time_average',
+        ) ??
+        _metricAverage(growth.deliveryMetrics, 'pull_request_merge_time');
+    final reviewAcceptanceRate =
+        _metricLatestValue(
+          growth.deliveryMetrics,
+          'annual_review_acceptance_rate',
+        ) ??
+        _metricPercentage(
+          growth.deliveryMetrics,
+          'review_approved_count',
+          'review_count',
+        );
+    final ciSuccessRate =
+        _metricLatestValue(growth.deliveryMetrics, 'annual_ci_success_rate') ??
+        _metricPercentage(
+          growth.deliveryMetrics,
+          'ci_success_count',
+          'ci_success_count',
+          additionalDenominatorType: 'ci_failure_count',
+        );
     final deliveryPoints =
         _metricLatestValue(
           growth.deliveryMetrics,
           'annual_delivery_points_total',
         ) ??
+        _metricSum(growth.deliveryMetrics, 'task_delivery_points') ??
         _metricSum(growth.deliveryMetrics, 'delivery_points');
 
     return Column(
@@ -1411,8 +1435,29 @@ String _deliveryMetricLabel(String type) {
   return switch (type) {
     'code_quality_score' => 'Qualidade do código',
     'delivery_points' => 'Pontos entregues',
+    'task_completed_count' => 'Tarefas concluídas',
+    'task_status_change_count' => 'Mudanças de status',
+    'task_delivery_points' => 'Pontos de tarefas',
     'task_delivery_count' => 'Tarefas entregues',
     'pull_request_count' => 'Pull requests',
+    'pull_request_merged_count' => 'PRs mesclados',
+    'pull_request_closed_without_merge_count' => 'PRs fechados sem merge',
+    'pull_request_open_time' => 'Tempo até fechamento',
+    'pull_request_merge_time' => 'Tempo até merge',
+    'pull_request_changed_files' => 'Arquivos alterados',
+    'pull_request_changed_lines' => 'Linhas alteradas',
+    'review_count' => 'Reviews',
+    'review_approved_count' => 'Reviews aprovados',
+    'review_changes_requested_count' => 'Reviews com alterações',
+    'review_commented_count' => 'Reviews comentados',
+    'ci_run_count' => 'Execuções de CI',
+    'ci_success_count' => 'CI com sucesso',
+    'ci_failure_count' => 'Falhas de CI',
+    'deployment_count' => 'Deployments',
+    'deployment_success_count' => 'Deployments com sucesso',
+    'deployment_failure_count' => 'Falhas de deploy',
+    'task_pull_request_link_count' => 'Tarefa vinculada a PR',
+    'task_to_pull_request_hours' => 'Tempo tarefa até PR',
     'review_comments_count' => 'Comentários de review',
     'ci_failures_count' => 'Falhas de CI',
     'rework_count' => 'Retrabalho',
@@ -2164,6 +2209,41 @@ num? _metricSum(List<PersonDeliveryMetric> metrics, String type) {
   }
 
   return values.reduce((sum, value) => sum + value);
+}
+
+num? _metricRatio(
+  List<PersonDeliveryMetric> metrics,
+  String numeratorType,
+  String denominatorType,
+) {
+  final numerator = _metricSum(metrics, numeratorType);
+  final denominator = _metricSum(metrics, denominatorType);
+
+  if (numerator == null || denominator == null || denominator == 0) {
+    return null;
+  }
+
+  return numerator / denominator;
+}
+
+num? _metricPercentage(
+  List<PersonDeliveryMetric> metrics,
+  String numeratorType,
+  String denominatorType, {
+  String? additionalDenominatorType,
+}) {
+  final numerator = _metricSum(metrics, numeratorType);
+  final denominator =
+      (_metricSum(metrics, denominatorType) ?? 0) +
+      (additionalDenominatorType == null
+          ? 0
+          : (_metricSum(metrics, additionalDenominatorType) ?? 0));
+
+  if (numerator == null || denominator == 0) {
+    return null;
+  }
+
+  return numerator / denominator * 100;
 }
 
 num? _metricLatestValue(List<PersonDeliveryMetric> metrics, String type) {
