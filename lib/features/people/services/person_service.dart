@@ -72,6 +72,8 @@ class PersonService {
     required SeniorityLevel seniority,
     String? email,
     String? phone,
+    String? githubUsername,
+    String? clickupUserId,
   }) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
@@ -90,6 +92,8 @@ class PersonService {
           'seniority': seniority.apiValue,
           'email': ?email,
           'phone': ?phone,
+          'github_username': ?githubUsername,
+          'clickup_user_id': ?clickupUserId,
         },
       );
 
@@ -110,6 +114,8 @@ class PersonService {
     required SeniorityLevel seniority,
     String? email,
     String? phone,
+    String? githubUsername,
+    String? clickupUserId,
   }) async {
     try {
       final response = await _client.dio.put<Map<String, dynamic>>(
@@ -128,6 +134,8 @@ class PersonService {
           'seniority': seniority.apiValue,
           'email': email,
           'phone': phone,
+          'github_username': githubUsername,
+          'clickup_user_id': clickupUserId,
         },
       );
 

@@ -23,10 +23,15 @@ class PersonForm extends StatefulWidget {
 
 class _PersonFormState extends State<PersonForm> {
   static final RegExp _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final RegExp _githubUsernameRegex = RegExp(
+    r'^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$',
+  );
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _githubUsernameController = TextEditingController();
+  final _clickupUserIdController = TextEditingController();
   final _positionController = TextEditingController();
 
   DateTime? _birthDate;
@@ -42,6 +47,8 @@ class _PersonFormState extends State<PersonForm> {
   String? _seniorityError;
   String? _emailError;
   String? _phoneError;
+  String? _githubUsernameError;
+  String? _clickupUserIdError;
   int? _filledPersonId;
 
   @override
@@ -49,6 +56,8 @@ class _PersonFormState extends State<PersonForm> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _githubUsernameController.dispose();
+    _clickupUserIdController.dispose();
     _positionController.dispose();
     super.dispose();
   }
@@ -67,6 +76,8 @@ class _PersonFormState extends State<PersonForm> {
     final position = _positionController.text.trim();
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
+    final githubUsername = _githubUsernameController.text.trim();
+    final clickupUserId = _clickupUserIdController.text.trim();
     final birthDate = _birthDate;
     final admissionDate = _admissionDate;
     final today = _today;
@@ -79,6 +90,8 @@ class _PersonFormState extends State<PersonForm> {
     String? seniorityError;
     String? emailError;
     String? phoneError;
+    String? githubUsernameError;
+    String? clickupUserIdError;
 
     if (name.isEmpty) {
       nameError = 'Informe o nome.';
@@ -127,6 +140,20 @@ class _PersonFormState extends State<PersonForm> {
       phoneError = 'O telefone deve ter no máximo 30 caracteres.';
     }
 
+    if (githubUsername.isNotEmpty) {
+      final normalizedGithubUsername = githubUsername.startsWith('@')
+          ? githubUsername.substring(1)
+          : githubUsername;
+
+      if (!_githubUsernameRegex.hasMatch(normalizedGithubUsername)) {
+        githubUsernameError = 'Informe um usuário GitHub válido.';
+      }
+    }
+
+    if (clickupUserId.length > 255) {
+      clickupUserIdError = 'O ID do ClickUp deve ter no máximo 255 caracteres.';
+    }
+
     setState(() {
       _nameError = nameError;
       _birthDateError = birthDateError;
@@ -136,6 +163,8 @@ class _PersonFormState extends State<PersonForm> {
       _seniorityError = seniorityError;
       _emailError = emailError;
       _phoneError = phoneError;
+      _githubUsernameError = githubUsernameError;
+      _clickupUserIdError = clickupUserIdError;
     });
 
     return [
@@ -147,6 +176,8 @@ class _PersonFormState extends State<PersonForm> {
       seniorityError,
       emailError,
       phoneError,
+      githubUsernameError,
+      clickupUserIdError,
     ].every((error) => error == null);
   }
 
@@ -163,6 +194,8 @@ class _PersonFormState extends State<PersonForm> {
     final position = _positionController.text.trim();
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
+    final githubUsername = _githubUsernameController.text.trim();
+    final clickupUserId = _clickupUserIdController.text.trim();
 
     final viewModel = context.read<PersonFormViewModel>();
     await viewModel.savePerson(
@@ -174,6 +207,8 @@ class _PersonFormState extends State<PersonForm> {
       seniority: seniority,
       email: email.isEmpty ? null : email,
       phone: phone.isEmpty ? null : phone,
+      githubUsername: githubUsername.isEmpty ? null : githubUsername,
+      clickupUserId: clickupUserId.isEmpty ? null : clickupUserId,
     );
 
     if (viewModel.state == ViewState.loaded && mounted) {
@@ -191,6 +226,8 @@ class _PersonFormState extends State<PersonForm> {
     _nameController.text = person.name;
     _emailController.text = person.email ?? '';
     _phoneController.text = person.phone ?? '';
+    _githubUsernameController.text = person.githubUsername ?? '';
+    _clickupUserIdController.text = person.clickupUserId ?? '';
     _positionController.text = person.position;
     _birthDate = person.birthDate;
     _admissionDate = person.admissionDate;
@@ -239,6 +276,29 @@ class _PersonFormState extends State<PersonForm> {
             onChanged: (_) {
               if (_phoneError != null) {
                 setState(() => _phoneError = null);
+              }
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
+            label: 'Usuário GitHub',
+            controller: _githubUsernameController,
+            errorText: _githubUsernameError,
+            onChanged: (_) {
+              if (_githubUsernameError != null) {
+                setState(() => _githubUsernameError = null);
+              }
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
+            label: 'ID do usuário no ClickUp',
+            controller: _clickupUserIdController,
+            errorText: _clickupUserIdError,
+            keyboardType: TextInputType.text,
+            onChanged: (_) {
+              if (_clickupUserIdError != null) {
+                setState(() => _clickupUserIdError = null);
               }
             },
           ),

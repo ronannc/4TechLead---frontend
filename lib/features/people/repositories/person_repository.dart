@@ -51,6 +51,8 @@ class PersonRepository {
     required SeniorityLevel seniority,
     String? email,
     String? phone,
+    String? githubUsername,
+    String? clickupUserId,
   }) async {
     final json = await _service.store(
       name: name,
@@ -62,6 +64,8 @@ class PersonRepository {
       seniority: seniority,
       email: email,
       phone: phone,
+      githubUsername: githubUsername,
+      clickupUserId: clickupUserId,
     );
 
     return Person.fromJson(json['data'] as Map<String, dynamic>);
@@ -78,6 +82,8 @@ class PersonRepository {
     required SeniorityLevel seniority,
     String? email,
     String? phone,
+    String? githubUsername,
+    String? clickupUserId,
   }) async {
     final json = await _service.update(
       id: id,
@@ -90,6 +96,8 @@ class PersonRepository {
       seniority: seniority,
       email: email,
       phone: phone,
+      githubUsername: githubUsername,
+      clickupUserId: clickupUserId,
     );
 
     return Person.fromJson(json['data'] as Map<String, dynamic>);
