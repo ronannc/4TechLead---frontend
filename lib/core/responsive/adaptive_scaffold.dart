@@ -9,15 +9,17 @@ class AppNavDestination {
     required this.label,
     required this.icon,
     required this.path,
+    this.showInMobileBar = true,
   });
 
   final String label;
   final IconData icon;
   final String path;
+  final bool showInMobileBar;
 }
 
-/// Adaptive navigation chrome: a bottom [NavigationBar] on mobile widths,
-/// a [NavigationRail] on desktop widths (macOS/Windows). Wrapped around
+/// Adaptive navigation chrome: a compact bottom [NavigationBar] on mobile
+/// widths, a [NavigationRail] on desktop widths (macOS/Windows). Wrapped around
 /// `child` by a go_router `ShellRoute`, so it persists across route changes.
 class AdaptiveScaffold extends StatelessWidget {
   const AdaptiveScaffold({
@@ -38,6 +40,14 @@ class AdaptiveScaffold extends StatelessWidget {
   /// With 0 or 1 destinations, render the nav chrome-less body instead of
   /// crashing.
   bool get _hasNav => destinations.length >= 2;
+
+  List<AppNavDestination> get _mobilePrimaryDestinations => destinations
+      .where((destination) => destination.showInMobileBar)
+      .toList(growable: false);
+
+  List<AppNavDestination> get _mobileSecondaryDestinations => destinations
+      .where((destination) => !destination.showInMobileBar)
+      .toList(growable: false);
 
   @override
   Widget build(BuildContext context) {
@@ -68,21 +78,74 @@ class AdaptiveScaffold extends StatelessWidget {
       );
     }
 
+    final primaryDestinations = _mobilePrimaryDestinations;
+    final secondaryDestinations = _mobileSecondaryDestinations;
+    final hasSecondaryDestinations = secondaryDestinations.isNotEmpty;
+    final selectedPrimaryIndex = primaryDestinations.indexWhere(
+      (destination) => destinations[selectedIndex].path == destination.path,
+    );
+    final mobileSelectedIndex = selectedPrimaryIndex >= 0
+        ? selectedPrimaryIndex
+        : primaryDestinations.length;
+
     return Scaffold(
       body: child,
       bottomNavigationBar: !_hasNav
           ? null
           : NavigationBar(
-              selectedIndex: selectedIndex,
-              onDestinationSelected: onDestinationSelected,
+              selectedIndex: mobileSelectedIndex,
+              onDestinationSelected: (index) {
+                if (index < primaryDestinations.length) {
+                  onDestinationSelected(
+                    destinations.indexOf(primaryDestinations[index]),
+                  );
+
+                  return;
+                }
+
+                _showMoreDestinations(context, secondaryDestinations);
+              },
               destinations: [
-                for (final destination in destinations)
+                for (final destination in primaryDestinations)
                   NavigationDestination(
                     icon: Icon(destination.icon),
                     label: destination.label,
                   ),
+                if (hasSecondaryDestinations)
+                  const NavigationDestination(
+                    icon: Icon(Icons.more_horiz),
+                    label: 'Mais',
+                  ),
               ],
             ),
+    );
+  }
+
+  void _showMoreDestinations(
+    BuildContext context,
+    List<AppNavDestination> secondaryDestinations,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.only(bottom: 8),
+          children: [
+            for (final destination in secondaryDestinations)
+              ListTile(
+                leading: Icon(destination.icon),
+                title: Text(destination.label),
+                selected: destinations[selectedIndex].path == destination.path,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  onDestinationSelected(destinations.indexOf(destination));
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

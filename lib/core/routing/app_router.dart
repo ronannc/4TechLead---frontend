@@ -52,6 +52,7 @@ List<AppNavDestination> _navDestinationsFor(AuthSession authSession) {
       label: 'Notificações',
       icon: Icons.notifications_none,
       path: RoutePaths.notifications,
+      showInMobileBar: false,
     ),
     const AppNavDestination(
       label: '1:1',
@@ -62,11 +63,13 @@ List<AppNavDestination> _navDestinationsFor(AuthSession authSession) {
       label: 'Integrações',
       icon: Icons.hub_outlined,
       path: RoutePaths.integrations,
+      showInMobileBar: false,
     ),
     const AppNavDestination(
       label: 'Perfil',
       icon: Icons.person_outline,
       path: RoutePaths.profile,
+      showInMobileBar: false,
     ),
   ];
 }
