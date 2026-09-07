@@ -19,6 +19,8 @@ Map<String, dynamic> _personJson({int id = 1, String name = 'Ada Lovelace'}) {
     'contract_type': 'clt',
     'email': 'ada@example.com',
     'phone': '+55 11 99999-0000',
+    'github_username': 'ada-lovelace',
+    'clickup_user_id': '230504877',
     'admission_date': '2020-01-15',
     'seniority': 'senior',
     'created_at': '2026-01-01T10:00:00.000000Z',
@@ -105,6 +107,8 @@ void main() {
       final person = await repository.getMyPerson();
 
       expect(person.email, 'ada@example.com');
+      expect(person.githubUsername, 'ada-lovelace');
+      expect(person.clickupUserId, '230504877');
       verify(() => service.showMe()).called(1);
     });
   });
@@ -122,6 +126,8 @@ void main() {
           seniority: SeniorityLevel.senior,
           email: 'ada@example.com',
           phone: null,
+          githubUsername: 'ada-lovelace',
+          clickupUserId: '230504877',
         ),
       ).thenAnswer((_) async => {'data': _personJson()});
 
@@ -134,6 +140,8 @@ void main() {
         admissionDate: DateTime(2020, 1, 15),
         seniority: SeniorityLevel.senior,
         email: 'ada@example.com',
+        githubUsername: 'ada-lovelace',
+        clickupUserId: '230504877',
       );
 
       expect(person.name, 'Ada Lovelace');
@@ -151,6 +159,8 @@ void main() {
           seniority: SeniorityLevel.senior,
           email: null,
           phone: null,
+          githubUsername: null,
+          clickupUserId: null,
         ),
       ).thenAnswer((_) async => {'data': _personWithoutDatesJson()});
 
@@ -181,6 +191,8 @@ void main() {
           seniority: SeniorityLevel.specialist,
           email: null,
           phone: null,
+          githubUsername: null,
+          clickupUserId: null,
         ),
       ).thenAnswer(
         (_) async => {

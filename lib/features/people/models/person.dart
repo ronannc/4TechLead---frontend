@@ -58,6 +58,8 @@ class Person extends Equatable {
     required this.updatedAt,
     this.email,
     this.phone,
+    this.githubUsername,
+    this.clickupUserId,
     this.dailyStatsSummary,
   });
 
@@ -70,6 +72,8 @@ class Person extends Equatable {
   final ContractType contractType;
   final String? email;
   final String? phone;
+  final String? githubUsername;
+  final String? clickupUserId;
   final DateTime? admissionDate;
   final SeniorityLevel seniority;
   final PersonDailyStatsSummary? dailyStatsSummary;
@@ -89,6 +93,8 @@ class Person extends Equatable {
       contractType: ContractType.fromApiValue(json['contract_type'] as String),
       email: json['email'] as String?,
       phone: json['phone'] as String?,
+      githubUsername: json['github_username'] as String?,
+      clickupUserId: json['clickup_user_id'] as String?,
       admissionDate: json['admission_date'] == null
           ? null
           : DateTime.parse(json['admission_date'] as String),
@@ -114,6 +120,8 @@ class Person extends Equatable {
       'contract_type': contractType.apiValue,
       'email': email,
       'phone': phone,
+      'github_username': githubUsername,
+      'clickup_user_id': clickupUserId,
       'admission_date': admissionDate?.toIso8601String(),
       'seniority': seniority.apiValue,
       'daily_stats_summary': dailyStatsSummary == null
@@ -142,6 +150,8 @@ class Person extends Equatable {
     contractType,
     email,
     phone,
+    githubUsername,
+    clickupUserId,
     admissionDate,
     seniority,
     dailyStatsSummary,

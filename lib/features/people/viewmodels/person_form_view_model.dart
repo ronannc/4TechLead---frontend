@@ -33,6 +33,8 @@ class PersonFormViewModel extends BaseViewModel {
     required SeniorityLevel seniority,
     String? email,
     String? phone,
+    String? githubUsername,
+    String? clickupUserId,
   }) async => savePerson(
     name: name,
     birthDate: birthDate,
@@ -42,6 +44,8 @@ class PersonFormViewModel extends BaseViewModel {
     seniority: seniority,
     email: email,
     phone: phone,
+    githubUsername: githubUsername,
+    clickupUserId: clickupUserId,
   );
 
   Future<void> savePerson({
@@ -53,6 +57,8 @@ class PersonFormViewModel extends BaseViewModel {
     required SeniorityLevel seniority,
     String? email,
     String? phone,
+    String? githubUsername,
+    String? clickupUserId,
   }) => runCatching(() async {
     final id = personId;
     if (id == null) {
@@ -66,6 +72,8 @@ class PersonFormViewModel extends BaseViewModel {
         seniority: seniority,
         email: email,
         phone: phone,
+        githubUsername: githubUsername,
+        clickupUserId: clickupUserId,
       );
       return;
     }
@@ -81,6 +89,8 @@ class PersonFormViewModel extends BaseViewModel {
       seniority: seniority,
       email: email,
       phone: phone,
+      githubUsername: githubUsername,
+      clickupUserId: clickupUserId,
     );
   });
 }

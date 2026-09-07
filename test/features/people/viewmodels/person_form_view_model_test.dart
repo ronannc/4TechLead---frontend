@@ -55,6 +55,8 @@ void main() {
           seniority: SeniorityLevel.senior,
           email: null,
           phone: null,
+          githubUsername: 'ada-lovelace',
+          clickupUserId: '230504877',
         ),
       ).thenAnswer((_) async => _person);
 
@@ -64,6 +66,8 @@ void main() {
         position: 'Software Engineer',
         contractType: ContractType.clt,
         seniority: SeniorityLevel.senior,
+        githubUsername: 'ada-lovelace',
+        clickupUserId: '230504877',
       );
 
       expect(viewModel.state, ViewState.loaded);
@@ -79,6 +83,8 @@ void main() {
           seniority: SeniorityLevel.senior,
           email: null,
           phone: null,
+          githubUsername: 'ada-lovelace',
+          clickupUserId: '230504877',
         ),
       ).called(1);
     },
@@ -97,6 +103,8 @@ void main() {
         seniority: SeniorityLevel.specialist,
         email: null,
         phone: null,
+        githubUsername: null,
+        clickupUserId: null,
       ),
     ).thenAnswer(
       (_) async => Person(
@@ -133,6 +141,8 @@ void main() {
         seniority: SeniorityLevel.specialist,
         email: null,
         phone: null,
+        githubUsername: null,
+        clickupUserId: null,
       ),
     ).called(1);
   });
