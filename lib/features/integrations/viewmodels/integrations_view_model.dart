@@ -15,11 +15,23 @@ class IntegrationsViewModel extends BaseViewModel {
   List<Person> people = [];
   List<PersonExternalIdentity> identities = [];
   List<PersonDeliveryMetric> metrics = [];
+  List<IntegrationWebhookEvent> webhookEvents = [];
   int systemsPage = 1;
   int identitiesPage = 1;
   int metricsPage = 1;
   int metricsLastPage = 1;
   int metricsTotal = 0;
+  int webhookEventsPage = 1;
+  int webhookEventsLastPage = 1;
+  int webhookEventsTotal = 0;
+  String webhookEventSearch = '';
+  int? webhookEventSystemId;
+  int? webhookEventPersonId;
+  String? webhookEventStatus;
+  bool webhookEventsOnlyUnmapped = false;
+  bool webhookEventsOnlyFailures = false;
+  String webhookEventsOrderDirection = 'desc';
+  IntegrationWebhookEvent? selectedWebhookEvent;
   String? latestToken;
   String? actionErrorMessage;
   bool isMutating = false;
@@ -94,6 +106,68 @@ class IntegrationsViewModel extends BaseViewModel {
     });
   }
 
+  Future<void> changeWebhookEventsPage(int page) async {
+    final nextPage = page.clamp(1, webhookEventsLastPage).toInt();
+    await _runMutation(() async {
+      await _loadWebhookEvents(page: nextPage);
+    });
+  }
+
+  Future<void> updateWebhookEventFilters({
+    String? search,
+    int? systemId,
+    bool clearSystemId = false,
+    int? personId,
+    bool clearPersonId = false,
+    String? status,
+    bool clearStatus = false,
+    bool? onlyUnmapped,
+    bool? onlyFailures,
+    String? orderDirection,
+  }) async {
+    webhookEventSearch = search ?? webhookEventSearch;
+    webhookEventSystemId = clearSystemId
+        ? null
+        : systemId ?? webhookEventSystemId;
+    webhookEventPersonId = clearPersonId
+        ? null
+        : personId ?? webhookEventPersonId;
+    webhookEventStatus = clearStatus ? null : status ?? webhookEventStatus;
+    webhookEventsOnlyUnmapped = onlyUnmapped ?? webhookEventsOnlyUnmapped;
+    webhookEventsOnlyFailures = onlyFailures ?? webhookEventsOnlyFailures;
+    webhookEventsOrderDirection = orderDirection ?? webhookEventsOrderDirection;
+
+    await _runMutation(() async {
+      await _loadWebhookEvents(page: 1);
+    });
+  }
+
+  Future<void> clearWebhookEventFilters() async {
+    webhookEventSearch = '';
+    webhookEventSystemId = null;
+    webhookEventPersonId = null;
+    webhookEventStatus = null;
+    webhookEventsOnlyUnmapped = false;
+    webhookEventsOnlyFailures = false;
+    webhookEventsOrderDirection = 'desc';
+
+    await _runMutation(() async {
+      await _loadWebhookEvents(page: 1);
+    });
+  }
+
+  Future<bool> loadWebhookEventDetail(int eventId) => _runMutation(() async {
+    selectedWebhookEvent = await _repository.getWebhookEvent(eventId);
+  });
+
+  Future<bool> archiveWebhookEvent(int eventId) => _runMutation(() async {
+    await _repository.archiveWebhookEvent(eventId);
+    if (selectedWebhookEvent?.id == eventId) {
+      selectedWebhookEvent = null;
+    }
+    await _loadWebhookEvents(page: webhookEventsPage);
+  });
+
   void clearActionError() {
     actionErrorMessage = null;
     notifyListeners();
@@ -126,6 +200,7 @@ class IntegrationsViewModel extends BaseViewModel {
     systemsPage = 1;
     identitiesPage = 1;
     await _loadMetrics(page: 1);
+    await _loadWebhookEvents(page: 1);
   }
 
   Future<void> _loadMetrics({required int page}) async {
@@ -137,6 +212,24 @@ class IntegrationsViewModel extends BaseViewModel {
     metricsPage = metricsPageResponse.currentPage;
     metricsLastPage = metricsPageResponse.lastPage;
     metricsTotal = metricsPageResponse.total;
+  }
+
+  Future<void> _loadWebhookEvents({required int page}) async {
+    final eventsPageResponse = await _repository.getWebhookEvents(
+      page: page,
+      search: webhookEventSearch,
+      integrationSystemId: webhookEventSystemId,
+      personId: webhookEventPersonId,
+      status: webhookEventStatus,
+      unmapped: webhookEventsOnlyUnmapped,
+      withFailure: webhookEventsOnlyFailures,
+      orderDirection: webhookEventsOrderDirection,
+    );
+
+    webhookEvents = eventsPageResponse.items;
+    webhookEventsPage = eventsPageResponse.currentPage;
+    webhookEventsLastPage = eventsPageResponse.lastPage;
+    webhookEventsTotal = eventsPageResponse.total;
   }
 
   Future<bool> _runMutation(Future<void> Function() action) async {

@@ -19,6 +19,11 @@ void main() {
   tearDown(getIt.reset);
 
   testWidgets('renders integration management sections', (tester) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final integrationRepository = _MockIntegrationRepository();
     final personRepository = _MockPersonRepository();
 
@@ -63,6 +68,35 @@ void main() {
       ),
     );
     when(
+      () => integrationRepository.getWebhookEvents(
+        page: 1,
+        search: '',
+        integrationSystemId: null,
+        personId: null,
+        status: null,
+        unmapped: false,
+        withFailure: false,
+        orderDirection: 'desc',
+      ),
+    ).thenAnswer(
+      (_) async => const WebhookEventsPage(
+        items: [
+          IntegrationWebhookEvent(
+            id: 1,
+            integrationSystemId: 1,
+            eventId: 'github-delivery-1',
+            eventType: 'pull_request.merged',
+            status: 'processed',
+            payload: {'repository': 'org/repo'},
+            deliveryMetricsCount: 1,
+          ),
+        ],
+        currentPage: 1,
+        lastPage: 1,
+        total: 1,
+      ),
+    );
+    when(
       () => personRepository.getPeople(page: 1, perPage: 100),
     ).thenAnswer((_) async => [_person()]);
 
@@ -83,6 +117,11 @@ void main() {
     await tester.tap(find.text('Métricas'));
     await tester.pumpAndSettle();
     expect(find.text('Qualidade do código'), findsOneWidget);
+
+    await tester.tap(find.text('Eventos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Eventos recebidos'), findsOneWidget);
+    expect(find.text('pull_request.merged'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

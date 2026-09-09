@@ -181,4 +181,66 @@ void main() {
     expect(page.items.single.metricType, 'code_quality_score');
     verifyNever(() => service.getDeliveryMetrics(page: 2));
   });
+
+  test('maps a paginated webhook events page', () async {
+    when(
+      () => service.getWebhookEvents(
+        page: 1,
+        search: null,
+        integrationSystemId: null,
+        personId: null,
+        status: null,
+        unmapped: false,
+        withFailure: false,
+        orderDirection: 'desc',
+      ),
+    ).thenAnswer(
+      (_) async => {
+        'data': [
+          {
+            'id': 10,
+            'integration_system_id': 3,
+            'person_id': null,
+            'event_id': 'github-delivery-1',
+            'event_type': 'pull_request.merged',
+            'external_actor_code': 'ada',
+            'status': 'unmapped_person',
+            'failure_reason': null,
+            'payload': {'repository': 'org/repo'},
+            'payload_hash': 'abc123',
+            'payload_size_bytes': 1234,
+            'normalized_payload': {'task_reference': 'DRIE-21919'},
+            'delivery_metrics_count': 2,
+            'received_at': '2026-09-08T18:00:00Z',
+            'delivery_metrics': [
+              {
+                'id': 1,
+                'person_id': 2,
+                'integration_system_id': 3,
+                'metric_type': 'pull_request_count',
+                'metric_value': '1.00',
+                'unit': 'count',
+                'source_ref': 'org/repo#42',
+                'occurred_at': '2026-09-08T18:00:00Z',
+              },
+            ],
+          },
+        ],
+        'meta': {'current_page': 1, 'last_page': 4, 'total': 61},
+      },
+    );
+
+    final page = await repository.getWebhookEvents();
+
+    expect(page.currentPage, 1);
+    expect(page.lastPage, 4);
+    expect(page.total, 61);
+    expect(page.items.single.eventType, 'pull_request.merged');
+    expect(page.items.single.payload['repository'], 'org/repo');
+    expect(page.items.single.deliveryMetricsCount, 2);
+    expect(
+      page.items.single.deliveryMetrics.single.metricType,
+      'pull_request_count',
+    );
+  });
 }

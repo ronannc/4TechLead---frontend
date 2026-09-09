@@ -51,6 +51,25 @@ void main() {
           total: 0,
         ),
       );
+      when(
+        () => integrationRepository.getWebhookEvents(
+          page: 1,
+          search: '',
+          integrationSystemId: null,
+          personId: null,
+          status: null,
+          unmapped: false,
+          withFailure: false,
+          orderDirection: 'desc',
+        ),
+      ).thenAnswer(
+        (_) async => const WebhookEventsPage(
+          items: [],
+          currentPage: 1,
+          lastPage: 1,
+          total: 0,
+        ),
+      );
       await viewModel.load();
 
       when(

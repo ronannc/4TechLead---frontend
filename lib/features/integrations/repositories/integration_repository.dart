@@ -55,6 +55,40 @@ class IntegrationRepository {
     return DeliveryMetricsPage.fromJson(json);
   }
 
+  Future<WebhookEventsPage> getWebhookEvents({
+    int page = 1,
+    String? search,
+    int? integrationSystemId,
+    int? personId,
+    String? status,
+    bool unmapped = false,
+    bool withFailure = false,
+    String orderDirection = 'desc',
+  }) async {
+    final json = await _service.getWebhookEvents(
+      page: page,
+      search: search,
+      integrationSystemId: integrationSystemId,
+      personId: personId,
+      status: status,
+      unmapped: unmapped,
+      withFailure: withFailure,
+      orderDirection: orderDirection,
+    );
+    return WebhookEventsPage.fromJson(json);
+  }
+
+  Future<IntegrationWebhookEvent> getWebhookEvent(int eventId) async {
+    final json = await _service.getWebhookEvent(eventId);
+    return IntegrationWebhookEvent.fromJson(
+      json['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> archiveWebhookEvent(int eventId) {
+    return _service.archiveWebhookEvent(eventId);
+  }
+
   List<T> _list<T>(
     Map<String, dynamic> json,
     T Function(Map<String, dynamic>) map,

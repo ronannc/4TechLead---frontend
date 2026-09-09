@@ -60,6 +60,44 @@ class IntegrationService {
     );
   }
 
+  Future<Map<String, dynamic>> getWebhookEvents({
+    int page = 1,
+    String? search,
+    int? integrationSystemId,
+    int? personId,
+    String? status,
+    bool unmapped = false,
+    bool withFailure = false,
+    String orderDirection = 'desc',
+  }) {
+    return _get(
+      '/integration-webhook-events',
+      query: {
+        'page': page,
+        'per_page': 20,
+        'order[received_at]': orderDirection,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+        'filters[integration_system_id]': ?integrationSystemId,
+        'filters[person_id]': ?personId,
+        if (status != null && status.isNotEmpty) 'filters[status]': status,
+        if (unmapped) 'filters[unmapped]': true,
+        if (withFailure) 'filters[with_failure]': true,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> getWebhookEvent(int eventId) {
+    return _get('/integration-webhook-events/$eventId');
+  }
+
+  Future<void> archiveWebhookEvent(int eventId) async {
+    try {
+      await _client.dio.delete<void>('/integration-webhook-events/$eventId');
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
   Future<Map<String, dynamic>> _get(
     String path, {
     Map<String, dynamic>? query,
