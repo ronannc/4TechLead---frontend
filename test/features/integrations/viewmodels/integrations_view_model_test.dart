@@ -104,6 +104,7 @@ void main() {
       provider: 'github',
       tokenPrefix: 'new12345',
       webhookToken: 'new-secret-token',
+      webhookUrl: 'https://app.test/api/v1/github-webhooks',
       active: true,
     );
 
@@ -118,6 +119,11 @@ void main() {
 
     expect(saved, isTrue);
     expect(viewModel.latestToken, 'new-secret-token');
+    expect(
+      viewModel.latestWebhookUrl,
+      'https://app.test/api/v1/github-webhooks',
+    );
+    expect(viewModel.latestProvider, 'github');
     expect(viewModel.systems.single.tokenPrefix, 'new12345');
     expect(viewModel.isMutating, isFalse);
   });

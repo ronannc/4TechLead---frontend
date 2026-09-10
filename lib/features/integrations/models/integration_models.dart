@@ -8,6 +8,7 @@ class IntegrationSystem extends Equatable {
     this.description,
     required this.tokenPrefix,
     this.webhookToken,
+    this.webhookUrl,
     required this.active,
     this.lastReceivedAt,
   });
@@ -18,6 +19,7 @@ class IntegrationSystem extends Equatable {
   final String? description;
   final String tokenPrefix;
   final String? webhookToken;
+  final String? webhookUrl;
   final bool active;
   final DateTime? lastReceivedAt;
 
@@ -29,6 +31,7 @@ class IntegrationSystem extends Equatable {
       description: json['description'] as String?,
       tokenPrefix: json['token_prefix'] as String,
       webhookToken: json['webhook_token'] as String?,
+      webhookUrl: json['webhook_url'] as String?,
       active: json['active'] as bool,
       lastReceivedAt: _date(json['last_received_at']),
     );
@@ -42,6 +45,7 @@ class IntegrationSystem extends Equatable {
     description,
     tokenPrefix,
     webhookToken,
+    webhookUrl,
     active,
     lastReceivedAt,
   ];

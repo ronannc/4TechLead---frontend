@@ -107,7 +107,11 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
         ],
         if (viewModel.latestToken != null) ...[
           const SizedBox(height: AppSpacing.md),
-          _TokenPanel(token: viewModel.latestToken!),
+          _TokenPanel(
+            token: viewModel.latestToken!,
+            webhookUrl: viewModel.latestWebhookUrl,
+            provider: viewModel.latestProvider,
+          ),
         ],
         const SizedBox(height: AppSpacing.md),
         switch (_selectedTab) {
@@ -565,13 +569,21 @@ class _IntegrationTabButton extends StatelessWidget {
 }
 
 class _TokenPanel extends StatelessWidget {
-  const _TokenPanel({required this.token});
+  const _TokenPanel({
+    required this.token,
+    required this.webhookUrl,
+    required this.provider,
+  });
 
   final String token;
+  final String? webhookUrl;
+  final String? provider;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final url = webhookUrl;
+    final isClickUp = provider == 'clickup';
 
     return _Surface(
       child: Column(
@@ -586,9 +598,80 @@ class _TokenPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          SelectableText(token),
+          _CopyableValue(label: 'Token', value: token, masked: true),
+          if (url != null && url.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _CopyableValue(label: 'URL do webhook', value: url),
+            if (isClickUp) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Na automação do ClickUp, adicione este header:',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              _CopyableValue(label: 'Header', value: 'X-Integration-Token'),
+              const SizedBox(height: AppSpacing.xs),
+              _CopyableValue(
+                label: 'Valor do header',
+                value: token,
+                masked: true,
+              ),
+            ],
+          ],
         ],
       ),
+    );
+  }
+}
+
+class _CopyableValue extends StatelessWidget {
+  const _CopyableValue({
+    required this.label,
+    required this.value,
+    this.masked = false,
+  });
+
+  final String label;
+  final String value;
+  final bool masked;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: theme.textTheme.labelMedium),
+              const SizedBox(height: AppSpacing.xs),
+              SelectableText(
+                value,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: masked ? 'monospace' : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: 'Copiar',
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: value));
+            if (context.mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('$label copiado.')));
+            }
+          },
+          icon: const Icon(Icons.copy_outlined),
+        ),
+      ],
     );
   }
 }
@@ -628,6 +711,17 @@ class _SystemTile extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          if (system.webhookUrl != null && system.webhookUrl!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _CopyableValue(label: 'URL do webhook', value: system.webhookUrl!),
+            if (system.provider == 'clickup') ...[
+              const SizedBox(height: AppSpacing.xs),
+              _CopyableValue(
+                label: 'Header da automação',
+                value: 'X-Integration-Token',
+              ),
+            ],
+          ],
           const SizedBox(height: AppSpacing.sm),
           Align(
             alignment: Alignment.centerRight,

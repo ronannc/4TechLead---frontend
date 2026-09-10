@@ -33,6 +33,8 @@ class IntegrationsViewModel extends BaseViewModel {
   String webhookEventsOrderDirection = 'desc';
   IntegrationWebhookEvent? selectedWebhookEvent;
   String? latestToken;
+  String? latestWebhookUrl;
+  String? latestProvider;
   String? actionErrorMessage;
   bool isMutating = false;
 
@@ -67,6 +69,8 @@ class IntegrationsViewModel extends BaseViewModel {
       description: description,
     );
     latestToken = system.webhookToken;
+    latestWebhookUrl = system.webhookUrl;
+    latestProvider = system.provider;
     systems = await _repository.getSystems();
     systemsPage = 1;
   });
@@ -74,6 +78,8 @@ class IntegrationsViewModel extends BaseViewModel {
   Future<bool> regenerateSystemToken(int systemId) => _runMutation(() async {
     final system = await _repository.regenerateSystemToken(systemId);
     latestToken = system.webhookToken;
+    latestWebhookUrl = system.webhookUrl;
+    latestProvider = system.provider;
     systems = await _repository.getSystems();
   });
 

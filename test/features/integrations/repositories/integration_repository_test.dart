@@ -25,6 +25,7 @@ void main() {
             'description': 'PRs e CI',
             'token_prefix': 'abc12345',
             'webhook_token': 'secret-token',
+            'webhook_url': 'https://app.test/api/v1/clickup-webhooks',
             'active': true,
             'last_received_at': null,
           },
@@ -36,6 +37,10 @@ void main() {
 
     expect(systems.single.name, 'GitHub Produto');
     expect(systems.single.webhookToken, 'secret-token');
+    expect(
+      systems.single.webhookUrl,
+      'https://app.test/api/v1/clickup-webhooks',
+    );
   });
 
   test('maps regenerated integration system token', () async {
@@ -48,6 +53,7 @@ void main() {
           'description': 'PRs e CI',
           'token_prefix': 'new12345',
           'webhook_token': 'new-secret-token',
+          'webhook_url': 'https://app.test/api/v1/github-webhooks',
           'active': true,
           'last_received_at': null,
         },
@@ -58,6 +64,7 @@ void main() {
 
     expect(system.tokenPrefix, 'new12345');
     expect(system.webhookToken, 'new-secret-token');
+    expect(system.webhookUrl, 'https://app.test/api/v1/github-webhooks');
   });
 
   test('maps external identities', () async {
