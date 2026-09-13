@@ -107,6 +107,30 @@ void main() {
     expect(system.webhookUrl, 'https://app.test/api/v1/github-webhooks');
   });
 
+  test('maps integrations whose webhook token was revoked', () async {
+    when(service.getSystems).thenAnswer(
+      (_) async => {
+        'data': [
+          {
+            'id': 1,
+            'name': 'ClickUp Produto',
+            'provider': 'clickup',
+            'token_prefix': null,
+            'has_webhook_token': false,
+            'has_provider_api_token': true,
+            'active': true,
+          },
+        ],
+      },
+    );
+
+    final systems = await repository.getSystems();
+
+    expect(systems.single.tokenPrefix, isNull);
+    expect(systems.single.hasWebhookToken, isFalse);
+    expect(systems.single.hasProviderApiToken, isTrue);
+  });
+
   test('maps external identities', () async {
     when(service.getExternalIdentities).thenAnswer(
       (_) async => {
@@ -127,6 +151,29 @@ void main() {
     expect(identities.single.personId, 2);
     expect(identities.single.externalCode, 'lucas-github');
   });
+
+  test(
+    'maps historical identities after their integration is deleted',
+    () async {
+      when(service.getExternalIdentities).thenAnswer(
+        (_) async => {
+          'data': [
+            {
+              'id': 1,
+              'person_id': 2,
+              'integration_system_id': null,
+              'external_code': 'lucas-github',
+              'active': true,
+            },
+          ],
+        },
+      );
+
+      final identities = await repository.getExternalIdentities();
+
+      expect(identities.single.integrationSystemId, isNull);
+    },
+  );
 
   test('maps a paginated delivery metrics page', () async {
     when(() => service.getDeliveryMetrics(page: 1)).thenAnswer(
@@ -290,4 +337,44 @@ void main() {
       'pull_request_count',
     );
   });
+
+  test(
+    'maps historical webhook events after their integration is deleted',
+    () async {
+      when(
+        () => service.getWebhookEvents(
+          page: 1,
+          search: null,
+          integrationSystemId: null,
+          personId: null,
+          status: null,
+          unmapped: false,
+          withFailure: false,
+          orderDirection: 'desc',
+        ),
+      ).thenAnswer(
+        (_) async => {
+          'data': <Map<String, dynamic>>[
+            {
+              'id': 11,
+              'integration_system_id': null,
+              'person_id': null,
+              'event_id': 'github-delivery-preserved',
+              'event_type': 'pull_request.merged',
+              'external_actor_code': 'ada',
+              'status': 'unmapped_person',
+              'failure_reason': null,
+              'payload': {'repository': 'org/repo'},
+              'delivery_metrics': <Map<String, dynamic>>[],
+            },
+          ],
+        },
+      );
+
+      final page = await repository.getWebhookEvents();
+
+      expect(page.items.single.eventId, 'github-delivery-preserved');
+      expect(page.items.single.integrationSystemId, isNull);
+    },
+  );
 }

@@ -85,6 +85,14 @@ class IntegrationsViewModel extends BaseViewModel {
     systems = await _repository.getSystems();
   });
 
+  Future<bool> deleteSystem(int systemId) => _runMutation(() async {
+    await _repository.deleteSystem(systemId);
+    latestToken = null;
+    latestWebhookUrl = null;
+    latestProvider = null;
+    systems = await _repository.getSystems();
+  });
+
   Future<bool> createExternalIdentity({
     required int personId,
     required int integrationSystemId,
@@ -189,12 +197,16 @@ class IntegrationsViewModel extends BaseViewModel {
         'Pessoa #$personId';
   }
 
-  String systemName(int systemId) {
+  String systemName(int? systemId) {
+    if (systemId == null) {
+      return 'Integração removida';
+    }
+
     return systems
             .where((system) => system.id == systemId)
             .map((system) => system.name)
             .firstOrNull ??
-        'Integração #$systemId';
+        'Integração removida';
   }
 
   Future<void> _loadAll() async {

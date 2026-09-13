@@ -128,4 +128,37 @@ void main() {
     expect(viewModel.systems.single.tokenPrefix, 'new12345');
     expect(viewModel.isMutating, isFalse);
   });
+
+  test(
+    'deleteSystem() clears the one time token state and reloads systems',
+    () async {
+      const remainingSystem = IntegrationSystem(
+        id: 1,
+        name: 'ClickUp Produto',
+        provider: 'clickup',
+        tokenPrefix: 'remaining',
+        hasProviderApiToken: false,
+        active: true,
+      );
+
+      viewModel.latestToken = 'old-token';
+      viewModel.latestWebhookUrl = 'https://app.test/api/v1/clickup-webhooks';
+      viewModel.latestProvider = 'clickup';
+      when(
+        () => integrationRepository.deleteSystem(1),
+      ).thenAnswer((_) async {});
+      when(
+        integrationRepository.getSystems,
+      ).thenAnswer((_) async => const [remainingSystem]);
+
+      final saved = await viewModel.deleteSystem(1);
+
+      expect(saved, isTrue);
+      expect(viewModel.latestToken, isNull);
+      expect(viewModel.latestWebhookUrl, isNull);
+      expect(viewModel.latestProvider, isNull);
+      expect(viewModel.systems.single.id, 1);
+      expect(viewModel.isMutating, isFalse);
+    },
+  );
 }

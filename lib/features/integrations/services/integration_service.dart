@@ -37,6 +37,14 @@ class IntegrationService {
     );
   }
 
+  Future<void> deleteSystem(int systemId) async {
+    try {
+      await _client.dio.delete<void>('/integration-systems/$systemId');
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
   Future<Map<String, dynamic>> getExternalIdentities() {
     return _get('/person-external-identities', query: {'per_page': 100});
   }

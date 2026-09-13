@@ -6,7 +6,8 @@ class IntegrationSystem extends Equatable {
     required this.name,
     required this.provider,
     this.description,
-    required this.tokenPrefix,
+    this.tokenPrefix,
+    this.hasWebhookToken = true,
     this.webhookToken,
     this.webhookUrl,
     this.hasProviderApiToken = false,
@@ -18,7 +19,8 @@ class IntegrationSystem extends Equatable {
   final String name;
   final String provider;
   final String? description;
-  final String tokenPrefix;
+  final String? tokenPrefix;
+  final bool hasWebhookToken;
   final String? webhookToken;
   final String? webhookUrl;
   final bool hasProviderApiToken;
@@ -31,7 +33,9 @@ class IntegrationSystem extends Equatable {
       name: json['name'] as String,
       provider: json['provider'] as String,
       description: json['description'] as String?,
-      tokenPrefix: json['token_prefix'] as String,
+      tokenPrefix: json['token_prefix'] as String?,
+      hasWebhookToken:
+          json['has_webhook_token'] as bool? ?? json['token_prefix'] != null,
       webhookToken: json['webhook_token'] as String?,
       webhookUrl: json['webhook_url'] as String?,
       hasProviderApiToken: json['has_provider_api_token'] as bool? ?? false,
@@ -47,6 +51,7 @@ class IntegrationSystem extends Equatable {
     provider,
     description,
     tokenPrefix,
+    hasWebhookToken,
     webhookToken,
     webhookUrl,
     hasProviderApiToken,
@@ -59,14 +64,14 @@ class PersonExternalIdentity extends Equatable {
   const PersonExternalIdentity({
     required this.id,
     required this.personId,
-    required this.integrationSystemId,
+    this.integrationSystemId,
     required this.externalCode,
     required this.active,
   });
 
   final int id;
   final int personId;
-  final int integrationSystemId;
+  final int? integrationSystemId;
   final String externalCode;
   final bool active;
 
@@ -74,7 +79,7 @@ class PersonExternalIdentity extends Equatable {
     return PersonExternalIdentity(
       id: json['id'] as int,
       personId: json['person_id'] as int,
-      integrationSystemId: json['integration_system_id'] as int,
+      integrationSystemId: json['integration_system_id'] as int?,
       externalCode: json['external_code'] as String,
       active: json['active'] as bool,
     );
@@ -163,7 +168,7 @@ class IntegrationWebhookEvent extends Equatable {
   });
 
   final int id;
-  final int integrationSystemId;
+  final int? integrationSystemId;
   final int? personId;
   final String eventId;
   final String eventType;
@@ -183,7 +188,7 @@ class IntegrationWebhookEvent extends Equatable {
   factory IntegrationWebhookEvent.fromJson(Map<String, dynamic> json) {
     return IntegrationWebhookEvent(
       id: json['id'] as int,
-      integrationSystemId: json['integration_system_id'] as int,
+      integrationSystemId: json['integration_system_id'] as int?,
       personId: json['person_id'] as int?,
       eventId: json['event_id'] as String,
       eventType: json['event_type'] as String,

@@ -621,18 +621,11 @@ class _TokenPanel extends StatelessWidget {
             if (isClickUp) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Na automação do ClickUp, adicione este header:',
+                'Na automação do ClickUp, configure o header '
+                'X-Integration-Token usando o token acima.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              _CopyableValue(label: 'Header', value: 'X-Integration-Token'),
-              const SizedBox(height: AppSpacing.xs),
-              _CopyableValue(
-                label: 'Valor do header',
-                value: token,
-                masked: true,
               ),
             ],
           ],
@@ -711,7 +704,7 @@ class _SystemTile extends StatelessWidget {
             leading: Icon(_providerIcon(system.provider)),
             title: Text(system.name),
             subtitle: Text(
-              '${system.provider} · token ${system.tokenPrefix}...'
+              '${system.provider} · ${system.hasWebhookToken ? 'token ${system.tokenPrefix}...' : 'token revogado'}'
               '${system.lastReceivedAt == null ? '' : ' · recebeu evento'}',
             ),
             trailing: Icon(
@@ -748,15 +741,27 @@ class _SystemTile extends StatelessWidget {
             ],
           ],
           const SizedBox(height: AppSpacing.sm),
-          Align(
-            alignment: Alignment.centerRight,
-            child: OutlinedButton.icon(
-              onPressed: viewModel.isMutating
-                  ? null
-                  : () => _confirmTokenRegeneration(context, system, viewModel),
-              icon: const Icon(Icons.sync),
-              label: const Text('Gerar novo token'),
-            ),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              OutlinedButton.icon(
+                onPressed: viewModel.isMutating
+                    ? null
+                    : () => _confirmSystemDeletion(context, system, viewModel),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Excluir integração'),
+              ),
+              OutlinedButton.icon(
+                onPressed: viewModel.isMutating
+                    ? null
+                    : () =>
+                          _confirmTokenRegeneration(context, system, viewModel),
+                icon: const Icon(Icons.sync),
+                label: const Text('Gerar novo token'),
+              ),
+            ],
           ),
         ],
       ),
@@ -803,6 +808,49 @@ class _SystemTile extends StatelessWidget {
         const SnackBar(
           content: Text('Novo token gerado. Copie antes de sair da tela.'),
         ),
+      );
+    }
+  }
+
+  Future<void> _confirmSystemDeletion(
+    BuildContext context,
+    IntegrationSystem system,
+    IntegrationsViewModel viewModel,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir integração?'),
+        content: Text(
+          'A integração ${system.name} e seus tokens serão excluídos. '
+          'Os eventos, notificações e vínculos já registrados serão mantidos no histórico, sem associação com esta integração. '
+          'Esta ação não pode ser desfeita.',
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        actions: [
+          AppDialogActions(
+            secondaryLabel: 'Cancelar',
+            onSecondaryPressed: () => Navigator.of(context).pop(false),
+            primaryLabel: 'Excluir',
+            onPrimaryPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final saved = await viewModel.deleteSystem(system.id);
+    if (saved && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Integração excluída com sucesso.')),
       );
     }
   }

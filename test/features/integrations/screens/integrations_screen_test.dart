@@ -38,6 +38,22 @@ void main() {
         ),
       ],
     );
+    when(
+      () => integrationRepository.createSystem(
+        name: 'ClickUp Produto',
+        provider: 'clickup',
+      ),
+    ).thenAnswer(
+      (_) async => const IntegrationSystem(
+        id: 2,
+        name: 'ClickUp Produto',
+        provider: 'clickup',
+        tokenPrefix: 'secret1a',
+        webhookToken: 'clickup-one-time-token',
+        webhookUrl: 'https://app.test/api/v1/clickup-webhooks',
+        active: true,
+      ),
+    );
     when(integrationRepository.getExternalIdentities).thenAnswer(
       (_) async => const [
         PersonExternalIdentity(
@@ -109,6 +125,20 @@ void main() {
     expect(find.text('Integrações'), findsOneWidget);
     expect(find.text('Novo sistema'), findsOneWidget);
     expect(find.text('GitHub Produto', skipOffstage: false), findsWidgets);
+    expect(find.text('Excluir integração'), findsOneWidget);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ClickUp').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'ClickUp Produto');
+    await tester.ensureVisible(find.text('Criar integração'));
+    await tester.tap(find.text('Criar integração'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('clickup-one-time-token'), findsOneWidget);
+    expect(find.textContaining('X-Integration-Token'), findsOneWidget);
+    expect(find.text('Valor do header'), findsNothing);
 
     await tester.tap(find.text('Vínculos'));
     await tester.pumpAndSettle();

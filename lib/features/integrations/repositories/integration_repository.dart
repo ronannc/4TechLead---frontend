@@ -33,6 +33,10 @@ class IntegrationRepository {
     return IntegrationSystem.fromJson(json['data'] as Map<String, dynamic>);
   }
 
+  Future<void> deleteSystem(int systemId) {
+    return _service.deleteSystem(systemId);
+  }
+
   Future<List<PersonExternalIdentity>> getExternalIdentities() async {
     final json = await _service.getExternalIdentities();
     return _list(json, PersonExternalIdentity.fromJson);
