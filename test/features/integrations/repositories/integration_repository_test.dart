@@ -26,6 +26,7 @@ void main() {
             'token_prefix': 'abc12345',
             'webhook_token': 'secret-token',
             'webhook_url': 'https://app.test/api/v1/clickup-webhooks',
+            'has_provider_api_token': true,
             'active': true,
             'last_received_at': null,
           },
@@ -41,7 +42,46 @@ void main() {
       systems.single.webhookUrl,
       'https://app.test/api/v1/clickup-webhooks',
     );
+    expect(systems.single.hasProviderApiToken, isTrue);
   });
+
+  test(
+    'forwards provider api token when creating integration systems',
+    () async {
+      when(
+        () => service.createSystem(
+          name: 'ClickUp Produto',
+          provider: 'clickup',
+          description: null,
+          providerApiToken: 'pk_clickup_api_token',
+        ),
+      ).thenAnswer(
+        (_) async => {
+          'data': {
+            'id': 1,
+            'name': 'ClickUp Produto',
+            'provider': 'clickup',
+            'description': null,
+            'token_prefix': 'abc12345',
+            'webhook_token': 'secret-token',
+            'webhook_url': 'https://app.test/api/v1/clickup-webhooks',
+            'has_provider_api_token': true,
+            'active': true,
+            'last_received_at': null,
+          },
+        },
+      );
+
+      final system = await repository.createSystem(
+        name: 'ClickUp Produto',
+        provider: 'clickup',
+        providerApiToken: 'pk_clickup_api_token',
+      );
+
+      expect(system.provider, 'clickup');
+      expect(system.hasProviderApiToken, isTrue);
+    },
+  );
 
   test('maps regenerated integration system token', () async {
     when(() => service.regenerateSystemToken(1)).thenAnswer(

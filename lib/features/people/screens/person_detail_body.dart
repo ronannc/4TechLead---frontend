@@ -1173,6 +1173,12 @@ class _AnalysisTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final deliveryKpis = growth.deliveryKpis;
+
+    if (deliveryKpis != null) {
+      return _CanonicalDeliveryKpis(summary: deliveryKpis);
+    }
+
     final recentMetrics = growth.deliveryMetrics
         .where((metric) => !metric.metricType.startsWith('annual_'))
         .take(6)
@@ -1384,6 +1390,110 @@ class _AnalysisTab extends StatelessWidget {
             _DeliveryMetricTile(metric: recentMetrics[index]),
           ],
       ],
+    );
+  }
+}
+
+class _CanonicalDeliveryKpis extends StatelessWidget {
+  const _CanonicalDeliveryKpis({required this.summary});
+
+  final DeliveryKpiSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle(
+          title: 'KPIs de entregas',
+          subtitle:
+              'Baseados em tarefas correlacionadas entre ClickUp e GitHub.',
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _Surface(
+          child: Text(
+            '${summary.associatedCases} de ${summary.casesInScope} entregas associadas'
+            '${summary.associationRate == null ? '' : ' · ${_percentageMetric(summary.associationRate)} de cobertura'}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = constraints.maxWidth < 360
+                ? constraints.maxWidth
+                : (constraints.maxWidth - AppSpacing.sm) / 2;
+
+            return Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                _kpiCard(
+                  itemWidth,
+                  Icons.task_alt_outlined,
+                  'Entregas publicadas',
+                  '${summary.publishedDeliveries}',
+                ),
+                _kpiCard(
+                  itemWidth,
+                  Icons.stars_outlined,
+                  'Pontos publicados',
+                  _compactMetric(summary.publishedStoryPoints),
+                ),
+                _kpiCard(
+                  itemWidth,
+                  Icons.timer_outlined,
+                  'Desenvolvimento p50',
+                  _unitMetric(summary.developmentCycleP50, 'h'),
+                ),
+                _kpiCard(
+                  itemWidth,
+                  Icons.hourglass_top_outlined,
+                  'Espera por QA p50',
+                  _unitMetric(summary.qaWaitP50, 'h'),
+                ),
+                _kpiCard(
+                  itemWidth,
+                  Icons.verified_outlined,
+                  'QA no primeiro passe',
+                  _percentageMetric(summary.qaFirstPassRate),
+                ),
+                _kpiCard(
+                  itemWidth,
+                  Icons.replay_outlined,
+                  'Retrabalho após QA',
+                  _percentageMetric(summary.qaReworkRate),
+                ),
+                _kpiCard(
+                  itemWidth,
+                  Icons.block_outlined,
+                  'Tempo impedido',
+                  _unitMetric(summary.blockedHours, 'h'),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Definição ${summary.definitionVersion}. Indicadores sem amostra suficiente aparecem como “-”.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _kpiCard(double width, IconData icon, String label, String value) {
+    return SizedBox(
+      width: width,
+      child: AppSummaryCard(icon: icon, label: label, value: value),
     );
   }
 }

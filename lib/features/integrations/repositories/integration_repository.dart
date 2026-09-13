@@ -15,11 +15,13 @@ class IntegrationRepository {
     required String name,
     required String provider,
     String? description,
+    String? providerApiToken,
   }) async {
     final json = await _service.createSystem(
       name: name,
       provider: provider,
       description: description,
+      providerApiToken: providerApiToken,
     );
 
     return IntegrationSystem.fromJson(json['data'] as Map<String, dynamic>);

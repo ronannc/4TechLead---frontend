@@ -221,6 +221,44 @@ class GrowthSuggestions {
   }
 }
 
+class DeliveryKpiSummary {
+  const DeliveryKpiSummary(this._data);
+
+  final Map<String, dynamic> _data;
+
+  factory DeliveryKpiSummary.fromJson(Map<String, dynamic> json) {
+    return DeliveryKpiSummary(json);
+  }
+
+  String get definitionVersion => _data['definition_version'] as String;
+
+  int get casesInScope => _intAt(['coverage', 'cases_in_scope']);
+  int get associatedCases => _intAt(['coverage', 'associated_cases']);
+  num? get associationRate => _numberAt(['coverage', 'association_rate_pct']);
+  int get publishedDeliveries => _intAt(['published_delivery_count', 'value']);
+  num get publishedStoryPoints =>
+      _numberAt(['published_story_points', 'value']) ?? 0;
+  num? get developmentCycleP50 =>
+      _numberAt(['development_cycle_time_hours', 'p50']);
+  num? get qaWaitP50 => _numberAt(['qa_wait_time_hours', 'p50']);
+  num? get qaFirstPassRate => _numberAt(['qa_first_pass_rate', 'value_pct']);
+  num? get qaReworkRate => _numberAt(['qa_rework_rate', 'value_pct']);
+  num get blockedHours => _numberAt(['blocked_time_hours', 'total']) ?? 0;
+
+  int _intAt(List<String> path) => _numberAt(path)?.toInt() ?? 0;
+
+  num? _numberAt(List<String> path) {
+    Object? value = _data;
+    for (final key in path) {
+      if (value is! Map<String, dynamic>) {
+        return null;
+      }
+      value = value[key];
+    }
+    return value is num ? value : null;
+  }
+}
+
 DateTime? _date(String? value) => value == null ? null : DateTime.parse(value);
 
 List<String> _stringList(Object? value) {

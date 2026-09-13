@@ -221,6 +221,10 @@ class PersonGrowthService {
     );
   }
 
+  Future<Map<String, dynamic>> getDeliveryKpis(int personId) {
+    return _get('/delivery-kpis', query: {'person_id': personId});
+  }
+
   Future<Map<String, dynamic>> _get(
     String path, {
     Map<String, dynamic>? query,

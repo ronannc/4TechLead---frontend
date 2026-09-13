@@ -19,6 +19,7 @@ class PersonGrowthViewModel extends BaseViewModel {
   List<OneOnOneSession> sessions = [];
   List<DevelopmentPlan> plans = [];
   List<PersonDeliveryMetric> deliveryMetrics = [];
+  DeliveryKpiSummary? deliveryKpis;
   GrowthSuggestions? suggestions;
 
   int sessionPage = 1;
@@ -244,7 +245,9 @@ class PersonGrowthViewModel extends BaseViewModel {
     if (metricsLoaded) {
       return;
     }
-    deliveryMetrics = await _repository.getDeliveryMetrics(personId);
+    if (canManageGrowth) {
+      deliveryKpis = await _repository.getDeliveryKpis(personId);
+    }
     metricsLoaded = true;
   }
 

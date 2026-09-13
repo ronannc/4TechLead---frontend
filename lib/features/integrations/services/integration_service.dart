@@ -16,6 +16,7 @@ class IntegrationService {
     required String name,
     required String provider,
     String? description,
+    String? providerApiToken,
   }) {
     return _post(
       '/integration-systems',
@@ -23,6 +24,7 @@ class IntegrationService {
         'name': name,
         'provider': provider,
         'description': ?description,
+        'provider_api_token': ?providerApiToken,
         'active': true,
       },
     );

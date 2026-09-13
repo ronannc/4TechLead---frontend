@@ -77,6 +77,7 @@ void main() {
           name: 'ClickUp',
           provider: 'clickup',
           description: null,
+          providerApiToken: null,
         ),
       ).thenThrow(
         ValidationException({

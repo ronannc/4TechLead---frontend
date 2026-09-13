@@ -62,11 +62,13 @@ class IntegrationsViewModel extends BaseViewModel {
     required String name,
     required String provider,
     String? description,
+    String? providerApiToken,
   }) => _runMutation(() async {
     final system = await _repository.createSystem(
       name: name,
       provider: provider,
       description: description,
+      providerApiToken: providerApiToken,
     );
     latestToken = system.webhookToken;
     latestWebhookUrl = system.webhookUrl;

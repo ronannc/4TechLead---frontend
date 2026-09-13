@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:for_tech_lead/bootstrap.dart';
 import 'package:for_tech_lead/core/responsive/adaptive_scaffold.dart';
-import 'package:for_tech_lead/features/integrations/models/integration_models.dart';
 import 'package:for_tech_lead/features/people/models/contract_type.dart';
 import 'package:for_tech_lead/features/people/models/person.dart';
 import 'package:for_tech_lead/features/people/models/person_growth_models.dart';
@@ -137,12 +136,10 @@ void main() {
           expect(tester.takeException(), isNull);
 
           if (tab == 'KPIs') {
-            expect(find.text('Evidências recentes'), findsOneWidget);
-            expect(find.text('PRs no ano'), findsOneWidget);
-            expect(find.text('CI falhando / PR'), findsOneWidget);
-            expect(find.text('Tempo merge / PR'), findsOneWidget);
-            expect(find.text('Aceite em review'), findsOneWidget);
-            expect(find.text('Qualidade do código'), findsOneWidget);
+            expect(find.text('KPIs de entregas'), findsOneWidget);
+            expect(find.text('Entregas publicadas'), findsOneWidget);
+            expect(find.text('QA no primeiro passe'), findsOneWidget);
+            expect(find.text('Tempo impedido'), findsOneWidget);
             _expectAnalysisSpacing(tester);
           }
 
@@ -394,36 +391,29 @@ void _expectOneOnOneHistorySpacing(WidgetTester tester) {
 
 void _expectAnalysisSpacing(WidgetTester tester) {
   final summarySubtitle = tester.getRect(
-    find.text('Indicadores calculados a partir das integrações.'),
+    find.text('Baseados em tarefas correlacionadas entre ClickUp e GitHub.'),
   );
   final firstMetricCard = tester.getRect(
     find.ancestor(
-      of: find.text('1:1 registrados'),
+      of: find.text('Entregas publicadas'),
       matching: find.byType(Card),
     ),
   );
   final secondMetricCard = tester.getRect(
-    find.ancestor(of: find.text('PDIs ativos'), matching: find.byType(Card)),
-  );
-  final firstMetricLabel = tester.getRect(find.text('1:1 registrados'));
-  final firstEvidenceCard = tester.getRect(
     find.ancestor(
-      of: find.text('Qualidade do código'),
+      of: find.text('Pontos publicados'),
       matching: find.byType(Card),
     ),
   );
-  final secondEvidenceCard = tester.getRect(
-    find.ancestor(of: find.text('8 points'), matching: find.byType(Card)),
-  );
+  final firstMetricLabel = tester.getRect(find.text('Entregas publicadas'));
 
-  expect(firstMetricCard.top - summarySubtitle.bottom, closeTo(8, 0.1));
+  expect(firstMetricCard.top, greaterThan(summarySubtitle.bottom));
   if (secondMetricCard.top == firstMetricCard.top) {
     expect(secondMetricCard.left - firstMetricCard.right, closeTo(8, 0.1));
   } else {
     expect(secondMetricCard.top - firstMetricCard.bottom, closeTo(8, 0.1));
   }
   expect(firstMetricLabel.left - firstMetricCard.left, closeTo(16, 0.1));
-  expect(secondEvidenceCard.top - firstEvidenceCard.bottom, closeTo(8, 0.1));
 }
 
 void _stubRepositories({
@@ -484,101 +474,26 @@ void _stubRepositories({
     ),
   );
   when(
-    () => growthRepository.getDeliveryMetrics(1),
-  ).thenAnswer((_) async => _deliveryMetrics());
+    () => growthRepository.getDeliveryKpis(1),
+  ).thenAnswer((_) async => _deliveryKpis());
 }
 
-List<PersonDeliveryMetric> _deliveryMetrics() {
-  return [
-    PersonDeliveryMetric(
-      id: 10,
-      personId: 1,
-      metricType: 'annual_pull_request_count',
-      metricValue: 1,
-      unit: 'pr',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 11,
-      personId: 1,
-      metricType: 'annual_quality_average',
-      metricValue: 55,
-      unit: 'score',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 12,
-      personId: 1,
-      metricType: 'annual_ci_failure_average',
-      metricValue: 1,
-      unit: 'failures/pr',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 18,
-      personId: 1,
-      metricType: 'annual_pr_merge_time_average',
-      metricValue: 32,
-      unit: 'hours/pr',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 19,
-      personId: 1,
-      metricType: 'annual_review_acceptance_rate',
-      metricValue: 100,
-      unit: 'percent',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 13,
-      personId: 1,
-      metricType: 'annual_review_comment_average',
-      metricValue: 5,
-      unit: 'comments/pr',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 14,
-      personId: 1,
-      metricType: 'annual_rework_average',
-      metricValue: 1,
-      unit: 'times/pr',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 15,
-      personId: 1,
-      metricType: 'annual_delivery_points_total',
-      metricValue: 8,
-      unit: 'points',
-      sourceRef: 'year:2026',
-      occurredAt: DateTime(2026, 8, 8),
-    ),
-    PersonDeliveryMetric(
-      id: 1,
-      personId: 1,
-      metricType: 'code_quality_score',
-      metricValue: 55,
-      unit: 'score',
-      sourceRef: 'org/repo#42',
-    ),
-    PersonDeliveryMetric(
-      id: 2,
-      personId: 1,
-      metricType: 'delivery_points',
-      metricValue: 8,
-      unit: 'points',
-      sourceRef: 'org/repo#42',
-    ),
-  ];
+DeliveryKpiSummary _deliveryKpis() {
+  return DeliveryKpiSummary.fromJson({
+    'definition_version': 'delivery-kpis.v1',
+    'coverage': {
+      'cases_in_scope': 3,
+      'associated_cases': 3,
+      'association_rate_pct': 100,
+    },
+    'published_delivery_count': {'value': 2},
+    'published_story_points': {'value': 5},
+    'development_cycle_time_hours': {'p50': 3},
+    'qa_wait_time_hours': {'p50': 1},
+    'qa_first_pass_rate': {'value_pct': 80},
+    'qa_rework_rate': {'value_pct': 20},
+    'blocked_time_hours': {'total': 0.5},
+  });
 }
 
 Future<void> _tapTab(WidgetTester tester, String label) async {

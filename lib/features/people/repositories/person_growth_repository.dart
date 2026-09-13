@@ -181,6 +181,11 @@ class PersonGrowthRepository {
     return _list(json, PersonDeliveryMetric.fromJson);
   }
 
+  Future<DeliveryKpiSummary> getDeliveryKpis(int personId) async {
+    final json = await _service.getDeliveryKpis(personId);
+    return DeliveryKpiSummary.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
   List<T> _list<T>(
     Map<String, dynamic> json,
     T Function(Map<String, dynamic>) map,

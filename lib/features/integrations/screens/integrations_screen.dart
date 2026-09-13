@@ -72,6 +72,7 @@ class _IntegrationsBody extends StatefulWidget {
 class _IntegrationsBodyState extends State<_IntegrationsBody> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _providerApiTokenController = TextEditingController();
   final _eventSearchController = TextEditingController();
 
   var _provider = 'github';
@@ -83,6 +84,7 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _providerApiTokenController.dispose();
     _eventSearchController.dispose();
     super.dispose();
   }
@@ -351,6 +353,16 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
           maxLines: 4,
           decoration: const InputDecoration(labelText: 'Descrição'),
         ),
+        if (_provider == 'clickup')
+          TextField(
+            controller: _providerApiTokenController,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Token da API do ClickUp',
+              helperText:
+                  'Opcional. Usado para buscar responsáveis atuais da tarefa.',
+            ),
+          ),
         SizedBox(
           width: double.infinity,
           child: AppPrimaryButton(
@@ -364,10 +376,14 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
                 name: _nameController.text.trim(),
                 provider: _provider,
                 description: _nullable(_descriptionController.text),
+                providerApiToken: _provider == 'clickup'
+                    ? _nullable(_providerApiTokenController.text)
+                    : null,
               );
               if (saved) {
                 _nameController.clear();
                 _descriptionController.clear();
+                _providerApiTokenController.clear();
               }
             },
           ),
@@ -719,6 +735,15 @@ class _SystemTile extends StatelessWidget {
               _CopyableValue(
                 label: 'Header da automação',
                 value: 'X-Integration-Token',
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                system.hasProviderApiToken
+                    ? 'Token da API do ClickUp configurado.'
+                    : 'Sem token da API do ClickUp para enriquecer responsáveis.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ],
