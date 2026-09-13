@@ -116,6 +116,9 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
   final _pointTitleController = TextEditingController();
   final _pointBodyController = TextEditingController();
 
+  double _documentQuestionsHeight = 180;
+  double _sessionNotesHeight = 260;
+
   late var _selectedTab = widget.initialTab ?? _OneOnOneTab.documents;
 
   @override
@@ -169,7 +172,7 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
   Widget _documents(OneOnOnesViewModel viewModel) {
     return _SectionStack(
       children: [
-        _Surface(child: _documentForm(viewModel)),
+        _documentForm(viewModel),
         const _SectionTitle(
           title: 'Documentos de 1:1',
           subtitle: 'Roteiros-base sem vínculo com uma pessoa específica.',
@@ -186,7 +189,7 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
   Widget _execute(OneOnOnesViewModel viewModel) {
     return _SectionStack(
       children: [
-        _Surface(child: _sessionForm(viewModel)),
+        _sessionForm(viewModel),
         const _SectionTitle(
           title: 'Pontos abertos da pessoa',
           subtitle: 'Assuntos anotados pelo TL para apoiar a conversa.',
@@ -203,7 +206,7 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
   Widget _points(OneOnOnesViewModel viewModel) {
     return _SectionStack(
       children: [
-        _Surface(child: _pointForm(viewModel)),
+        _pointForm(viewModel),
         const _SectionTitle(
           title: 'Pontos para próximos 1:1',
           subtitle: 'Anotações rápidas por pessoa, privadas ao Tech Lead.',
@@ -252,11 +255,14 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
           maxLines: 4,
           decoration: const InputDecoration(labelText: 'Objetivo'),
         ),
-        TextField(
+        _ResizableTextField(
           controller: _documentQuestionsController,
-          minLines: 5,
-          maxLines: 10,
+          height: _documentQuestionsHeight,
+          onHeightChanged: (height) => setState(() {
+            _documentQuestionsHeight = height;
+          }),
           decoration: const InputDecoration(
+            alignLabelWithHint: true,
             labelText: 'Perguntas e tópicos, um por linha',
           ),
         ),
@@ -287,11 +293,14 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
             helperText: 'Ex.: 1:1 Setembro - conversa com Ada.',
           ),
         ),
-        TextField(
+        _ResizableTextField(
           controller: _sessionNotesController,
-          minLines: 10,
-          maxLines: 18,
+          height: _sessionNotesHeight,
+          onHeightChanged: (height) => setState(() {
+            _sessionNotesHeight = height;
+          }),
           decoration: const InputDecoration(
+            alignLabelWithHint: true,
             labelText: 'Respostas, tópicos discutidos e decisões',
           ),
         ),
@@ -657,6 +666,58 @@ class _FormColumn extends StatelessWidget {
           if (index > 0) const SizedBox(height: AppSpacing.sm),
           child,
         ],
+      ],
+    );
+  }
+}
+
+class _ResizableTextField extends StatelessWidget {
+  const _ResizableTextField({
+    required this.controller,
+    required this.decoration,
+    required this.height,
+    required this.onHeightChanged,
+  });
+
+  final TextEditingController controller;
+  final InputDecoration decoration;
+  final double height;
+  final ValueChanged<double> onHeightChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: height,
+          child: TextField(
+            controller: controller,
+            decoration: decoration,
+            expands: true,
+            maxLines: null,
+            minLines: null,
+            textAlignVertical: TextAlignVertical.top,
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Tooltip(
+            message: 'Arraste para ajustar a altura',
+            child: GestureDetector(
+              onVerticalDragUpdate: (details) {
+                onHeightChanged(
+                  (height + details.delta.dy).clamp(120.0, 600.0).toDouble(),
+                );
+              },
+              child: const SizedBox(
+                height: 28,
+                width: 48,
+                child: Icon(Icons.drag_handle),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

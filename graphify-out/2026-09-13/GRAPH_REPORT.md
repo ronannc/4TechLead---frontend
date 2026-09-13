@@ -1,11 +1,11 @@
 # Graph Report - frontend  (2026-09-13)
 
 ## Corpus Check
-- 194 files · ~63,239 words
+- 194 files · ~63,442 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2550 nodes · 3868 edges · 138 communities (133 shown, 5 thin omitted)
+- 2550 nodes · 3868 edges · 140 communities (134 shown, 6 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 27 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
@@ -36,13 +36,13 @@
 - external_notification.dart
 - app_colors.dart
 - daily_meeting_detail_body_test.dart
-- package:mocktail/mocktail.dart
+- integrations_view_model_test.dart
 - daily_config_body.dart
 - integration_models.dart
 - Mock
 - route_paths.dart
 - profile_screen.dart
-- teams_list_view_model_test.dart
+- package:mocktail/mocktail.dart
 - daily_session_view_model_test.dart
 - profile_view_model_test.dart
 - bootstrap.dart
@@ -50,11 +50,11 @@
 - one_on_ones_screen.dart
 - app_router.dart
 - api_exception.dart
-- register_form.dart
+- BaseViewModel
 - daily_session_screen.dart
 - app_text_field.dart
 - notifications_view_model.dart
-- team_detail_screen.dart
+- ../../../core/theme/app_spacing.dart
 - daily_meeting_annotation.dart
 - auth_repository_test.dart
 - daily_history_body.dart
@@ -66,10 +66,10 @@
 - team_detail_view_model.dart
 - app_theme.dart
 - DailySessionViewModel
-- BaseViewModel
+- people_list_view_model.dart
 - person_growth_repository.dart
 - home_body.dart
-- package:provider/provider.dart
+- package:flutter/material.dart
 - daily_meeting_entry.dart
 - daily_config_body_test.dart
 - auth_session.dart
@@ -80,24 +80,24 @@
 - VoidCallback?
 - daily_meeting.dart
 - daily_history_view_model.dart
-- person_detail_screen.dart
+- PersonDetailViewModel
 - auth_repository.dart
 - one_on_ones_view_model.dart
 - State
-- app_page_header.dart
+- package:go_router/go_router.dart
 - login_form.dart
 - daily_meeting_detail_body.dart
-- int?
+- person_detail_view_model.dart
 - token_storage.dart
 - app_user.dart
 - team.dart
 - app_typography.dart
-- person_form_screen.dart
+- PersonFormViewModel
 - app_logo.dart
 - MVVM Feature Architecture
 - home_view_model.dart
 - logging_interceptor.dart
-- team_members_section.dart
+- ../../people/models/person.dart
 - access_policy.dart
 - daily_timer_ring.dart
 - base_view_model.dart
@@ -122,7 +122,7 @@
 - notifications_view_model_test.dart
 - ../../../core/network/api_exception.dart
 - _
-- package:flutter/material.dart
+- app_primary_button_test.dart
 - AppThemeExtension
 - breakpoints.dart
 - app_spacing.dart
@@ -131,7 +131,7 @@
 - birthday_util.dart
 - notifications_screen_test.dart
 - AuthSession
-- daily_history_screen.dart
+- person_detail_screen.dart
 - Linux Relocatable Bundle Build
 - adaptive_scaffold_test.dart
 - MainActivity.kt
@@ -144,11 +144,13 @@
 - DailyEntryStatus
 - Equatable
 - teams_list_view_model.dart
-- home_screen.dart
+- app_primary_button.dart
 - seniority_level.dart
-- build
+- OneOnOnesViewModel
 - team_service.dart
 - notification_repository_test.dart
+- PersonGrowthRepository
+- _tabBody
 
 ## God Nodes (most connected - your core abstractions)
 1. `PersonRepository` - 36 edges
@@ -171,8 +173,8 @@
   linux/runner/CMakeLists.txt → windows/runner/CMakeLists.txt
 - `MVVM Feature Architecture` --conceptually_related_to--> `Strict Dart Analyzer Profile`  [INFERRED]
   CLAUDE.md → analysis_options.yaml
-- `_MockTeamRepository` --implements--> `TeamRepository`  [EXTRACTED]
-  test/features/teams/screens/team_detail_body_test.dart → lib/features/teams/repositories/team_repository.dart
+- `_MockPersonRepository` --implements--> `PersonRepository`  [EXTRACTED]
+  test/features/home/screens/home_body_test.dart → lib/features/people/repositories/person_repository.dart
 
 ## Import Cycles
 - None detected.
@@ -181,11 +183,11 @@
 - **Frontend Multi Platform Delivery Surface** — frontend_pubspec_flutter_app_manifest, frontend_ios_runner_assets_xcassets_launchimage_imageset_ios_launch_screen_customization, frontend_linux_cmakelists_linux_relocatable_bundle_build, frontend_web_index_flutter_web_bootstrap_shell, frontend_windows_cmakelists_windows_in_place_runtime_bundle [INFERRED 0.75]
 - **Frontend Application Architecture** — frontend_claude_mvvm_feature_architecture, frontend_claude_token_driven_design_system, frontend_claude_shell_and_focus_mode_navigation, frontend_claude_bearer_token_authentication_model, frontend_claude_webhook_integration_boundary [INFERRED 0.85]
 
-## Communities (138 total, 5 thin omitted)
+## Communities (140 total, 6 thin omitted)
 
 ### Community 0 - "person_detail_body.dart"
 Cohesion: 0.02
-Nodes (88): ../../daily/screens/person_daily_section.dart, Iterable, actionErrorMessage, _availableWidth, canGenerateAccessToken, canManageGrowth, canShowOneOnOne, child (+80 more)
+Nodes (86): ../../daily/screens/person_daily_section.dart, Iterable, actionErrorMessage, _availableWidth, canGenerateAccessToken, canManageGrowth, canShowOneOnOne, child (+78 more)
 
 ### Community 1 - "daily_session_view_model.dart"
 Cohesion: 0.03
@@ -197,7 +199,7 @@ Nodes (60): _In_, _In_opt_, Point, RECT, Size, unique_ptr, vector, DartProject (
 
 ### Community 3 - "integrations_screen.dart"
 Cohesion: 0.03
-Nodes (73): ../../../core/responsive/breakpoints.dart, dart:convert, build, child, children, _confirmTokenRegeneration, _confirmTokenRevocation, _confirmWebhookEventArchive (+65 more)
+Nodes (70): ../../../core/responsive/breakpoints.dart, dart:convert, build, child, children, _confirmSystemDeletion, _confirmTokenRegeneration, _confirmWebhookEventArchive (+62 more)
 
 ### Community 4 - "generate_daily_sounds.dart"
 Cohesion: 0.04
@@ -212,7 +214,7 @@ Nodes (17): averageActualSeconds, burnedPercentage, byPerson, computeDailyStatsS
 
 ### Community 6 - "one_on_ones_view_model_test.dart"
 Cohesion: 0.06
-Nodes (47): _MockPersonRepository, package:for_tech_lead/core/routing/route_paths.dart, package:for_tech_lead/core/viewmodels/base_view_model.dart, package:for_tech_lead/features/daily/viewmodels/person_daily_stats_view_model.dart, package:for_tech_lead/features/home/screens/home_body.dart, package:for_tech_lead/features/home/viewmodels/home_view_model.dart, package:for_tech_lead/features/one_on_ones/viewmodels/one_on_ones_view_model.dart, package:for_tech_lead/features/people/models/contract_type.dart (+39 more)
+Nodes (39): _MockPersonRepository, package:for_tech_lead/features/daily/viewmodels/person_daily_stats_view_model.dart, package:for_tech_lead/features/one_on_ones/viewmodels/one_on_ones_view_model.dart, package:for_tech_lead/features/people/models/contract_type.dart, package:for_tech_lead/features/people/models/person.dart, package:for_tech_lead/features/people/models/seniority_level.dart, package:for_tech_lead/features/people/repositories/person_repository.dart, package:for_tech_lead/features/people/services/person_service.dart (+31 more)
 
 ### Community 7 - "integrations_view_model.dart"
 Cohesion: 0.04
@@ -224,7 +226,7 @@ Nodes (42): DeliveryKpiSummary, actionErrorMessage, canManageGrowth, clearAction
 
 ### Community 9 - "person_form.dart"
 Cohesion: 0.06
-Nodes (33): ../../../core/widgets/inputs/app_date_field.dart, ../../../core/widgets/inputs/app_dropdown_field.dart, _admissionDate, _admissionDateError, _birthDate, _birthDateError, _clickupUserIdController, _clickupUserIdError (+25 more)
+Nodes (31): ../../../core/widgets/inputs/app_date_field.dart, ../../../core/widgets/inputs/app_dropdown_field.dart, _admissionDate, _admissionDateError, _birthDate, _birthDateError, _clickupUserIdController, _clickupUserIdError (+23 more)
 
 ### Community 10 - "person_growth_models.dart"
 Cohesion: 0.03
@@ -241,7 +243,7 @@ Nodes (23): Any, Cocoa, Flutter, FlutterAppDelegate, FlutterImplicitEngineBridge
 
 ### Community 13 - "StatelessWidget"
 Cohesion: 0.04
-Nodes (50): _ActionErrorBanner, _DetailItem, _EmptyPanel, _FormColumn, _GeneratedCodeHint, _InlinePagination, IntegrationsScreen, _IntegrationTabBar (+42 more)
+Nodes (55): AppPageHeader, _ActionErrorBanner, _CopyableValue, _EmptyPanel, _FormColumn, _GeneratedCodeHint, _IdentityTile, _InlinePagination (+47 more)
 
 ### Community 14 - "person.dart"
 Cohesion: 0.07
@@ -268,12 +270,11 @@ Cohesion: 0.06
 Nodes (31): accent, accentDark, AppColors, background, backgroundDark, border, borderDark, error (+23 more)
 
 ### Community 20 - "daily_meeting_detail_body_test.dart"
-Cohesion: 0.07
-Nodes (27): package:for_tech_lead/features/daily/models/daily_annotation_type.dart, package:for_tech_lead/features/daily/models/daily_entry_status.dart, package:for_tech_lead/features/daily/models/daily_meeting_annotation.dart, package:for_tech_lead/features/daily/models/daily_meeting_entry.dart, package:for_tech_lead/features/daily/screens/daily_meeting_detail_body.dart, package:for_tech_lead/features/daily/utils/daily_stats.dart, package:for_tech_lead/features/daily/viewmodels/daily_meeting_detail_view_model.dart, required String text,
-  bool (+19 more)
+Cohesion: 0.06
+Nodes (32): app.dart, configureDependencies, initializeDateFormatting, main, package:for_tech_lead/features/daily/models/daily_annotation_type.dart, package:for_tech_lead/features/daily/models/daily_entry_status.dart, package:for_tech_lead/features/daily/models/daily_meeting_annotation.dart, package:for_tech_lead/features/daily/models/daily_meeting_entry.dart (+24 more)
 
-### Community 21 - "package:mocktail/mocktail.dart"
-Cohesion: 0.09
+### Community 21 - "integrations_view_model_test.dart"
+Cohesion: 0.08
 Nodes (25): class _MockIntegrationRepository extends, IntegrationRepository, IntegrationService, _MockIntegrationRepository, package:for_tech_lead/features/integrations/models/integration_models.dart, package:for_tech_lead/features/integrations/repositories/integration_repository.dart, package:for_tech_lead/features/integrations/screens/integrations_screen.dart, package:for_tech_lead/features/integrations/services/integration_service.dart (+17 more)
 
 ### Community 22 - "daily_config_body.dart"
@@ -285,8 +286,8 @@ Cohesion: 0.04
 Nodes (44): active, createdAt, currentPage, _date, deliveryMetrics, deliveryMetricsCount, description, eventId (+36 more)
 
 ### Community 24 - "Mock"
-Cohesion: 0.11
-Nodes (30): DailyMeetingRepository, PersonRepository, PersonService, TeamRepository, Mock, _MockDailyMeetingRepository, _MockPersonRepository, _MockTeamRepository (+22 more)
+Cohesion: 0.12
+Nodes (27): DailyMeetingRepository, PersonRepository, PersonService, TeamRepository, TeamService, Mock, _MockDailyMeetingRepository, _MockPersonRepository (+19 more)
 
 ### Community 25 - "route_paths.dart"
 Cohesion: 0.07
@@ -296,9 +297,9 @@ Nodes (27): acceptInvitation, dailyHistory, dailyHistoryPath, dailyMeetingDetail
 Cohesion: 0.09
 Nodes (24): AppUser? get, AsyncCallback, ../../auth/models/app_user.dart, ../../auth/repositories/auth_repository.dart, AppUser, build, _edit, _MissingPersonProfile (+16 more)
 
-### Community 27 - "teams_list_view_model_test.dart"
+### Community 27 - "package:mocktail/mocktail.dart"
 Cohesion: 0.07
-Nodes (27): app.dart, TeamService, configureDependencies, initializeDateFormatting, main, _MockTeamRepository, package:for_tech_lead/features/teams/models/team.dart, package:for_tech_lead/features/teams/repositories/team_repository.dart (+19 more)
+Nodes (31): _MockTeamRepository, package:for_tech_lead/core/routing/route_paths.dart, package:for_tech_lead/features/home/screens/home_body.dart, package:for_tech_lead/features/home/viewmodels/home_view_model.dart, package:for_tech_lead/features/teams/models/team.dart, package:for_tech_lead/features/teams/repositories/team_repository.dart, package:for_tech_lead/features/teams/screens/team_detail_body.dart, package:for_tech_lead/features/teams/screens/teams_list_body.dart (+23 more)
 
 ### Community 28 - "daily_session_view_model_test.dart"
 Cohesion: 0.09
@@ -306,7 +307,7 @@ Nodes (22): class _MockDailyMeetingRepository extends, _MockDailyMeetingReposito
 
 ### Community 29 - "profile_view_model_test.dart"
 Cohesion: 0.10
-Nodes (20): _MockAuthRepository, package:for_tech_lead/features/auth/models/app_user.dart, package:for_tech_lead/features/auth/repositories/auth_repository.dart, package:for_tech_lead/features/auth/viewmodels/login_view_model.dart, package:for_tech_lead/features/auth/viewmodels/register_view_model.dart, package:for_tech_lead/features/profile/viewmodels/profile_view_model.dart, main, repository (+12 more)
+Nodes (22): _MockAuthRepository, package:for_tech_lead/core/viewmodels/base_view_model.dart, package:for_tech_lead/features/auth/models/app_user.dart, package:for_tech_lead/features/auth/repositories/auth_repository.dart, package:for_tech_lead/features/auth/viewmodels/login_view_model.dart, package:for_tech_lead/features/auth/viewmodels/register_view_model.dart, package:for_tech_lead/features/profile/viewmodels/profile_view_model.dart, main (+14 more)
 
 ### Community 30 - "bootstrap.dart"
 Cohesion: 0.10
@@ -318,7 +319,7 @@ Nodes (20): FlView, GApplication, gboolean, gchar, GObject, GtkApplication, main
 
 ### Community 32 - "one_on_ones_screen.dart"
 Cohesion: 0.03
-Nodes (64): _ActionErrorBanner, build, child, children, _createDocument, _createPoint, createState, dispose (+56 more)
+Nodes (60): _ActionErrorBanner, child, children, _createDocument, _createPoint, createState, dispose, document (+52 more)
 
 ### Community 33 - "app_router.dart"
 Cohesion: 0.09
@@ -328,9 +329,9 @@ Nodes (22): ../auth/access_policy.dart, ../../features/auth/screens/accept_invit
 Cohesion: 0.13
 Nodes (21): Exception, ApiException, bodyMessage, data, errors, _firstMessage, ForbiddenException, mapDioException (+13 more)
 
-### Community 35 - "register_form.dart"
-Cohesion: 0.24
-Nodes (10): build, createState, dispose, _emailController, _nameController, _passwordConfirmationController, _passwordController, RegisterForm (+2 more)
+### Community 35 - "BaseViewModel"
+Cohesion: 0.16
+Nodes (14): ChangeNotifier, BaseViewModel, build, createState, dispose, _emailController, _nameController, _passwordConfirmationController (+6 more)
 
 ### Community 36 - "daily_session_screen.dart"
 Cohesion: 0.11
@@ -344,9 +345,9 @@ Nodes (16): AppSearchField, build, controller, hintText, onChanged, AppTextField
 Cohesion: 0.14
 Nodes (13): changePage, clearPageError, isChangingPage, lastPage, load, _loadPage, notifications, page (+5 more)
 
-### Community 39 - "team_detail_screen.dart"
-Cohesion: 0.28
-Nodes (8): build, TeamDetailScreen, teamId, TeamDetailViewModel, RoutePaths.personCreatePath, team_detail_body.dart, team_members_section.dart, ../viewmodels/team_detail_view_model.dart
+### Community 39 - "../../../core/theme/app_spacing.dart"
+Cohesion: 0.12
+Nodes (19): ../../../core/theme/app_spacing.dart, ../../../core/widgets/buttons/app_primary_button.dart, TeamDetailBody, build, TeamDetailScreen, teamId, _InlinePagination, lastPage (+11 more)
 
 ### Community 40 - "daily_meeting_annotation.dart"
 Cohesion: 0.11
@@ -357,8 +358,8 @@ Cohesion: 0.12
 Nodes (17): TokenStorage, _MockTokenStorage, package:for_tech_lead/core/auth/access_policy.dart, package:for_tech_lead/core/auth/auth_session.dart, package:for_tech_lead/core/storage/token_storage.dart, package:for_tech_lead/features/auth/services/auth_service.dart, authSession, main (+9 more)
 
 ### Community 42 - "daily_history_body.dart"
-Cohesion: 0.18
-Nodes (10): ../../../core/widgets/cards/app_summary_card.dart, createState, _dateFormat, _HistorySummaryCard, icon, label, _query, _summaryCardSize (+2 more)
+Cohesion: 0.12
+Nodes (20): ../../../core/widgets/cards/app_summary_card.dart, daily_history_body.dart, build, createState, DailyHistoryBody, _DailyHistoryBodyState, _dateFormat, _HistorySummaryCard (+12 more)
 
 ### Community 43 - "IconData"
 Cohesion: 0.12
@@ -392,21 +393,21 @@ Nodes (10): app_colors.dart, app_radius.dart, app_spacing.dart, app_theme_extens
 Cohesion: 0.20
 Nodes (10): build, _PeoplePicker, _TeamSelector, _TimeLimitControl, _AnnotationList, build, _LiveHeader, build (+2 more)
 
-### Community 51 - "BaseViewModel"
-Cohesion: 0.14
-Nodes (13): ChangeNotifier, BaseViewModel, PersonDailyStatsViewModel, hasPeople, load, _people, PeopleListViewModel, _query (+5 more)
+### Community 51 - "people_list_view_model.dart"
+Cohesion: 0.20
+Nodes (9): hasPeople, load, _people, PeopleListViewModel, _query, _repository, search, teamId (+1 more)
 
 ### Community 52 - "person_growth_repository.dart"
-Cohesion: 0.10
-Nodes (19): ../../integrations/models/integration_models.dart, createDevelopmentPlan, createDevelopmentPlanItem, createPersonOneOnOneNote, createSession, createTemplate, getDeliveryKpis, getDeliveryMetrics (+11 more)
+Cohesion: 0.09
+Nodes (21): ../../integrations/models/integration_models.dart, createDevelopmentPlan, createDevelopmentPlanItem, createPersonOneOnOneNote, createSession, createTemplate, getDeliveryKpis, getDeliveryMetrics (+13 more)
 
 ### Community 53 - "home_body.dart"
-Cohesion: 0.12
-Nodes (15): _BirthdayCard, _DailyCallout, _daysUntilLabel, HomeBody, _homeInnerGap, _homeOuterGap, _initials, parts (+7 more)
+Cohesion: 0.09
+Nodes (22): _historyLink, _BirthdayCard, build, _DailyCallout, _daysUntilLabel, HomeBody, _homeInnerGap, _homeOuterGap (+14 more)
 
-### Community 54 - "package:provider/provider.dart"
-Cohesion: 0.13
-Nodes (16): accept_invitation_form.dart, bootstrap.dart, ../../../core/theme/app_spacing.dart, ../../../core/widgets/buttons/app_primary_button.dart, AcceptInvitationScreen, build, build, LoginScreen (+8 more)
+### Community 54 - "package:flutter/material.dart"
+Cohesion: 0.12
+Nodes (16): accept_invitation_form.dart, bootstrap.dart, build, LoadingView, AcceptInvitationScreen, build, build, LoginScreen (+8 more)
 
 ### Community 55 - "daily_meeting_entry.dart"
 Cohesion: 0.13
@@ -437,8 +438,8 @@ Cohesion: 0.29
 Nodes (6): getNotifications, _service, NotificationService, ../models/external_notification.dart, ../services/notification_service.dart, _MockNotificationService
 
 ### Community 62 - "VoidCallback?"
-Cohesion: 0.14
-Nodes (12): ../buttons/app_primary_button.dart, AppPrimaryButton, AppSecondaryButton, build, label, loading, onPressed, build (+4 more)
+Cohesion: 0.29
+Nodes (6): ../buttons/app_primary_button.dart, build, ErrorView, message, onRetry, VoidCallback?
 
 ### Community 63 - "daily_meeting.dart"
 Cohesion: 0.14
@@ -448,9 +449,9 @@ Nodes (13): daily_meeting_annotation.dart, daily_meeting_entry.dart, annotations
 Cohesion: 0.14
 Nodes (13): DailyStatsSummary get, DailyStatsSummary, load, _meetings, _namesByPersonId, personName, _personRepository, _rankings (+5 more)
 
-### Community 65 - "person_detail_screen.dart"
-Cohesion: 0.20
-Nodes (11): ../../../core/widgets/states/loading_view.dart, build, _PersonHeader, build, PersonDetailScreen, personId, PersonDetailViewModel, person_detail_body.dart (+3 more)
+### Community 65 - "PersonDetailViewModel"
+Cohesion: 0.40
+Nodes (5): build, _PersonHeader, build, PersonDetailScreen, PersonDetailViewModel
 
 ### Community 66 - "auth_repository.dart"
 Cohesion: 0.14
@@ -461,24 +462,24 @@ Cohesion: 0.06
 Nodes (34): actionErrorMessage, canManageOneOnOnes, clearActionError, completedSessions, createPersonNote, createTemplate, currentPersonId, executeSession (+26 more)
 
 ### Community 68 - "State"
-Cohesion: 0.20
-Nodes (14): AppDataTable, _AppDataTableState, DailyConfigBody, _DailyConfigBodyState, DailyHistoryBody, _DailyHistoryBodyState, DailyRunningBody, _DailyRunningBodyState (+6 more)
+Cohesion: 0.23
+Nodes (12): AppDataTable, _AppDataTableState, DailyConfigBody, _DailyConfigBodyState, DailyRunningBody, _DailyRunningBodyState, _DailySessionView, _DailySessionViewState (+4 more)
 
-### Community 69 - "app_page_header.dart"
-Cohesion: 0.15
-Nodes (12): ../branding/app_logo.dart, AppPageHeader, build, preferredSize, showBrandMark, showNotifications, subtitle, title (+4 more)
+### Community 69 - "package:go_router/go_router.dart"
+Cohesion: 0.17
+Nodes (11): ../branding/app_logo.dart, build, preferredSize, showBrandMark, showNotifications, subtitle, title, package:go_router/go_router.dart (+3 more)
 
 ### Community 70 - "login_form.dart"
-Cohesion: 0.18
-Nodes (13): ../../../core/widgets/branding/app_logo.dart, ../../../core/widgets/inputs/app_text_field.dart, build, createState, dispose, _emailController, LoginForm, _LoginFormState (+5 more)
+Cohesion: 0.19
+Nodes (12): ../../../core/widgets/branding/app_logo.dart, ../../../core/widgets/inputs/app_text_field.dart, build, createState, dispose, _emailController, LoginForm, _LoginFormState (+4 more)
 
 ### Community 71 - "daily_meeting_detail_body.dart"
 Cohesion: 0.12
 Nodes (16): annotations, _AnnotationsSection, build, DailyMeetingDetailBody, _dateFormat, entries, _EntriesList, entry (+8 more)
 
-### Community 72 - "int?"
-Cohesion: 0.15
-Nodes (11): int?, actualSeconds, allowedSeconds, DailyTurnDraft, hasSpoken, person, setStats, _stats (+3 more)
+### Community 72 - "person_detail_view_model.dart"
+Cohesion: 0.20
+Nodes (9): clearInvitationToken, createInvitationToken, _invitationErrorMessage, _invitationToken, load, _person, personId, _repository (+1 more)
 
 ### Community 73 - "token_storage.dart"
 Cohesion: 0.15
@@ -496,9 +497,9 @@ Nodes (13): createdAt, fromJson, id, name, people, peopleLastPage, peoplePage, p
 Cohesion: 0.14
 Nodes (13): AppTypography, bodyLarge, bodyMedium, bodySmall, displaySmall, _inter, labelLarge, labelMedium (+5 more)
 
-### Community 77 - "person_form_screen.dart"
-Cohesion: 0.20
-Nodes (11): build, appBarTitle, build, PersonFormScreen, personId, teamId, _submit, PersonFormViewModel (+3 more)
+### Community 77 - "PersonFormViewModel"
+Cohesion: 0.29
+Nodes (7): build, PersonForm, _PersonFormState, build, PersonFormScreen, _submit, PersonFormViewModel
 
 ### Community 78 - "app_logo.dart"
 Cohesion: 0.17
@@ -509,16 +510,16 @@ Cohesion: 0.20
 Nodes (11): Strict Dart Analyzer Profile, Bearer Token Authentication Model, MVVM Feature Architecture, Shell And Focus Mode Navigation, Token Driven Design System, Webhook Integration Boundary, iOS Launch Screen Customization, Flutter App Manifest (+3 more)
 
 ### Community 80 - "home_view_model.dart"
-Cohesion: 0.15
-Nodes (12): firstTeamId, load, _peopleCount, _personRepository, _teamRepository, _teams, _teamsCount, _teamToday (+4 more)
+Cohesion: 0.14
+Nodes (13): firstTeamId, load, _peopleCount, _personRepository, _teamRepository, _teams, _teamsCount, _teamToday (+5 more)
 
 ### Community 81 - "logging_interceptor.dart"
 Cohesion: 0.17
 Nodes (11): Interceptor, AuthInterceptor, AppLoggingInterceptor, _logger, onError, onRequest, onResponse, _redact (+3 more)
 
-### Community 82 - "team_members_section.dart"
-Cohesion: 0.12
-Nodes (15): ../../../core/routing/route_paths.dart, ../../../core/widgets/data/app_key_value_row.dart, build, _DailyStatsContent, PersonDailySection, stats, teamId, _InlinePagination (+7 more)
+### Community 82 - "../../people/models/person.dart"
+Cohesion: 0.15
+Nodes (12): ../../../core/routing/route_paths.dart, ../../../core/widgets/data/app_key_value_row.dart, build, _DailyStatsContent, PersonDailySection, stats, teamId, setStats (+4 more)
 
 ### Community 83 - "access_policy.dart"
 Cohesion: 0.17
@@ -537,8 +538,8 @@ Cohesion: 0.18
 Nodes (10): createInvitationToken, createPerson, getMyPerson, getPeople, getPerson, _service, updatePerson, ../models/contract_type.dart (+2 more)
 
 ### Community 87 - "package:flutter_test/flutter_test.dart"
-Cohesion: 0.18
-Nodes (8): package:flutter_test/flutter_test.dart, package:for_tech_lead/core/feedback/daily_cue_sound_theme.dart, package:for_tech_lead/features/daily/models/daily_cue.dart, package:for_tech_lead/features/daily/utils/daily_time_limit.dart, package:for_tech_lead/features/people/utils/birthday_util.dart, main, main, main
+Cohesion: 0.11
+Nodes (13): package:flutter_test/flutter_test.dart, package:for_tech_lead/core/feedback/daily_cue_sound_theme.dart, package:for_tech_lead/core/widgets/branding/app_logo.dart, package:for_tech_lead/core/widgets/cards/app_summary_card.dart, package:for_tech_lead/core/widgets/navigation/app_page_header.dart, package:for_tech_lead/features/daily/models/daily_cue.dart, package:for_tech_lead/features/daily/utils/daily_time_limit.dart, package:for_tech_lead/features/people/utils/birthday_util.dart (+5 more)
 
 ### Community 88 - "manifest.json"
 Cohesion: 0.18
@@ -558,15 +559,15 @@ Nodes (12): ../../../core/viewmodels/base_view_model.dart, AuthRepository, accep
 
 ### Community 92 - "integration_service.dart"
 Cohesion: 0.14
-Nodes (13): archiveWebhookEvent, _client, createExternalIdentity, createSystem, _get, getDeliveryMetrics, getExternalIdentities, getSystems (+5 more)
+Nodes (13): archiveWebhookEvent, _client, createExternalIdentity, createSystem, deleteSystem, _get, getDeliveryMetrics, getExternalIdentities (+5 more)
 
 ### Community 93 - "integration_repository.dart"
 Cohesion: 0.13
-Nodes (14): archiveWebhookEvent, createExternalIdentity, createSystem, getDeliveryMetrics, getExternalIdentities, getSystems, getWebhookEvent, getWebhookEvents (+6 more)
+Nodes (14): archiveWebhookEvent, createExternalIdentity, createSystem, deleteSystem, getDeliveryMetrics, getExternalIdentities, getSystems, getWebhookEvent (+6 more)
 
 ### Community 94 - "person_form_view_model.dart"
-Cohesion: 0.11
-Nodes (18): Person, clearInvitationToken, createInvitationToken, _invitationErrorMessage, _invitationToken, load, _person, personId (+10 more)
+Cohesion: 0.12
+Nodes (15): int?, actualSeconds, allowedSeconds, DailyTurnDraft, hasSpoken, person, Person, createPerson (+7 more)
 
 ### Community 95 - "daily_meeting_detail_view_model.dart"
 Cohesion: 0.22
@@ -577,8 +578,8 @@ Cohesion: 0.20
 Nodes (9): DailyMeetingService, package:for_tech_lead/features/daily/repositories/daily_meeting_repository.dart, package:for_tech_lead/features/daily/services/daily_meeting_service.dart, _entryJson, main, _meetingJson, _MockDailyMeetingService, repository (+1 more)
 
 ### Community 97 - "accept_invitation_form.dart"
-Cohesion: 0.21
-Nodes (11): AcceptInvitationForm, _AcceptInvitationFormState, build, createState, dispose, _emailController, _passwordConfirmationController, _passwordController (+3 more)
+Cohesion: 0.19
+Nodes (12): AcceptInvitationForm, _AcceptInvitationFormState, build, createState, dispose, _emailController, _passwordConfirmationController, _passwordController (+4 more)
 
 ### Community 98 - "static const"
 Cohesion: 0.22
@@ -601,8 +602,8 @@ Cohesion: 0.22
 Nodes (8): createMeeting, getAllEntries, getMeeting, getMeetings, _maxStatsPages, _service, ../models/daily_meeting_entry.dart, ../services/daily_meeting_service.dart
 
 ### Community 103 - "person_growth_view_model_test.dart"
-Cohesion: 0.17
-Nodes (11): class _MockPersonGrowthRepository extends, PersonGrowthRepository, _MockPersonGrowthRepository, package:for_tech_lead/features/people/models/person_growth_models.dart, package:for_tech_lead/features/people/viewmodels/person_growth_view_model.dart, _MockPersonGrowthRepository, _MockPersonGrowthRepository, main (+3 more)
+Cohesion: 0.25
+Nodes (7): class _MockPersonGrowthRepository extends, _MockPersonGrowthRepository, package:for_tech_lead/features/people/models/person_growth_models.dart, package:for_tech_lead/features/people/viewmodels/person_growth_view_model.dart, main, Mock, repository
 
 ### Community 104 - "notifications_view_model_test.dart"
 Cohesion: 0.22
@@ -616,9 +617,9 @@ Nodes (17): ../../../core/network/api_exception.dart, ../../../core/network/dio_
 Cohesion: 0.29
 Nodes (8): ../../features/daily/models/daily_cue.dart, _, assetPath, byCue, DailyCueSound, DailyCueSoundTheme, ticking, volume
 
-### Community 107 - "package:flutter/material.dart"
-Cohesion: 0.12
-Nodes (12): ElevatedButton, build, LoadingView, package:flutter/material.dart, package:for_tech_lead/core/widgets/branding/app_logo.dart, package:for_tech_lead/core/widgets/buttons/app_dialog_actions.dart, package:for_tech_lead/core/widgets/buttons/app_primary_button.dart, package:for_tech_lead/core/widgets/cards/app_summary_card.dart (+4 more)
+### Community 107 - "app_primary_button_test.dart"
+Cohesion: 0.40
+Nodes (4): ElevatedButton, package:for_tech_lead/core/widgets/buttons/app_dialog_actions.dart, package:for_tech_lead/core/widgets/buttons/app_primary_button.dart, main
 
 ### Community 108 - "AppThemeExtension"
 Cohesion: 0.22
@@ -633,8 +634,8 @@ Cohesion: 0.29
 Nodes (6): AppSpacing, lg, md, sm, xl, xs
 
 ### Community 111 - "person_growth_repository_test.dart"
-Cohesion: 0.20
-Nodes (9): PersonGrowthService, package:for_tech_lead/features/people/repositories/person_growth_repository.dart, package:for_tech_lead/features/people/services/person_growth_service.dart, main, _MockPersonGrowthService, _planJson, repository, service (+1 more)
+Cohesion: 0.25
+Nodes (7): package:for_tech_lead/features/people/repositories/person_growth_repository.dart, package:for_tech_lead/features/people/services/person_growth_service.dart, main, _planJson, repository, service, _sessionJson
 
 ### Community 112 - "daily_blocker_draft.dart"
 Cohesion: 0.33
@@ -652,9 +653,9 @@ Nodes (10): class _MockNotificationRepository extends, NotificationRepository, p
 Cohesion: 0.25
 Nodes (7): ../../../core/auth/auth_session.dart, core/routing/app_router.dart, core/theme/app_theme.dart, App, build, AuthSession, package:flutter_localizations/flutter_localizations.dart
 
-### Community 116 - "daily_history_screen.dart"
-Cohesion: 0.14
-Nodes (16): ../../../core/widgets/navigation/app_page_header.dart, ../../../core/widgets/states/error_view.dart, daily_history_body.dart, daily_meeting_detail_body.dart, build, build, DailyHistoryScreen, teamId (+8 more)
+### Community 116 - "person_detail_screen.dart"
+Cohesion: 0.09
+Nodes (26): ../../../core/widgets/navigation/app_page_header.dart, ../../../core/widgets/states/error_view.dart, ../../../core/widgets/states/loading_view.dart, daily_meeting_detail_body.dart, home_body.dart, build, DailyMeetingDetailScreen, meetingId (+18 more)
 
 ### Community 117 - "Linux Relocatable Bundle Build"
 Cohesion: 0.67
@@ -681,20 +682,20 @@ Cohesion: 0.18
 Nodes (11): Equatable, DailyMeetingEntry, DeliveryMetricsPage, IntegrationSystem, IntegrationWebhookEvent, PersonDeliveryMetric, PersonExternalIdentity, WebhookEventsPage (+3 more)
 
 ### Community 132 - "teams_list_view_model.dart"
-Cohesion: 0.20
-Nodes (9): bool get, createTeam, hasTeams, load, _query, _repository, search, _teams (+1 more)
+Cohesion: 0.22
+Nodes (8): bool get, createTeam, hasTeams, load, _query, _repository, search, _teams
 
-### Community 133 - "home_screen.dart"
-Cohesion: 0.32
-Nodes (7): home_body.dart, build, HomeScreen, HomeViewModel, ../../people/repositories/person_repository.dart, ../../teams/repositories/team_repository.dart, ../viewmodels/home_view_model.dart
+### Community 133 - "app_primary_button.dart"
+Cohesion: 0.29
+Nodes (6): AppPrimaryButton, AppSecondaryButton, build, label, loading, onPressed
 
 ### Community 134 - "seniority_level.dart"
 Cohesion: 0.40
 Nodes (4): apiValue, fromApiValue, label, SeniorityLevel
 
-### Community 135 - "build"
-Cohesion: 0.29
-Nodes (7): _historyLink, build, build, build, RoutePaths.dailyHistoryPath, RoutePaths.dailySessionPath, RoutePaths.personDetailPath
+### Community 135 - "OneOnOnesViewModel"
+Cohesion: 0.50
+Nodes (4): build, _OneOnOnesBody, _OneOnOnesBodyState, OneOnOnesViewModel
 
 ### Community 136 - "team_service.dart"
 Cohesion: 0.29
@@ -704,24 +705,28 @@ Nodes (6): _client, destroy, index, show, store, update
 Cohesion: 0.33
 Nodes (5): package:for_tech_lead/features/notifications/repositories/notification_repository.dart, package:for_tech_lead/features/notifications/services/notification_service.dart, main, repository, service
 
+### Community 138 - "PersonGrowthRepository"
+Cohesion: 0.50
+Nodes (4): PersonGrowthRepository, _MockPersonGrowthRepository, _MockPersonGrowthRepository, _MockPersonGrowthRepository
+
 ## Knowledge Gaps
 - **1557 isolated node(s):** `build`, `getIt`, `authSession`, `configureDependencies`, `restore` (+1552 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PersonRepository` connect `Mock` to `daily_session_view_model.dart`, `integrations_screen.dart`, `home_screen.dart`, `one_on_ones_view_model_test.dart`, `integrations_view_model.dart`, `person_detail_body_layout_test.dart`, `package:mocktail/mocktail.dart`, `profile_screen.dart`, `bootstrap.dart`, `one_on_ones_screen.dart`, `daily_session_screen.dart`, `BaseViewModel`, `daily_history_view_model.dart`, `person_detail_screen.dart`, `one_on_ones_view_model.dart`, `person_form_screen.dart`, `home_view_model.dart`, `person_repository.dart`, `person_form_view_model.dart`, `daily_history_screen.dart`?**
+- **Why does `PersonRepository` connect `Mock` to `daily_session_view_model.dart`, `integrations_screen.dart`, `one_on_ones_view_model_test.dart`, `integrations_view_model.dart`, `person_detail_body_layout_test.dart`, `integrations_view_model_test.dart`, `profile_screen.dart`, `package:mocktail/mocktail.dart`, `profile_view_model_test.dart`, `bootstrap.dart`, `one_on_ones_screen.dart`, `daily_session_screen.dart`, `daily_history_body.dart`, `people_list_view_model.dart`, `daily_history_view_model.dart`, `one_on_ones_view_model.dart`, `person_detail_view_model.dart`, `home_view_model.dart`, `person_repository.dart`, `person_form_view_model.dart`, `person_detail_screen.dart`?**
   _High betweenness centrality (0.059) - this node is a cross-community bridge._
-- **Why does `PersonGrowthRepository` connect `person_growth_view_model_test.dart` to `one_on_ones_screen.dart`, `person_detail_screen.dart`, `one_on_ones_view_model.dart`, `person_growth_view_model.dart`, `person_detail_body_layout_test.dart`, `person_growth_repository_test.dart`, `person_growth_repository.dart`, `bootstrap.dart`?**
+- **Why does `PersonGrowthRepository` connect `PersonGrowthRepository` to `one_on_ones_screen.dart`, `one_on_ones_view_model.dart`, `person_growth_view_model.dart`, `person_detail_body_layout_test.dart`, `person_growth_repository_test.dart`, `person_detail_screen.dart`, `person_growth_repository.dart`, `bootstrap.dart`?**
   _High betweenness centrality (0.023) - this node is a cross-community bridge._
-- **Why does `DailyMeetingRepository` connect `Mock` to `daily_history_view_model.dart`, `daily_session_view_model.dart`, `daily_meeting_repository_test.dart`, `daily_session_screen.dart`, `daily_meeting_repository.dart`, `daily_history_screen.dart`, `bootstrap.dart`, `daily_meeting_detail_view_model.dart`?**
+- **Why does `DailyMeetingRepository` connect `Mock` to `daily_history_view_model.dart`, `daily_session_view_model.dart`, `daily_meeting_repository_test.dart`, `daily_session_screen.dart`, `daily_meeting_repository.dart`, `daily_history_body.dart`, `person_detail_screen.dart`, `bootstrap.dart`, `daily_meeting_detail_view_model.dart`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **What connects `build`, `getIt`, `authSession` to the rest of the system?**
   _1557 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `person_detail_body.dart` be split into smaller, more focused modules?**
-  _Cohesion score 0.02247191011235955 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.022988505747126436 - nodes in this community are weakly interconnected._
 - **Should `daily_session_view_model.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.03333333333333333 - nodes in this community are weakly interconnected._
 - **Should `Win32Window` be split into smaller, more focused modules?**
