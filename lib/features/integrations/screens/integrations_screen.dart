@@ -271,11 +271,37 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
       return;
     }
 
+    var enriching = false;
     await showDialog<void>(
       context: context,
-      builder: (context) => _WebhookEventDetailDialog(
-        event: viewModel.selectedWebhookEvent!,
-        viewModel: viewModel,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => _WebhookEventDetailDialog(
+          event: viewModel.selectedWebhookEvent!,
+          viewModel: viewModel,
+          isEnriching: enriching,
+          onEnrich: viewModel.isClickUpEvent(viewModel.selectedWebhookEvent!)
+              ? () async {
+                  setDialogState(() => enriching = true);
+                  final succeeded = await viewModel.enrichWebhookEvent(
+                    event.id,
+                  );
+                  if (!mounted || !dialogContext.mounted) return;
+                  setDialogState(() => enriching = false);
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        succeeded
+                            ? _enrichmentResultMessage(
+                                viewModel.selectedWebhookEvent!,
+                              )
+                            : viewModel.actionErrorMessage ??
+                                  'Não foi possível consultar a API do ClickUp.',
+                      ),
+                    ),
+                  );
+                }
+              : null,
+        ),
       ),
     );
   }
@@ -1232,10 +1258,14 @@ class _WebhookEventDetailDialog extends StatelessWidget {
   const _WebhookEventDetailDialog({
     required this.event,
     required this.viewModel,
+    required this.isEnriching,
+    required this.onEnrich,
   });
 
   final IntegrationWebhookEvent event;
   final IntegrationsViewModel viewModel;
+  final bool isEnriching;
+  final VoidCallback? onEnrich;
 
   @override
   Widget build(BuildContext context) {
@@ -1258,6 +1288,19 @@ class _WebhookEventDetailDialog extends StatelessWidget {
         ),
       ),
       actions: [
+        if (onEnrich != null)
+          TextButton.icon(
+            onPressed: isEnriching ? null : onEnrich,
+            icon: isEnriching
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+            label: Text(
+              isEnriching ? 'Consultando...' : 'Consultar API do ClickUp',
+            ),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Fechar'),
@@ -1294,8 +1337,12 @@ class _WebhookEventDetailHeader extends StatelessWidget {
                 value: viewModel.systemName(event.integrationSystemId),
               ),
               _DetailItem(
-                label: 'Pessoa',
+                label: 'Quem alterou',
                 value: _eventPersonName(viewModel, event),
+              ),
+              _DetailItem(
+                label: 'Responsável(is) da task',
+                value: _eventAssigneeNames(event),
               ),
               _DetailItem(
                 label: 'Recebido',
@@ -1648,6 +1695,43 @@ String _eventPersonName(
 ) {
   final personId = event.personId;
   return personId == null ? 'Sem pessoa' : viewModel.personName(personId);
+}
+
+String _eventAssigneeNames(IntegrationWebhookEvent event) {
+  final assignees = event.normalizedPayload?['task_assignees'];
+  if (assignees is! List) return 'Não informado';
+
+  final names = assignees
+      .whereType<Map<String, dynamic>>()
+      .map((assignee) {
+        final name = assignee['name']?.toString().trim();
+        if (name != null && name.isNotEmpty) return name;
+        final id = assignee['id']?.toString().trim();
+        return id == null || id.isEmpty ? null : 'ID $id';
+      })
+      .whereType<String>()
+      .toList();
+
+  return names.isEmpty ? 'Sem responsável' : names.join(', ');
+}
+
+String _enrichmentResultMessage(IntegrationWebhookEvent event) {
+  final status = event.normalizedPayload?['task_enrichment_status'];
+  if (status == 'enriched') return 'Task atualizada com dados da API ClickUp.';
+  if (status == 'http_error') {
+    final error = event.normalizedPayload?['task_enrichment_error'];
+    return 'A API ClickUp respondeu com erro ${error ?? 'HTTP'}.';
+  }
+  if (status == 'connection_failed') {
+    return 'Não foi possível conectar à API do ClickUp.';
+  }
+  if (status == 'skipped_missing_provider_api_token') {
+    return 'Configure o token da API ClickUp na integração e tente novamente.';
+  }
+  if (status == 'skipped_missing_task_id') {
+    return 'Este evento não contém o ID da task para consulta.';
+  }
+  return 'Resultado da consulta: ${status ?? 'indisponível'}.';
 }
 
 String _statusLabel(String status) {

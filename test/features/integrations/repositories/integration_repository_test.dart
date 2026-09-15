@@ -377,4 +377,30 @@ void main() {
       expect(page.items.single.integrationSystemId, isNull);
     },
   );
+
+  test('maps a manually enriched webhook event response', () async {
+    when(() => service.enrichWebhookEvent(19)).thenAnswer(
+      (_) async => {
+        'data': {
+          'id': 19,
+          'integration_system_id': 4,
+          'event_id': 'manual-enrichment',
+          'event_type': 'clickup_automation',
+          'external_actor_code': 'clickup_user:actor-9',
+          'status': 'processed',
+          'payload': {
+            'task': {'assignees': <dynamic>[]},
+          },
+          'normalized_payload': {'task_enrichment_status': 'enriched'},
+        },
+      },
+    );
+
+    final event = await repository.enrichWebhookEvent(19);
+
+    expect(event.id, 19);
+    expect(event.eventId, 'manual-enrichment');
+    expect(event.externalActorCode, 'clickup_user:actor-9');
+    expect(event.normalizedPayload?['task_enrichment_status'], 'enriched');
+  });
 }
