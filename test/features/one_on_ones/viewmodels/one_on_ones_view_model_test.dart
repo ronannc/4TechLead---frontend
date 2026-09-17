@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
 import 'package:for_tech_lead/features/one_on_ones/viewmodels/one_on_ones_view_model.dart';
@@ -62,6 +64,47 @@ void main() {
     expect(viewModel.selectedPersonId, 1);
     expect(viewModel.people.single.name, 'Ada Lovelace');
     expect(viewModel.templates.single.title, 'Carreira');
+  });
+
+  test('updates and deletes a one on one document', () async {
+    await viewModel.load(initialPersonId: 1);
+    when(
+      () => growthRepository.updateTemplate(
+        id: 2,
+        title: 'Carreira atualizada',
+        questions: ['Qual evolução ficou mais evidente?'],
+        description: 'Novo objetivo.',
+      ),
+    ).thenAnswer(
+      (_) async => const OneOnOneTemplate(
+        id: 2,
+        title: 'Carreira atualizada',
+        questions: ['Qual evolução ficou mais evidente?'],
+        description: 'Novo objetivo.',
+      ),
+    );
+    when(() => growthRepository.deleteTemplate(2)).thenAnswer((_) async {});
+
+    expect(
+      await viewModel.updateTemplate(
+        id: 2,
+        title: 'Carreira atualizada',
+        questions: ['Qual evolução ficou mais evidente?'],
+        description: 'Novo objetivo.',
+      ),
+      isTrue,
+    );
+    await viewModel.deleteTemplate(2);
+
+    verify(
+      () => growthRepository.updateTemplate(
+        id: 2,
+        title: 'Carreira atualizada',
+        questions: ['Qual evolução ficou mais evidente?'],
+        description: 'Novo objetivo.',
+      ),
+    ).called(1);
+    verify(() => growthRepository.deleteTemplate(2)).called(1);
   });
 
   test('executes a one on one with selected person and document', () async {
@@ -163,6 +206,61 @@ void main() {
       ),
     ).called(2);
   });
+
+  test(
+    'ignores a second 1:1 registration while the first is pending',
+    () async {
+      await viewModel.load(initialPersonId: 1);
+      viewModel.selectTemplate(2);
+      final request = Completer<OneOnOneSession>();
+      when(
+        () => growthRepository.createSession(
+          personId: 1,
+          title: '1:1 Setembro',
+          notes: 'Conversa.',
+          heldAt: any(named: 'heldAt'),
+          templateId: 2,
+          questions: ['O que quer evoluir?'],
+          answers: {'O que quer evoluir?': 'Conversa.'},
+          status: 'completed',
+        ),
+      ).thenAnswer((_) => request.future);
+
+      final first = viewModel.executeSession(
+        title: '1:1 Setembro',
+        notes: 'Conversa.',
+        answers: {'O que quer evoluir?': 'Conversa.'},
+      );
+      final second = viewModel.executeSession(
+        title: '1:1 Setembro',
+        notes: 'Conversa.',
+        answers: {'O que quer evoluir?': 'Conversa.'},
+      );
+
+      expect(await second, isFalse);
+      request.complete(
+        const OneOnOneSession(
+          id: 10,
+          personId: 1,
+          title: '1:1 Setembro',
+          status: 'completed',
+        ),
+      );
+      expect(await first, isTrue);
+      verify(
+        () => growthRepository.createSession(
+          personId: 1,
+          title: '1:1 Setembro',
+          notes: 'Conversa.',
+          heldAt: any(named: 'heldAt'),
+          templateId: 2,
+          questions: ['O que quer evoluir?'],
+          answers: {'O que quer evoluir?': 'Conversa.'},
+          status: 'completed',
+        ),
+      ).called(1);
+    },
+  );
 
   test('creates a point for a person', () async {
     await viewModel.load(initialPersonId: 1);

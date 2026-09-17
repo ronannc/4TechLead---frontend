@@ -338,6 +338,39 @@ void main() {
     );
   });
 
+  test('enriches a webhook event and maps the returned payload', () async {
+    when(() => service.enrichWebhookEvent(42)).thenAnswer(
+      (_) async => {
+        'data': {
+          'id': 42,
+          'integration_system_id': 3,
+          'event_id': 'clickup-event-42',
+          'event_type': 'taskUpdated',
+          'status': 'processed',
+          'payload': {
+            'task': {'id': 'task-42', 'name': 'Task enriquecida'},
+          },
+          'normalized_payload': {
+            'task_id': 'task-42',
+            'task_name': 'Task enriquecida',
+            'task_enrichment_status': 'enriched',
+          },
+          'delivery_metrics': <Map<String, dynamic>>[],
+        },
+      },
+    );
+
+    final event = await repository.enrichWebhookEvent(42);
+
+    expect(event.id, 42);
+    expect(
+      (event.payload['task'] as Map<String, dynamic>)['name'],
+      'Task enriquecida',
+    );
+    expect(event.normalizedPayload?['task_enrichment_status'], 'enriched');
+    verify(() => service.enrichWebhookEvent(42)).called(1);
+  });
+
   test(
     'maps historical webhook events after their integration is deleted',
     () async {

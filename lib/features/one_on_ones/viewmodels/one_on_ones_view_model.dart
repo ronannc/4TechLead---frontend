@@ -79,7 +79,7 @@ class OneOnOnesViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  Future<void> createTemplate({
+  Future<bool> createTemplate({
     required String title,
     required List<String> questions,
     String? description,
@@ -89,6 +89,29 @@ class OneOnOnesViewModel extends BaseViewModel {
       questions: questions,
       description: description,
     );
+    await _loadTemplates();
+  });
+
+  Future<bool> updateTemplate({
+    required int id,
+    required String title,
+    required List<String> questions,
+    String? description,
+  }) => _runMutation(() async {
+    await _growthRepository.updateTemplate(
+      id: id,
+      title: title,
+      questions: questions,
+      description: description,
+    );
+    await _loadTemplates();
+  });
+
+  Future<bool> deleteTemplate(int id) => _runMutation(() async {
+    await _growthRepository.deleteTemplate(id);
+    if (selectedTemplateId == id) {
+      selectedTemplateId = null;
+    }
     await _loadTemplates();
   });
 
@@ -121,6 +144,41 @@ class OneOnOnesViewModel extends BaseViewModel {
       _loadCompletedSessions(),
       _loadPersonNotes(),
     ]);
+  });
+
+  Future<bool> updateSession({
+    required int id,
+    required String title,
+    String? notes,
+    Map<String, dynamic>? answers,
+    DateTime? heldAt,
+  }) {
+    return _runMutation(() async {
+      final personId = selectedPersonId;
+      if (personId == null) {
+        actionErrorMessage = 'Escolha uma pessoa para atualizar o 1:1.';
+        return;
+      }
+
+      final template = _selectedTemplate();
+      await _growthRepository.updateSession(
+        id: id,
+        personId: personId,
+        title: title,
+        notes: notes,
+        heldAt: heldAt,
+        templateId: selectedTemplateId,
+        questions: template?.questions,
+        answers: answers,
+        status: 'completed',
+      );
+      await _loadCompletedSessions();
+    });
+  }
+
+  Future<bool> deleteSession(int id) => _runMutation(() async {
+    await _growthRepository.deleteSession(id);
+    await _loadCompletedSessions();
   });
 
   Future<void> createPersonNote({required String title, String? body}) =>
@@ -209,6 +267,10 @@ class OneOnOnesViewModel extends BaseViewModel {
   }
 
   Future<bool> _runMutation(Future<void> Function() action) async {
+    if (isMutating) {
+      return false;
+    }
+
     actionErrorMessage = null;
     isMutating = true;
     notifyListeners();

@@ -90,7 +90,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     sessionsLoaded = true;
   });
 
-  Future<void> createTemplate({
+  Future<bool> createTemplate({
     required String title,
     required List<String> questions,
     String? description,
@@ -104,7 +104,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     templatesLoaded = true;
   });
 
-  Future<void> createSession({
+  Future<bool> createSession({
     required String title,
     String? notes,
     int? templateId,
@@ -128,7 +128,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     sessionsLoaded = true;
   });
 
-  Future<void> createPlan({
+  Future<bool> createPlan({
     required String title,
     String? summary,
     String? targetRole,
@@ -143,7 +143,15 @@ class PersonGrowthViewModel extends BaseViewModel {
     plansLoaded = true;
   });
 
-  Future<void> updatePlan({
+  Future<bool> deletePlan(int id) async {
+    return _runMutation(() async {
+      await _repository.deleteDevelopmentPlan(id);
+      plans = await _getReadableDevelopmentPlans();
+      plansLoaded = true;
+    });
+  }
+
+  Future<bool> updatePlan({
     required int id,
     String? title,
     String? summary,
@@ -161,7 +169,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     plansLoaded = true;
   });
 
-  Future<void> createPlanItem({
+  Future<bool> createPlanItem({
     required int planId,
     required String title,
     String? competency,
@@ -177,7 +185,7 @@ class PersonGrowthViewModel extends BaseViewModel {
     plansLoaded = true;
   });
 
-  Future<void> generateSuggestions({String? focusArea, String? context}) =>
+  Future<bool> generateSuggestions({String? focusArea, String? context}) =>
       _runMutation(() async {
         suggestions = await _repository.getSuggestions(
           personId: personId,
@@ -192,13 +200,18 @@ class PersonGrowthViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  Future<void> _runMutation(Future<void> Function() action) async {
+  Future<bool> _runMutation(Future<void> Function() action) async {
+    if (isMutating) {
+      return false;
+    }
+
     actionErrorMessage = null;
     isMutating = true;
     notifyListeners();
 
     try {
       await action();
+      return actionErrorMessage == null;
     } on ApiException catch (e) {
       actionErrorMessage = e.userMessage;
     } catch (_) {
@@ -207,6 +220,8 @@ class PersonGrowthViewModel extends BaseViewModel {
       isMutating = false;
       notifyListeners();
     }
+
+    return false;
   }
 
   Future<void> _ensureTemplates() async {

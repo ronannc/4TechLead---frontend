@@ -120,6 +120,8 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
   double _sessionNotesHeight = 260;
 
   late var _selectedTab = widget.initialTab ?? _OneOnOneTab.documents;
+  int? _editingSessionId;
+  DateTime? _editingSessionHeldAt;
 
   @override
   void dispose() {
@@ -181,7 +183,12 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
           const _EmptyPanel(message: 'Nenhum documento de 1:1 criado ainda.')
         else
           for (final document in viewModel.templates)
-            _DocumentTile(document: document),
+            _DocumentTile(
+              document: document,
+              viewModel: viewModel,
+              onEdit: () => _editDocument(viewModel, document),
+              onDelete: () => _deleteDocument(viewModel, document),
+            ),
       ],
     );
   }
@@ -233,7 +240,12 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
           const _EmptyPanel(message: 'Nenhum 1:1 registrado ainda.')
         else
           for (final session in viewModel.completedSessions)
-            _SessionTile(session: session, viewModel: viewModel),
+            _SessionTile(
+              session: session,
+              viewModel: viewModel,
+              onEdit: () => _editSession(viewModel, session),
+              onDelete: () => _deleteSession(viewModel, session),
+            ),
       ],
     );
   }
@@ -282,10 +294,14 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
           title: 'Executar 1:1',
           subtitle: 'Escolha a pessoa e clone um documento para esta conversa.',
         ),
-        _PeopleDropdown(viewModel: viewModel),
-        _DocumentDropdown(viewModel: viewModel),
-        if (viewModel.selectedDocument != null)
-          _DocumentPreview(document: viewModel.selectedDocument!),
+        _PeopleDropdown(
+          viewModel: viewModel,
+          onChanged: (personId) => _selectPerson(viewModel, personId),
+        ),
+        _DocumentDropdown(
+          viewModel: viewModel,
+          onChanged: (templateId) => _selectDocument(viewModel, templateId),
+        ),
         TextField(
           controller: _sessionTitleController,
           decoration: const InputDecoration(
@@ -302,15 +318,60 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
           decoration: const InputDecoration(
             alignLabelWithHint: true,
             labelText: 'Respostas, tópicos discutidos e decisões',
+            helperText:
+                'Ao escolher um documento, seu conteúdo será carregado aqui para conduzir o 1:1.',
           ),
         ),
         AppPrimaryButton(
-          label: 'Salvar 1:1 executado',
+          label: _editingSessionId == null
+              ? 'Salvar 1:1 executado'
+              : 'Atualizar 1:1',
           loading: viewModel.isMutating,
           onPressed: () => _executeSession(viewModel),
         ),
       ],
     );
+  }
+
+  void _selectPerson(OneOnOnesViewModel viewModel, int? personId) {
+    _startNewSessionIfContextChanged();
+    viewModel.selectPerson(personId);
+  }
+
+  void _selectDocument(OneOnOnesViewModel viewModel, int? templateId) {
+    _startNewSessionIfContextChanged();
+    viewModel.selectTemplate(templateId);
+    if (templateId == null) {
+      _sessionNotesController.clear();
+      return;
+    }
+
+    for (final document in viewModel.templates) {
+      if (document.id == templateId) {
+        _sessionNotesController.text = _documentContent(document);
+        return;
+      }
+    }
+  }
+
+  void _startNewSessionIfContextChanged() {
+    if (_editingSessionId == null) {
+      return;
+    }
+
+    _editingSessionId = null;
+    _editingSessionHeldAt = null;
+    _sessionTitleController.clear();
+    _sessionNotesController.clear();
+  }
+
+  String _documentContent(OneOnOneTemplate document) {
+    return [
+      document.title,
+      if (document.description != null && document.description!.isNotEmpty)
+        document.description!,
+      ...document.questions,
+    ].join('\n\n');
   }
 
   Widget _pointForm(OneOnOnesViewModel viewModel) {
@@ -347,14 +408,122 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
       return;
     }
 
-    await viewModel.createTemplate(
+    final saved = await viewModel.createTemplate(
       title: title,
       description: _nullable(_documentDescriptionController.text),
       questions: questions,
     );
+    if (!saved) {
+      return;
+    }
+
     _documentTitleController.clear();
     _documentDescriptionController.clear();
     _documentQuestionsController.clear();
+  }
+
+  Future<void> _editDocument(
+    OneOnOnesViewModel viewModel,
+    OneOnOneTemplate document,
+  ) async {
+    final titleController = TextEditingController(text: document.title);
+    final descriptionController = TextEditingController(
+      text: document.description,
+    );
+    final questionsController = TextEditingController(
+      text: document.questions.join('\n'),
+    );
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Editar documento de 1:1'),
+        content: SingleChildScrollView(
+          child: _FormColumn(
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Nome do documento',
+                ),
+              ),
+              TextField(
+                controller: descriptionController,
+                minLines: 2,
+                maxLines: 4,
+                decoration: const InputDecoration(labelText: 'Objetivo'),
+              ),
+              TextField(
+                controller: questionsController,
+                minLines: 6,
+                maxLines: 12,
+                decoration: const InputDecoration(
+                  labelText: 'Perguntas e tópicos, um por linha',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: viewModel.isMutating
+                ? null
+                : () async {
+                    final title = titleController.text.trim();
+                    final questions = _lines(questionsController.text);
+                    if (title.isEmpty || questions.isEmpty) {
+                      return;
+                    }
+                    final saved = await viewModel.updateTemplate(
+                      id: document.id,
+                      title: title,
+                      description: _nullable(descriptionController.text),
+                      questions: questions,
+                    );
+                    if (saved && dialogContext.mounted) {
+                      Navigator.pop(dialogContext);
+                    }
+                  },
+            child: const Text('Salvar alterações'),
+          ),
+        ],
+      ),
+    );
+
+    titleController.dispose();
+    descriptionController.dispose();
+    questionsController.dispose();
+  }
+
+  Future<void> _deleteDocument(
+    OneOnOnesViewModel viewModel,
+    OneOnOneTemplate document,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir documento?'),
+        content: Text('O documento "${document.title}" será removido.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await viewModel.deleteTemplate(document.id);
+    }
   }
 
   Future<void> _executeSession(OneOnOnesViewModel viewModel) async {
@@ -364,17 +533,78 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
     }
 
     final notes = _nullable(_sessionNotesController.text);
-    final saved = await viewModel.executeSession(
-      title: title,
-      notes: notes,
-      answers: _sessionAnswers(viewModel, notes),
-    );
+    final sessionId = _editingSessionId;
+    final saved = sessionId == null
+        ? await viewModel.executeSession(
+            title: title,
+            notes: notes,
+            answers: _sessionAnswers(viewModel, notes),
+          )
+        : await viewModel.updateSession(
+            id: sessionId,
+            title: title,
+            notes: notes,
+            heldAt: _editingSessionHeldAt,
+            answers: _sessionAnswers(viewModel, notes),
+          );
     if (!saved) {
       return;
     }
 
     _sessionTitleController.clear();
     _sessionNotesController.clear();
+    _editingSessionId = null;
+    _editingSessionHeldAt = null;
+  }
+
+  void _editSession(OneOnOnesViewModel viewModel, OneOnOneSession session) {
+    viewModel.selectPerson(session.personId);
+    viewModel.selectTemplate(session.templateId);
+    _sessionTitleController.text = session.title;
+    _sessionNotesController.text =
+        session.notes ?? _sessionContent(viewModel, session);
+    _editingSessionId = session.id;
+    _editingSessionHeldAt = session.heldAt;
+    setState(() => _selectedTab = _OneOnOneTab.execute);
+  }
+
+  String _sessionContent(
+    OneOnOnesViewModel viewModel,
+    OneOnOneSession session,
+  ) {
+    final document = viewModel.selectedDocument;
+    if (document != null) {
+      return _documentContent(document);
+    }
+
+    return session.questions.join('\n\n');
+  }
+
+  Future<void> _deleteSession(
+    OneOnOnesViewModel viewModel,
+    OneOnOneSession session,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir 1:1?'),
+        content: Text('O registro "${session.title}" será removido.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await viewModel.deleteSession(session.id);
+    }
   }
 
   Future<void> _createPoint(OneOnOnesViewModel viewModel) async {
@@ -409,9 +639,10 @@ class _OneOnOnesBodyState extends State<_OneOnOnesBody> {
 }
 
 class _PeopleDropdown extends StatelessWidget {
-  const _PeopleDropdown({required this.viewModel});
+  const _PeopleDropdown({required this.viewModel, this.onChanged});
 
   final OneOnOnesViewModel viewModel;
+  final ValueChanged<int?>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -428,15 +659,16 @@ class _PeopleDropdown extends StatelessWidget {
         for (final person in viewModel.people)
           DropdownMenuItem(value: person.id, child: Text(person.name)),
       ],
-      onChanged: viewModel.selectPerson,
+      onChanged: onChanged ?? viewModel.selectPerson,
     );
   }
 }
 
 class _DocumentDropdown extends StatelessWidget {
-  const _DocumentDropdown({required this.viewModel});
+  const _DocumentDropdown({required this.viewModel, required this.onChanged});
 
   final OneOnOnesViewModel viewModel;
+  final ValueChanged<int?> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -455,16 +687,23 @@ class _DocumentDropdown extends StatelessWidget {
         for (final template in viewModel.templates)
           DropdownMenuItem(value: template.id, child: Text(template.title)),
       ],
-      onChanged: viewModel.selectTemplate,
+      onChanged: onChanged,
     );
   }
 }
 
 class _SessionTile extends StatelessWidget {
-  const _SessionTile({required this.session, required this.viewModel});
+  const _SessionTile({
+    required this.session,
+    required this.viewModel,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final OneOnOneSession session;
   final OneOnOnesViewModel viewModel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -474,78 +713,91 @@ class _SessionTile extends StatelessWidget {
         : DateFormat.yMMMd('pt_BR').format(date);
     final documentTitle = session.documentSnapshot?['title']?.toString();
 
-    return _TextTile(
-      icon: Icons.forum_outlined,
-      title: session.title,
-      subtitle: [
-        if (viewModel.canManageOneOnOnes)
-          viewModel.personName(session.personId),
-        formattedDate,
-        if (documentTitle != null) 'documento: $documentTitle',
-      ].join(' · '),
+    return _Surface(
+      child: Row(
+        children: [
+          Expanded(
+            child: _TextTile(
+              icon: Icons.forum_outlined,
+              title: session.title,
+              subtitle: [
+                if (viewModel.canManageOneOnOnes)
+                  viewModel.personName(session.personId),
+                formattedDate,
+                if (documentTitle != null) 'documento: $documentTitle',
+              ].join(' · '),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Editar 1:1',
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined),
+          ),
+          IconButton(
+            tooltip: 'Excluir 1:1',
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _DocumentTile extends StatelessWidget {
-  const _DocumentTile({required this.document});
+  const _DocumentTile({
+    required this.document,
+    required this.viewModel,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final OneOnOneTemplate document;
+  final OneOnOnesViewModel viewModel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return _TextTile(
-      icon: Icons.description_outlined,
-      title: document.title,
-      subtitle: [
-        if (document.description != null) document.description!,
-        '${document.questions.length} tópicos',
-      ].join(' · '),
-    );
-  }
-}
-
-class _DocumentPreview extends StatelessWidget {
-  const _DocumentPreview({required this.document});
-
-  final OneOnOneTemplate document;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.35,
-        ),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SectionTitle(
-              title: document.title,
-              subtitle: document.description,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            for (final question in document.questions)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.notes_outlined, size: 18),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(child: Text(question)),
-                  ],
+    return _Surface(
+      child: Row(
+        children: [
+          Icon(
+            Icons.description_outlined,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  document.title,
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
-              ),
-          ],
-        ),
+                Text(
+                  [
+                    if (document.description != null) document.description!,
+                    '${document.questions.length} tópicos',
+                  ].join(' · '),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Editar documento',
+            onPressed: viewModel.isMutating ? null : onEdit,
+            icon: const Icon(Icons.edit_outlined),
+          ),
+          IconButton(
+            tooltip: 'Excluir documento',
+            onPressed: viewModel.isMutating ? null : onDelete,
+            icon: const Icon(Icons.delete_outline),
+          ),
+        ],
       ),
     );
   }

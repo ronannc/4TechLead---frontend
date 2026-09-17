@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:for_tech_lead/bootstrap.dart';
 import 'package:for_tech_lead/core/auth/auth_session.dart';
 import 'package:for_tech_lead/features/one_on_ones/screens/one_on_ones_screen.dart';
+import 'package:for_tech_lead/features/people/models/person_growth_models.dart';
 import 'package:for_tech_lead/features/people/repositories/person_growth_repository.dart';
 import 'package:for_tech_lead/features/people/repositories/person_repository.dart';
 import 'package:mocktail/mocktail.dart';
@@ -15,6 +16,73 @@ class _MockPersonGrowthRepository extends Mock
 class _MockPersonRepository extends Mock implements PersonRepository {}
 
 void main() {
+  testWidgets('loads the selected document content into the 1:1 notes field', (
+    tester,
+  ) async {
+    addTearDown(getIt.reset);
+
+    final authSession = _MockAuthSession();
+    final growthRepository = _MockPersonGrowthRepository();
+    final personRepository = _MockPersonRepository();
+    when(() => authSession.isTechLead).thenReturn(true);
+    when(() => authSession.personId).thenReturn(null);
+    when(growthRepository.getTemplates).thenAnswer(
+      (_) async => [
+        const OneOnOneTemplate(
+          id: 1,
+          title: 'Conversa de carreira',
+          description: 'Alinhar evolução e próximos passos.',
+          questions: ['Qual foi a principal evolução?'],
+        ),
+      ],
+    );
+    when(
+      () => personRepository.getPeople(perPage: 100),
+    ).thenAnswer((_) async => []);
+    when(
+      () => growthRepository.getSessions(
+        personId: null,
+        status: 'completed',
+        perPage: 50,
+      ),
+    ).thenAnswer((_) async => []);
+    when(
+      () => growthRepository.getPersonOneOnOneNotes(
+        personId: null,
+        status: 'open',
+      ),
+    ).thenAnswer((_) async => []);
+
+    getIt.registerSingleton<AuthSession>(authSession);
+    getIt.registerSingleton<PersonGrowthRepository>(growthRepository);
+    getIt.registerSingleton<PersonRepository>(personRepository);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: OneOnOnesScreen(initialTab: 'execute')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Documento-base'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Conversa de carreira').last);
+    await tester.pumpAndSettle();
+
+    final notesField = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField &&
+          widget.decoration?.labelText ==
+              'Respostas, tópicos discutidos e decisões',
+    );
+    expect(
+      (tester.widget(notesField) as TextField).controller?.text,
+      contains('Conversa de carreira'),
+    );
+    expect(
+      (tester.widget(notesField) as TextField).controller?.text,
+      contains('Qual foi a principal evolução?'),
+    );
+  });
+
   testWidgets('document fields sit outside cards and the notes field resizes', (
     tester,
   ) async {

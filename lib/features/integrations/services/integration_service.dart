@@ -100,6 +100,10 @@ class IntegrationService {
     return _get('/integration-webhook-events/$eventId');
   }
 
+  Future<Map<String, dynamic>> enrichWebhookEvent(int eventId) {
+    return _post('/integration-webhook-events/$eventId/enrich', data: const {});
+  }
+
   Future<void> archiveWebhookEvent(int eventId) async {
     try {
       await _client.dio.delete<void>('/integration-webhook-events/$eventId');

@@ -25,6 +25,23 @@ class PersonGrowthRepository {
     return OneOnOneTemplate.fromJson(json['data'] as Map<String, dynamic>);
   }
 
+  Future<OneOnOneTemplate> updateTemplate({
+    required int id,
+    required String title,
+    required List<String> questions,
+    String? description,
+  }) async {
+    final json = await _service.updateTemplate(
+      id: id,
+      title: title,
+      questions: questions,
+      description: description,
+    );
+    return OneOnOneTemplate.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteTemplate(int id) => _service.deleteTemplate(id);
+
   Future<List<OneOnOneSession>> getSessions({
     int? personId,
     int page = 1,
@@ -66,6 +83,33 @@ class PersonGrowthRepository {
     );
     return OneOnOneSession.fromJson(json['data'] as Map<String, dynamic>);
   }
+
+  Future<OneOnOneSession> updateSession({
+    required int id,
+    required int personId,
+    required String title,
+    String? notes,
+    DateTime? heldAt,
+    int? templateId,
+    List<String>? questions,
+    Map<String, dynamic>? answers,
+    String status = 'completed',
+  }) async {
+    final json = await _service.updateSession(
+      id: id,
+      personId: personId,
+      title: title,
+      notes: notes,
+      heldAt: heldAt,
+      templateId: templateId,
+      questions: questions,
+      answers: answers,
+      status: status,
+    );
+    return OneOnOneSession.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteSession(int id) => _service.deleteSession(id);
 
   Future<List<PersonOneOnOneNote>> getPersonOneOnOneNotes({
     int? personId,
@@ -146,6 +190,10 @@ class PersonGrowthRepository {
       progress: progress,
     );
     return DevelopmentPlan.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteDevelopmentPlan(int id) {
+    return _service.deleteDevelopmentPlan(id);
   }
 
   Future<DevelopmentPlanItem> createDevelopmentPlanItem({

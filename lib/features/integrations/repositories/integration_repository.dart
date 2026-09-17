@@ -91,6 +91,13 @@ class IntegrationRepository {
     );
   }
 
+  Future<IntegrationWebhookEvent> enrichWebhookEvent(int eventId) async {
+    final json = await _service.enrichWebhookEvent(eventId);
+    return IntegrationWebhookEvent.fromJson(
+      json['data'] as Map<String, dynamic>,
+    );
+  }
+
   Future<void> archiveWebhookEvent(int eventId) {
     return _service.archiveWebhookEvent(eventId);
   }

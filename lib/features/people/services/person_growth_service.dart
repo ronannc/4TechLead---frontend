@@ -30,6 +30,30 @@ class PersonGrowthService {
     );
   }
 
+  Future<Map<String, dynamic>> updateTemplate({
+    required int id,
+    required String title,
+    required List<String> questions,
+    String? description,
+  }) {
+    return _put(
+      '/one-on-one-templates/$id',
+      data: {
+        'title': title,
+        'description': ?description,
+        'questions': questions,
+      },
+    );
+  }
+
+  Future<void> deleteTemplate(int id) async {
+    try {
+      await _client.dio.delete<void>('/one-on-one-templates/$id');
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
   Future<Map<String, dynamic>> getSessions({
     int? personId,
     int page = 1,
@@ -129,6 +153,40 @@ class PersonGrowthService {
     );
   }
 
+  Future<Map<String, dynamic>> updateSession({
+    required int id,
+    required int personId,
+    required String title,
+    String? notes,
+    DateTime? heldAt,
+    int? templateId,
+    List<String>? questions,
+    Map<String, dynamic>? answers,
+    String status = 'completed',
+  }) {
+    return _put(
+      '/one-on-one-sessions/$id',
+      data: {
+        'person_id': personId,
+        'title': title,
+        'status': status,
+        'held_at': heldAt == null ? null : _dateFormat.format(heldAt),
+        'one_on_one_template_id': ?templateId,
+        'questions': ?questions,
+        'answers': ?answers,
+        'notes': ?notes,
+      },
+    );
+  }
+
+  Future<void> deleteSession(int id) async {
+    try {
+      await _client.dio.delete<void>('/one-on-one-sessions/$id');
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
   Future<Map<String, dynamic>> getDevelopmentPlans(int personId) {
     return _get(
       '/development-plans',
@@ -175,6 +233,14 @@ class PersonGrowthService {
         'progress': ?progress,
       },
     );
+  }
+
+  Future<void> deleteDevelopmentPlan(int id) async {
+    try {
+      await _client.dio.delete<void>('/development-plans/$id');
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
   }
 
   Future<Map<String, dynamic>> createDevelopmentPlanItem({

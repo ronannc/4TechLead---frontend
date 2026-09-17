@@ -154,6 +154,108 @@ void main() {
     expect(find.text('pull_request.merged'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('enriches a ClickUp event from its detail dialog', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final integrationRepository = _MockIntegrationRepository();
+    final personRepository = _MockPersonRepository();
+    const clickUpSystem = IntegrationSystem(
+      id: 2,
+      name: 'ClickUp Produto',
+      provider: 'clickup',
+      hasProviderApiToken: true,
+      active: true,
+    );
+    const webhookEvent = IntegrationWebhookEvent(
+      id: 7,
+      integrationSystemId: 2,
+      eventId: 'clickup-event-7',
+      eventType: 'taskUpdated',
+      status: 'processed',
+      payload: {
+        'task': {'id': 'task-7'},
+      },
+    );
+    const enrichedEvent = IntegrationWebhookEvent(
+      id: 7,
+      integrationSystemId: 2,
+      eventId: 'clickup-event-7',
+      eventType: 'taskUpdated',
+      status: 'processed',
+      payload: {
+        'task': {'id': 'task-7', 'name': 'Task enriquecida via API'},
+      },
+      normalizedPayload: {'task_enrichment_status': 'enriched'},
+    );
+
+    when(
+      integrationRepository.getSystems,
+    ).thenAnswer((_) async => const [clickUpSystem]);
+    when(
+      integrationRepository.getExternalIdentities,
+    ).thenAnswer((_) async => const []);
+    when(
+      () => personRepository.getPeople(page: 1, perPage: 100),
+    ).thenAnswer((_) async => const []);
+    when(() => integrationRepository.getDeliveryMetrics(page: 1)).thenAnswer(
+      (_) async => const DeliveryMetricsPage(
+        items: [],
+        currentPage: 1,
+        lastPage: 1,
+        total: 0,
+      ),
+    );
+    when(
+      () => integrationRepository.getWebhookEvents(
+        page: 1,
+        search: '',
+        integrationSystemId: null,
+        personId: null,
+        status: null,
+        unmapped: false,
+        withFailure: false,
+        orderDirection: 'desc',
+      ),
+    ).thenAnswer(
+      (_) async => const WebhookEventsPage(
+        items: [webhookEvent],
+        currentPage: 1,
+        lastPage: 1,
+        total: 1,
+      ),
+    );
+    when(
+      () => integrationRepository.getWebhookEvent(7),
+    ).thenAnswer((_) async => webhookEvent);
+    when(
+      () => integrationRepository.enrichWebhookEvent(7),
+    ).thenAnswer((_) async => enrichedEvent);
+
+    getIt.registerSingleton<IntegrationRepository>(integrationRepository);
+    getIt.registerSingleton<PersonRepository>(personRepository);
+
+    await tester.pumpWidget(const MaterialApp(home: IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eventos'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byTooltip('Detalhar'));
+    await tester.tap(find.byTooltip('Detalhar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enriquecer via ClickUp'), findsOneWidget);
+    await tester.tap(find.text('Enriquecer via ClickUp'));
+    await tester.pumpAndSettle();
+
+    verify(() => integrationRepository.enrichWebhookEvent(7)).called(1);
+    expect(find.textContaining('Task enriquecida via API'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Person _person() {

@@ -176,6 +176,25 @@ class IntegrationsViewModel extends BaseViewModel {
     selectedWebhookEvent = await _repository.getWebhookEvent(eventId);
   });
 
+  Future<bool> enrichWebhookEvent(int eventId) => _runMutation(() async {
+    final event = await _repository.enrichWebhookEvent(eventId);
+    selectedWebhookEvent = event;
+    final eventIndex = webhookEvents.indexWhere((item) => item.id == eventId);
+    if (eventIndex >= 0) {
+      webhookEvents = [...webhookEvents]..[eventIndex] = event;
+    }
+    await _loadMetrics(page: metricsPage);
+  });
+
+  IntegrationSystem? integrationForWebhookEvent(IntegrationWebhookEvent event) {
+    final systemId = event.integrationSystemId;
+    if (systemId == null) {
+      return null;
+    }
+
+    return systems.where((system) => system.id == systemId).firstOrNull;
+  }
+
   Future<bool> archiveWebhookEvent(int eventId) => _runMutation(() async {
     await _repository.archiveWebhookEvent(eventId);
     if (selectedWebhookEvent?.id == eventId) {

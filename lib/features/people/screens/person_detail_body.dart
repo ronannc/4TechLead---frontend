@@ -279,6 +279,7 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
         },
         onCreateItem: (plan) => _showPlanItemDialog(context, growth, plan),
         onEditPlan: (plan) => _showEditPlanDialog(context, growth, plan),
+        onDeletePlan: (plan) => _deletePlan(context, growth, plan),
         onCreatePlan: () => _openFocusedFlow(_FocusedFlow.pdi),
       ),
       _PersonTab.analysis => _AnalysisTab(person: person, growth: growth),
@@ -303,6 +304,7 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
           titleController: _planTitleController,
           summaryController: _planSummaryController,
           targetRoleController: _planTargetRoleController,
+          loading: growth.isMutating,
           onCreatePlan: () => _createPlan(growth),
         ),
       },
@@ -323,11 +325,15 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
       return;
     }
 
-    await growth.createPlan(
+    final saved = await growth.createPlan(
       title: title,
       summary: _nullable(_planSummaryController.text),
       targetRole: _nullable(_planTargetRoleController.text),
     );
+    if (!saved) {
+      return;
+    }
+
     _planTitleController.clear();
     _planSummaryController.clear();
     _planTargetRoleController.clear();
@@ -336,6 +342,36 @@ class _PersonDetailBodyState extends State<PersonDetailBody> {
         _focusedFlow = null;
         _pdiView = _PdiView.tracking;
       });
+    }
+  }
+
+  Future<void> _deletePlan(
+    BuildContext context,
+    PersonGrowthViewModel growth,
+    DevelopmentPlan plan,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir PDI?'),
+        content: Text(
+          'O plano "${plan.title}" e todas as suas ações serão removidos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await growth.deletePlan(plan.id);
     }
   }
 
@@ -963,6 +999,7 @@ class _PdiTab extends StatelessWidget {
     required this.onCreatePlan,
     required this.onCreateItem,
     required this.onEditPlan,
+    required this.onDeletePlan,
   });
 
   final PersonGrowthViewModel growth;
@@ -972,6 +1009,7 @@ class _PdiTab extends StatelessWidget {
   final VoidCallback onCreatePlan;
   final ValueChanged<DevelopmentPlan> onCreateItem;
   final ValueChanged<DevelopmentPlan> onEditPlan;
+  final ValueChanged<DevelopmentPlan> onDeletePlan;
 
   @override
   Widget build(BuildContext context) {
@@ -1002,6 +1040,7 @@ class _PdiTab extends StatelessWidget {
             canManageGrowth: canManageGrowth,
             onCreateItem: onCreateItem,
             onEditPlan: onEditPlan,
+            onDeletePlan: onDeletePlan,
           ),
           _PdiView.suggestions => _PdiSuggestionsView(
             suggestions: growth.suggestions,
@@ -1017,12 +1056,14 @@ class _PdiCreateView extends StatelessWidget {
     required this.titleController,
     required this.summaryController,
     required this.targetRoleController,
+    required this.loading,
     required this.onCreatePlan,
   });
 
   final TextEditingController titleController;
   final TextEditingController summaryController;
   final TextEditingController targetRoleController;
+  final bool loading;
   final VoidCallback onCreatePlan;
 
   @override
@@ -1073,6 +1114,7 @@ class _PdiCreateView extends StatelessWidget {
                   Expanded(
                     child: AppPrimaryButton(
                       label: 'Criar PDI',
+                      loading: loading,
                       onPressed: onCreatePlan,
                     ),
                   ),
@@ -1127,12 +1169,14 @@ class _PdiTrackingView extends StatelessWidget {
     required this.canManageGrowth,
     required this.onCreateItem,
     required this.onEditPlan,
+    required this.onDeletePlan,
   });
 
   final List<DevelopmentPlan> plans;
   final bool canManageGrowth;
   final ValueChanged<DevelopmentPlan> onCreateItem;
   final ValueChanged<DevelopmentPlan> onEditPlan;
+  final ValueChanged<DevelopmentPlan> onDeletePlan;
 
   @override
   Widget build(BuildContext context) {
@@ -1159,6 +1203,7 @@ class _PdiTrackingView extends StatelessWidget {
               canManageGrowth: canManageGrowth,
               onCreateItem: () => onCreateItem(plan),
               onEditPlan: () => onEditPlan(plan),
+              onDeletePlan: () => onDeletePlan(plan),
             ),
       ],
     );
@@ -1617,12 +1662,14 @@ class _PlanTile extends StatelessWidget {
     required this.canManageGrowth,
     required this.onCreateItem,
     required this.onEditPlan,
+    required this.onDeletePlan,
   });
 
   final DevelopmentPlan plan;
   final bool canManageGrowth;
   final VoidCallback onCreateItem;
   final VoidCallback onEditPlan;
+  final VoidCallback onDeletePlan;
 
   @override
   Widget build(BuildContext context) {
@@ -1660,6 +1707,13 @@ class _PlanTile extends StatelessWidget {
                   child: AppSecondaryButton(
                     label: 'Editar',
                     onPressed: onEditPlan,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppSecondaryButton(
+                    label: 'Excluir',
+                    onPressed: onDeletePlan,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),

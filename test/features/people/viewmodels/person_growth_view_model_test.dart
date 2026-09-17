@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:for_tech_lead/core/viewmodels/base_view_model.dart';
 import 'package:for_tech_lead/features/people/models/person_growth_models.dart';
@@ -44,6 +46,48 @@ void main() {
       expect(viewModel.plans, plans);
       verify(() => repository.getMyDevelopmentPlans()).called(1);
       verifyNever(() => repository.getDevelopmentPlans(any()));
+    },
+  );
+
+  test(
+    'ignores concurrent PDI creation while the first request is pending',
+    () async {
+      final request = Completer<DevelopmentPlan>();
+      when(
+        () => repository.createDevelopmentPlan(
+          personId: 10,
+          title: 'PDI autonomia',
+          summary: null,
+          targetRole: null,
+        ),
+      ).thenAnswer((_) => request.future);
+      when(
+        () => repository.getDevelopmentPlans(10),
+      ).thenAnswer((_) async => []);
+
+      final viewModel = PersonGrowthViewModel(repository, 10);
+      final first = viewModel.createPlan(title: 'PDI autonomia');
+      final second = viewModel.createPlan(title: 'PDI autonomia');
+
+      expect(await second, isFalse);
+      request.complete(
+        const DevelopmentPlan(
+          id: 1,
+          personId: 10,
+          title: 'PDI autonomia',
+          status: 'active',
+          progress: 0,
+        ),
+      );
+      expect(await first, isTrue);
+      verify(
+        () => repository.createDevelopmentPlan(
+          personId: 10,
+          title: 'PDI autonomia',
+          summary: null,
+          targetRole: null,
+        ),
+      ).called(1);
     },
   );
 }

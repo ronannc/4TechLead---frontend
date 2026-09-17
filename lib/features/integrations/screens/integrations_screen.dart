@@ -273,9 +273,12 @@ class _IntegrationsBodyState extends State<_IntegrationsBody> {
 
     await showDialog<void>(
       context: context,
-      builder: (context) => _WebhookEventDetailDialog(
-        event: viewModel.selectedWebhookEvent!,
-        viewModel: viewModel,
+      builder: (context) => ChangeNotifierProvider.value(
+        value: viewModel,
+        child: _WebhookEventDetailDialog(
+          event: viewModel.selectedWebhookEvent!,
+          viewModel: viewModel,
+        ),
       ),
     );
   }
@@ -1241,23 +1244,94 @@ class _WebhookEventDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(event.eventType),
-      content: SizedBox(
-        width: 920,
-        child: SingleChildScrollView(
-          child: _SectionStack(
-            children: [
-              _WebhookEventDetailHeader(event: event, viewModel: viewModel),
-              _JsonPanel(title: 'Payload armazenado', value: event.payload),
-              _JsonPanel(
-                title: 'Payload normalizado',
-                value: event.normalizedPayload ?? const {},
+      content: Consumer<IntegrationsViewModel>(
+        builder: (context, currentViewModel, _) {
+          final currentEvent = currentViewModel.selectedWebhookEvent ?? event;
+          return SizedBox(
+            width: 920,
+            child: SingleChildScrollView(
+              child: _SectionStack(
+                children: [
+                  if (currentViewModel.actionErrorMessage != null)
+                    _ActionErrorBanner(
+                      message: currentViewModel.actionErrorMessage!,
+                      onDismiss: currentViewModel.clearActionError,
+                    ),
+                  _WebhookEventDetailHeader(
+                    event: currentEvent,
+                    viewModel: currentViewModel,
+                  ),
+                  _JsonPanel(
+                    title: 'Payload armazenado',
+                    value: currentEvent.payload,
+                  ),
+                  _JsonPanel(
+                    title: 'Payload normalizado',
+                    value: currentEvent.normalizedPayload ?? const {},
+                  ),
+                  _WebhookEventMetrics(metrics: currentEvent.deliveryMetrics),
+                ],
               ),
-              _WebhookEventMetrics(metrics: event.deliveryMetrics),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
       actions: [
+        if (viewModel.integrationForWebhookEvent(event)?.provider == 'clickup')
+          Consumer<IntegrationsViewModel>(
+            builder: (context, currentViewModel, _) => TextButton.icon(
+              onPressed: currentViewModel.isMutating
+                  ? null
+                  : () async {
+                      final integration = currentViewModel
+                          .integrationForWebhookEvent(event);
+                      if (integration?.hasProviderApiToken != true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Configure o token da API do ClickUp na integração antes de enriquecer.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final enriched = await currentViewModel
+                          .enrichWebhookEvent(event.id);
+                      if (enriched && context.mounted) {
+                        final enrichmentStatus = currentViewModel
+                            .selectedWebhookEvent
+                            ?.normalizedPayload?['task_enrichment_status'];
+                        final enrichmentError = currentViewModel
+                            .selectedWebhookEvent
+                            ?.normalizedPayload?['task_enrichment_error'];
+                        final message = switch (enrichmentStatus) {
+                          'enriched' =>
+                            'Dados da tarefa atualizados pela API do ClickUp.',
+                          'connection_failed' =>
+                            'Não foi possível conectar à API do ClickUp.',
+                          'http_error' =>
+                            'A API do ClickUp retornou um erro${enrichmentError == null ? '.' : ': $enrichmentError.'}',
+                          'skipped_missing_task_id' =>
+                            'Este evento não contém o ID da tarefa do ClickUp.',
+                          'skipped_missing_provider_api_token' =>
+                            'Configure o token da API do ClickUp na integração.',
+                          _ => 'Consulta à API do ClickUp concluída.',
+                        };
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(message)));
+                      }
+                    },
+              icon: currentViewModel.isMutating
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync),
+              label: const Text('Enriquecer via ClickUp'),
+            ),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Fechar'),

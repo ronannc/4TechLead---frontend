@@ -130,6 +130,63 @@ void main() {
   });
 
   test(
+    'enrichWebhookEvent() updates the selected event and event list',
+    () async {
+      const originalEvent = IntegrationWebhookEvent(
+        id: 42,
+        integrationSystemId: 2,
+        eventId: 'clickup-event-42',
+        eventType: 'taskUpdated',
+        status: 'processed',
+        payload: {
+          'task': {'id': 'task-42'},
+        },
+      );
+      const enrichedEvent = IntegrationWebhookEvent(
+        id: 42,
+        integrationSystemId: 2,
+        eventId: 'clickup-event-42',
+        eventType: 'taskUpdated',
+        status: 'processed',
+        payload: {
+          'task': {'id': 'task-42', 'name': 'Task enriquecida'},
+        },
+        normalizedPayload: {'task_enrichment_status': 'enriched'},
+      );
+      viewModel.webhookEvents = [originalEvent];
+      viewModel.selectedWebhookEvent = originalEvent;
+      when(
+        () => integrationRepository.enrichWebhookEvent(42),
+      ).thenAnswer((_) async => enrichedEvent);
+      when(() => integrationRepository.getDeliveryMetrics(page: 1)).thenAnswer(
+        (_) async => const DeliveryMetricsPage(
+          items: [],
+          currentPage: 1,
+          lastPage: 1,
+          total: 0,
+        ),
+      );
+
+      final succeeded = await viewModel.enrichWebhookEvent(42);
+
+      expect(succeeded, isTrue);
+      expect(
+        viewModel
+            .selectedWebhookEvent
+            ?.normalizedPayload?['task_enrichment_status'],
+        'enriched',
+      );
+    expect(
+      (viewModel.webhookEvents.single.payload['task'] as Map<String, dynamic>)[
+        'name'
+      ],
+      'Task enriquecida',
+    );
+      expect(viewModel.isMutating, isFalse);
+    },
+  );
+
+  test(
     'deleteSystem() clears the one time token state and reloads systems',
     () async {
       const remainingSystem = IntegrationSystem(
